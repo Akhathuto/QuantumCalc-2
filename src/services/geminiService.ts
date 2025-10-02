@@ -1,3 +1,4 @@
+
 declare const process: any;
 
 import { GoogleGenAI, Type } from "@google/genai";
