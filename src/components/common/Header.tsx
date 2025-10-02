@@ -3,12 +3,8 @@ import React from 'react';
 import {
   Calculator as CalculatorIcon,
   LineChart,
-  Table,
-  BarChart,
-  FunctionSquare,
   Scale,
   Landmark,
-  Percent,
   Binary,
   Banknote,
   Calendar,

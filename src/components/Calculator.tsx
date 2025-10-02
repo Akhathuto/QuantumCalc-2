@@ -390,13 +390,6 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
 
   const memoryClear = () => { setMemory(null); showToast("Memory cleared"); };
   const memoryRecall = () => { if(memory !== null) { setCurrentInput(String(memory)); setIsResultState(false); } };
-  const memoryStore = () => {
-    const valToStore = parseFloat(currentInput);
-    if (!isNaN(valToStore)) {
-        setMemory(valToStore);
-        showToast("Value stored in memory");
-    }
-  };
   const memoryAdd = () => {
     const currentVal = parseFloat(currentInput);
      if (!isNaN(currentVal)) {
