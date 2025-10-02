@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuantumCalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --color-bg: #1a202c;
+        --color-surface: #2d3748;
+        --color-primary: #4299e1;
+        --color-secondary: #ed8936;
+        --color-accent: #48bb78;
+        --color-text: #e2e8f0;
+        --color-text-secondary: #a0aec0;
+        --color-border: #4a5568;
+      }
+      html.light {
+        --color-bg: #f7fafc;
+        --color-surface: #ffffff;
+        --color-primary: #3182ce;
+        --color-secondary: #dd6b20;
+        --color-accent: #38a169;
+        --color-text: #2d3748;
+        --color-text-secondary: #718096;
+        --color-border: #e2e8f0;
+      }
+      @keyframes fade-in-down {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in-down {
+        animation: fade-in-down 0.2s ease-out;
+      }
+    </style>
+    <script>
+      // Immediately apply theme from localStorage to prevent FOUC
+      (function() {
+        try {
+          if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.add('light');
+          } else {
+            document.documentElement.classList.remove('light');
+          }
+        } catch (e) {
+          console.error('Could not apply theme from localStorage', e);
+          // Defaults to dark theme if localStorage is unavailable
+          document.documentElement.classList.remove('light');
+        }
+      })();
+    </script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-bg': 'var(--color-bg)',
+              'brand-surface': 'var(--color-surface)',
+              'brand-primary': 'var(--color-primary)',
+              'brand-secondary': 'var(--color-secondary)',
+              'brand-accent': 'var(--color-accent)',
+              'brand-text': 'var(--color-text)',
+              'brand-text-secondary': 'var(--color-text-secondary)',
+              'brand-border': 'var(--color-border)',
+            },
+            animation: {
+              'fade-in-down': 'fade-in-down 0.2s ease-out',
+            },
+            keyframes: {
+              'fade-in-down': {
+                '0%': {
+                  opacity: '0',
+                  transform: 'translateY(-10px)'
+                },
+                '100%': {
+                  opacity: '1',
+                  transform: 'translateY(0)'
+                },
+              }
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.544.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
+    "mathjs": "https://aistudiocdn.com/mathjs@^14.7.0",
+    "recharts": "https://aistudiocdn.com/recharts@^2.12.7"
+  }
+}
+</script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+  <body class="bg-brand-bg text-brand-text transition-colors duration-300">
+    <div id="root"></div>
+    <script type="text/babel" data-type="module" src="/index.tsx"></script>
+  </body>
+</html>
