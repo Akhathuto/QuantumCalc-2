@@ -66,24 +66,37 @@ QuantumCalc is more than one calculator—it's a massive collection of specializ
 
 ---
 
-## Running the Application (Local & Deployment)
+## Running the Application
 
-This project is a static web application. It uses modern browser features but requires a local server for development due to security policies (CORS). **You cannot open the `index.html` file directly from your filesystem.**
+This project is built with React and Vite. You'll need Node.js and npm (or yarn/pnpm) installed to run it.
 
 ### Local Development
 
 1.  **Get the Code**: Clone or download the repository to your local machine.
-2.  **Run a Server**: From the project's root directory, start a local web server. Here are some easy options:
-    -   **Using `npx serve` (Easiest)**: If you have Node.js, run `npx serve` in your terminal and open the provided `localhost` URL.
-    -   **VS Code Live Server**: Use the "Live Server" extension in VS Code. Right-click `index.html` and select "Open with Live Server".
-    -   **Python Server**: Run `python -m http.server` (for Python 3) and navigate to `http://localhost:8000`.
+2.  **Install Dependencies**: Open a terminal in the project's root directory and run:
+    ```bash
+    npm install
+    ```
+3.  **Run the Development Server**: After installation, start the Vite development server:
+     ```bash
+    npm run dev
+    ```
+    This will start the app on a local port (usually `http://localhost:5173`) and open it in your browser.
+
+### Building for Production
+
+To create an optimized production build, run:
+```bash
+npm run build
+```
+The output files will be generated in the `dist/` directory.
 
 ### Deployment
 
-To deploy QuantumCalc, simply upload all the project files to any static web hosting service (like Vercel, Netlify, GitHub Pages, etc.). No build step is necessary.
+You can deploy the contents of the `dist/` directory to any static web hosting service (like Vercel, Netlify, GitHub Pages, etc.). Configure your hosting provider with the following settings:
 
--   **Build Command:** Set to empty.
--   **Output Directory:** Set to the root directory.
+-   **Build Command:** `npm run build`
+-   **Output Directory:** `dist`
 
 ---
 
@@ -104,6 +117,7 @@ If the AI features are not working, it means the API key has not been configured
 - **AI Integration**: Google Gemini API
 - **Mathematics Engine**: Math.js
 - **Charting**: Recharts
+- **Build Tool**: Vite
 
 ---
 
