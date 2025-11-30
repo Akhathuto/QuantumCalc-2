@@ -1,11 +1,14 @@
-const CACHE_NAME = 'quantumcalc-v1';
+// Version the cache so updates force a refresh on clients
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `quantumcalc-${CACHE_VERSION}`;
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache).catch(err => {
@@ -22,8 +25,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  // Skip cross-origin requests (but allow navigation fallback)
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin && event.request.mode !== 'navigate') {
     return;
   }
 
@@ -44,8 +48,8 @@ self.addEventListener('fetch', (event) => {
         });
         return response;
       }).catch(() => {
-        // Return offline fallback if available
-        return caches.match('/');
+        // Return offline fallback: try cache for index.html for navigations
+        return caches.match('./index.html');
       });
     })
   );
@@ -61,6 +65,6 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });

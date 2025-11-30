@@ -118,8 +118,9 @@
     <script type="module" src="/index.tsx"></script>
     <script>
       // Register Service Worker for offline support (optional)
+      // Use a relative path so the worker is registered under the app's path
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
           console.log('Service Worker registration failed:', err);
         });
       }
