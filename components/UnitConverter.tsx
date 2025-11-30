@@ -135,9 +135,11 @@ export const UnitConverter = () => {
             <div className="sm:col-span-2">
                 <label htmlFor="from-unit" className="block text-sm font-medium text-brand-text-secondary mb-1">From</label>
                 <input
+                    id="from-input"
                     type="number"
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
+                    placeholder="Enter value"
                     className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
                 />
                 <select
@@ -151,7 +153,12 @@ export const UnitConverter = () => {
             </div>
 
             <div className="flex items-center justify-center">
-                 <button onClick={swapUnits} className="p-3 bg-brand-primary/80 hover:bg-brand-primary rounded-full transition-transform transform hover:rotate-180">
+                 <button 
+                    onClick={swapUnits} 
+                    className="p-3 bg-brand-primary/80 hover:bg-brand-primary rounded-full transition-transform transform hover:rotate-180"
+                    title="Swap units"
+                    aria-label="Swap from and to units"
+                 >
                     <ArrowRightLeft size={20} />
                 </button>
             </div>

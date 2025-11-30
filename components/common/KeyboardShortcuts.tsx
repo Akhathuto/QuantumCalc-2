@@ -38,6 +38,8 @@ const KeyboardShortcuts: React.FC = () => {
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-brand-border rounded-md transition-colors"
+                title="Close shortcuts"
+                aria-label="Close keyboard shortcuts dialog"
               >
                 <X size={20} />
               </button>

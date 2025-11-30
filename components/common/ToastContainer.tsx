@@ -14,7 +14,11 @@ const ToastContainer: React.FC = () => {
       }, toast.duration);
     });
 
-    return unsubscribe;
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const getIcon = (type: string) => {
@@ -55,6 +59,8 @@ const ToastContainer: React.FC = () => {
           <button
             onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
             className="ml-auto hover:opacity-70 transition-opacity"
+            title="Dismiss notification"
+            aria-label="Dismiss notification"
           >
             <X size={16} />
           </button>

@@ -529,7 +529,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
                       </button>
                     )}
                     {/* Expression Line */}
-                    <div className="text-brand-text-secondary text-xl break-words h-7 overflow-x-auto text-right font-mono transition-opacity duration-300" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
+                    <div className="text-brand-text-secondary text-xl break-words h-7 overflow-x-auto text-right font-mono transition-opacity duration-300 no-scrollbar">{expression || ' '}</div>
                     {/* Input/Result Line */}
                     <div className="text-4xl font-bold text-brand-text break-words min-h-[48px] overflow-x-auto text-right font-mono transition-all duration-200">
                         {currentInput}

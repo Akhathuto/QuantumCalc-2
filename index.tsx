@@ -27,7 +27,8 @@ function mountApp() {
         pre.style.padding = '1rem';
         pre.style.borderRadius = '6px';
         pre.style.margin = '1rem';
-        pre.textContent = 'Application failed to start. Check console for details.\n' + (err && err.stack ? err.stack : String(err));
+        const errorStack = (err instanceof Error && err.stack) ? err.stack : String(err);
+        pre.textContent = 'Application failed to start. Check console for details.\n' + errorStack;
         body.innerHTML = '';
         body.appendChild(pre);
       }
