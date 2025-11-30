@@ -3,9 +3,10 @@ import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import type { ReactNode } from 'react';
 import { HistoryEntry, Explanation } from '../types';
 import { getFormulaExplanation } from '../services/geminiService';
+import { showSuccess, showError } from '../utils/toastNotification';
 import Button from './common/Button';
 import { create, all } from 'mathjs';
-import { Loader, Brain, FlaskConical } from 'lucide-react';
+import { Loader, Brain, FlaskConical, Copy } from 'lucide-react';
 
 const math = create(all);
 // Add nPr, nCr, and pmt functions
@@ -345,6 +346,16 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
     }
   };
 
+  const copyResultToClipboard = useCallback(() => {
+    if (currentInput) {
+      navigator.clipboard.writeText(currentInput).then(() => {
+        showSuccess('Result copied to clipboard');
+      }).catch(() => {
+        showError('Failed to copy result');
+      });
+    }
+  }, [currentInput]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
         // Prevent handling events if an input field is focused (e.g. in another tab)
@@ -508,6 +519,15 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
                         <span className="text-brand-primary">{angleMode.toUpperCase()}</span>
                         {memory !== null && <span className="text-teal-400 animate-fade-in-down">M</span>}
                     </div>
+                    {currentInput && (
+                      <button
+                        onClick={copyResultToClipboard}
+                        className="absolute top-2 right-3 p-1 text-brand-text-secondary hover:text-brand-accent transition-colors"
+                        title="Copy result"
+                      >
+                        <Copy size={16} />
+                      </button>
+                    )}
                     {/* Expression Line */}
                     <div className="text-brand-text-secondary text-xl break-words h-7 overflow-x-auto text-right font-mono transition-opacity duration-300" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
                     {/* Input/Result Line */}

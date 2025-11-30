@@ -10,6 +10,8 @@ import About from './components/About';
 import TermsAndLicense from './components/TermsAndLicense';
 import Settings from './components/Settings';
 import Help from './components/Help';
+import ToastContainer from './components/common/ToastContainer';
+import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 import { AppTab, HistoryEntry } from './types';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
@@ -133,6 +135,8 @@ const App = () => {
       <main className="container mx-auto px-4 pb-8">
         {renderActiveTab()}
       </main>
+      <ToastContainer />
+      <KeyboardShortcuts />
     </div>
   );
 };
