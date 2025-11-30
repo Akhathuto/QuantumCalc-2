@@ -117,13 +117,41 @@
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
     <script>
-      // Register Service Worker for offline support (optional)
-      // Use a relative path so the worker is registered under the app's path
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(err => {
-          console.log('Service Worker registration failed:', err);
-        });
-      }
+      // One-time service worker cleanup helper.
+      // If an old service worker or stale caches are present (which can cause a blank page),
+      // this script will unregister existing workers and clear caches once, then reload.
+      (function () {
+        const SW_FLAG = 'quantumcalc-sw-unregistered-v2';
+        const shouldUnregister = !localStorage.getItem(SW_FLAG);
+
+        if ('serviceWorker' in navigator) {
+          if (shouldUnregister) {
+            // Try to unregister all existing service workers and clear caches, then reload once.
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              return Promise.all(registrations.map(r => r.unregister()));
+            }).then(() => {
+              if (window.caches && caches.keys) {
+                return caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+              }
+            }).catch((err) => {
+              console.warn('SW cleanup encountered an error:', err);
+            }).finally(() => {
+              try {
+                localStorage.setItem(SW_FLAG, '1');
+              } catch (e) {
+                /* ignore */
+              }
+              // Reload once to fetch fresh assets without SW interference
+              try { location.reload(); } catch (e) { /* ignore */ }
+            });
+          } else {
+            // Normal registration when cleanup already performed
+            navigator.serviceWorker.register('./sw.js').catch(err => {
+              console.log('Service Worker registration failed:', err);
+            });
+          }
+        }
+      })();
     </script>
   </body>
 </html>
