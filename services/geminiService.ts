@@ -1,7 +1,22 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Explanation } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+
+const getAiClient = (): GoogleGenAI => {
+  if (!aiClient) {
+    // In Vite, process.env might not be defined if not polyfilled, so we safely check it.
+    // We also fallback to import.meta.env for Vercel deployments if users set it as VITE_GEMINI_API_KEY
+    const apiKey = (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
+      || (import.meta.env && import.meta.env.VITE_GEMINI_API_KEY);
+      
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is missing. Please set it in your environment variables.");
+    }
+    aiClient = new GoogleGenAI({ apiKey });
+  }
+  return aiClient;
+};
 
 const genericErrorExplanation: Explanation = {
     functionName: "Error",
@@ -39,6 +54,7 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
       - If no specific function is found, return null.
     `;
 
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: prompt,
@@ -90,6 +106,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
       Keep the response under 60 words.
     `;
     
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: prompt,
@@ -132,6 +149,7 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
       - Start the response with a concise summary sentence, followed by bullet points.
     `;
     
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: prompt,
