@@ -14,7 +14,7 @@ import { AppTab, HistoryEntry } from './types';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 // Lazy-load components with heavy dependencies (like charting libraries) to prevent startup crashes
-const Graph = lazy(() => import('./components/Graph'));
+import Graph from './components/Graph';
 const MathTools = lazy(() => import('./components/MathTools'));
 const CurrencyConverter = lazy(() => import('./components/CurrencyConverter'));
 const FinancialCalculator = lazy(() => import('./components/FinancialCalculator'));
