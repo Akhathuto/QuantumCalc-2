@@ -3,68 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="QuantumCalc - Your all-in-one scientific calculator and utility suite powered by Gemini AI" />
-    <meta name="theme-color" content="#1a202c" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="QuantumCalc" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234299e1' width='100' height='100'/><text x='50' y='50' font-size='70' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>⚛</text></svg>" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234299e1' width='100' height='100'/><text x='50' y='50' font-size='70' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>⚛</text></svg>" />
     <title>QuantumCalc</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      :root {
-        --color-bg: #1a202c;
-        --color-surface: #2d3748;
-        --color-primary: #4299e1;
-        --color-secondary: #ed8936;
-        --color-accent: #48bb78;
-        --color-text: #e2e8f0;
-        --color-text-secondary: #a0aec0;
-        --color-border: #4a5568;
-      }
-      html.light {
-        --color-bg: #f7fafc;
-        --color-surface: #ffffff;
-        --color-primary: #3182ce;
-        --color-secondary: #dd6b20;
-        --color-accent: #38a169;
-        --color-text: #2d3748;
-        --color-text-secondary: #718096;
-        --color-border: #e2e8f0;
-      }
-      @keyframes fade-in-down {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .animate-fade-in-down {
-        animation: fade-in-down 0.2s ease-out;
-      }
-      .no-scrollbar {
-        /* Firefox */
-        scrollbar-width: thin;
-        scrollbar-color: transparent transparent;
-      }
-      .no-scrollbar::-webkit-scrollbar {
-        /* Chrome, Safari and Opera */
-        width: 0;
-        height: 0;
-      }
-      .no-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .no-scrollbar::-webkit-scrollbar-thumb {
-        background: transparent;
-      }
-    </style>
     <script>
       // Immediately apply theme from localStorage to prevent FOUC
       (function() {
@@ -81,45 +20,12 @@
         }
       })();
     </script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-bg': 'var(--color-bg)',
-              'brand-surface': 'var(--color-surface)',
-              'brand-primary': 'var(--color-primary)',
-              'brand-secondary': 'var(--color-secondary)',
-              'brand-accent': 'var(--color-accent)',
-              'brand-text': 'var(--color-text)',
-              'brand-text-secondary': 'var(--color-text-secondary)',
-              'brand-border': 'var(--color-border)',
-            },
-            animation: {
-              'fade-in-down': 'fade-in-down 0.2s ease-out',
-            },
-            keyframes: {
-              'fade-in-down': {
-                '0%': {
-                  opacity: '0',
-                  transform: 'translateY(-10px)'
-                },
-                '100%': {
-                  opacity: '1',
-                  transform: 'translateY(0)'
-                },
-              }
-            }
-          }
-        }
-      }
-    </script>
   <script type="importmap">
 {
   "imports": {
-    "react": "https://aistudiocdn.com/react@^18.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^18.2.0/",
-    "react/": "https://aistudiocdn.com/react@^18.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.544.0",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
     "mathjs": "https://aistudiocdn.com/mathjs@^14.7.0",
@@ -129,46 +35,10 @@
   }
 }
 </script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
   <body class="bg-brand-bg text-brand-text transition-colors duration-300">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-    <script>
-      // One-time service worker cleanup helper.
-      // If an old service worker or stale caches are present (which can cause a blank page),
-      // this script will unregister existing workers and clear caches once, then reload.
-      (function () {
-        const SW_FLAG = 'quantumcalc-sw-unregistered-v2';
-        const shouldUnregister = !localStorage.getItem(SW_FLAG);
-
-        if ('serviceWorker' in navigator) {
-          if (shouldUnregister) {
-            // Try to unregister all existing service workers and clear caches, then reload once.
-            navigator.serviceWorker.getRegistrations().then((registrations) => {
-              return Promise.all(registrations.map(r => r.unregister()));
-            }).then(() => {
-              if (window.caches && caches.keys) {
-                return caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
-              }
-            }).catch((err) => {
-              console.warn('SW cleanup encountered an error:', err);
-            }).finally(() => {
-              try {
-                localStorage.setItem(SW_FLAG, '1');
-              } catch (e) {
-                /* ignore */
-              }
-              // Reload once to fetch fresh assets without SW interference
-              try { location.reload(); } catch (e) { /* ignore */ }
-            });
-          } else {
-            // Normal registration when cleanup already performed
-            navigator.serviceWorker.register('./sw.js').catch(err => {
-              console.log('Service Worker registration failed:', err);
-            });
-          }
-        }
-      })();
-    </script>
+    <script type="text/babel" data-type="module" src="/index.tsx"></script>
   </body>
 </html>

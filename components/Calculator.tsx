@@ -3,10 +3,9 @@ import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import type { ReactNode } from 'react';
 import { HistoryEntry, Explanation } from '../types';
 import { getFormulaExplanation } from '../services/geminiService';
-import { showSuccess, showError } from '../utils/toastNotification';
 import Button from './common/Button';
 import { create, all } from 'mathjs';
-import { Loader, Brain, FlaskConical, Copy } from 'lucide-react';
+import { Loader, Brain, FlaskConical } from 'lucide-react';
 
 const math = create(all);
 // Add nPr, nCr, and pmt functions
@@ -151,7 +150,18 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [angleMode, setAngleMode] = useState<AngleMode>('deg');
+  const [angleMode, setAngleMode] = useState<AngleMode>(() => {
+    try {
+      const saved = localStorage.getItem('calc_angleMode');
+      return (saved as AngleMode) || 'deg';
+    } catch { return 'deg'; }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('calc_angleMode', angleMode);
+    } catch { console.error("Failed to save angle mode"); }
+  }, [angleMode]);
   const [memory, setMemory] = useState<number | null>(null);
   const [isSecond, setIsSecond] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -303,7 +313,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
       setExplanation(null);
       const expl = await getFormulaExplanation(sanitizedExpression);
       setExplanation(expl);
-    } catch (e: any) {
+    } catch (e) {
       let errorMessage = 'Invalid Expression'; // Default message
       if (e instanceof Error) {
         if (e.message.includes('Undefined symbol')) {
@@ -329,7 +339,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
     }
   }, [expression, currentInput, error, isLoading, addToHistory, parser]);
 
-  const handleOp = (op: string) => {
+  const handleOp = useCallback((op: string) => {
     setError(null);
     if (currentInput === '' && expression.length > 0) {
         // Use regex to robustly replace the last operator
@@ -344,17 +354,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
       setExpression(prev => (prev + currentInput + ` ${op} `));
       setCurrentInput('');
     }
-  };
-
-  const copyResultToClipboard = useCallback(() => {
-    if (currentInput) {
-      navigator.clipboard.writeText(currentInput).then(() => {
-        showSuccess('Result copied to clipboard');
-      }).catch(() => {
-        showError('Failed to copy result');
-      });
-    }
-  }, [currentInput]);
+  }, [currentInput, expression.length, isResultState]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -401,13 +401,6 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
 
   const memoryClear = () => { setMemory(null); showToast("Memory cleared"); };
   const memoryRecall = () => { if(memory !== null) { setCurrentInput(String(memory)); setIsResultState(false); } };
-  const memoryStore = () => {
-    const valToStore = parseFloat(currentInput);
-    if (!isNaN(valToStore)) {
-        setMemory(valToStore);
-        showToast("Value stored in memory");
-    }
-  };
   const memoryAdd = () => {
     const currentVal = parseFloat(currentInput);
      if (!isNaN(currentVal)) {
@@ -432,7 +425,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
     active: 'bg-brand-primary text-white',
   };
 
-  const buttonGrid: { label: string, secondLabel?: string, action: any, secondAction?: any, className: string, colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = [
+  const buttonGrid: { label: string, secondLabel?: string, action: () => void, secondAction?: () => void, className: string, colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = [
       [
           { label: '2nd', action: () => setIsSecond(s => !s), className: styles.func, active: isSecond, title: 'Toggle Secondary Functions' },
           { label: 'π', action: () => handleInput('π'), className: styles.func, title: 'Pi (3.141...)' },
@@ -519,17 +512,8 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
                         <span className="text-brand-primary">{angleMode.toUpperCase()}</span>
                         {memory !== null && <span className="text-teal-400 animate-fade-in-down">M</span>}
                     </div>
-                    {currentInput && (
-                      <button
-                        onClick={copyResultToClipboard}
-                        className="absolute top-2 right-3 p-1 text-brand-text-secondary hover:text-brand-accent transition-colors"
-                        title="Copy result"
-                      >
-                        <Copy size={16} />
-                      </button>
-                    )}
                     {/* Expression Line */}
-                    <div className="text-brand-text-secondary text-xl break-words h-7 overflow-x-auto text-right font-mono transition-opacity duration-300 no-scrollbar">{expression || ' '}</div>
+                    <div className="text-brand-text-secondary text-xl break-words h-7 overflow-x-auto text-right font-mono transition-opacity duration-300" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
                     {/* Input/Result Line */}
                     <div className="text-4xl font-bold text-brand-text break-words min-h-[48px] overflow-x-auto text-right font-mono transition-all duration-200">
                         {currentInput}

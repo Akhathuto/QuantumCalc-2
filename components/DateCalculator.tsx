@@ -1,6 +1,28 @@
 
 import { useState, useMemo } from 'react';
 
+interface DateInputProps {
+    label: string;
+    value: string;
+    setter: (val: string) => void;
+}
+
+const DateInput = ({ label, value, setter }: DateInputProps) => (
+    <div>
+        <label className="block text-sm font-medium text-brand-text-secondary mb-1">{label}</label>
+        <input type="date" value={value} onChange={e => setter(e.target.value)} className="w-full bg-gray-900/70 dark:bg-brand-bg border-brand-border rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary" />
+    </div>
+);
+
+interface NumberInputProps {
+    value: string;
+    setter: (val: string) => void;
+}
+
+const NumberInput = ({ value, setter }: NumberInputProps) => (
+    <input type="number" value={value} onChange={e => setter(e.target.value)} className="w-20 bg-gray-900/70 dark:bg-brand-bg border-brand-border rounded-md p-1 text-center" />
+);
+
 const DateCalculator = () => {
     // Duration State
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -50,17 +72,6 @@ const DateCalculator = () => {
 
         return base.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }, [baseDate, addYears, addMonths, addDays]);
-
-    const DateInput = ({ label, value, setter }: { label: string, value: string, setter: (val: string) => void }) => (
-        <div>
-            <label className="block text-sm font-medium text-brand-text-secondary mb-1">{label}</label>
-            <input type="date" value={value} onChange={e => setter(e.target.value)} className="w-full bg-gray-900/70 dark:bg-brand-bg border-brand-border rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary" />
-        </div>
-    );
-    
-    const NumberInput = ({ value, setter }: { value: string, setter: (val: string) => void }) => (
-        <input type="number" value={value} onChange={e => setter(e.target.value)} className="w-20 bg-gray-900/70 dark:bg-brand-bg border-brand-border rounded-md p-1 text-center" />
-    );
 
     return (
         <div>

@@ -104,7 +104,7 @@ You can deploy the contents of the `dist/` directory to any static web hosting s
 
 The AI-powered features in QuantumCalc (like the Formula Explorer and Currency Forecast) are powered by the Google Gemini API.
 
-For these features to work, the application administrator must configure a Google Gemini API key as an environment variable (`process.env.API_KEY`) in the deployment environment. The application is designed to securely access this key without any action required from the end-user.
+For these features to work, the application administrator must configure a Google Gemini API key as an environment variable (`process.env.GEMINI_API_KEY`) in the deployment environment. The application is designed to securely access this key without any action required from the end-user.
 
 If the AI features are not working, it means the API key has not been configured in the environment where the application is hosted. The rest of the application will continue to function normally.
 

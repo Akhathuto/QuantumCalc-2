@@ -10,6 +10,28 @@ const baseDetails = {
   hex: { name: 'Hexadecimal', base: 16, pattern: /^[0-9a-fA-F]*$/ },
 };
 
+interface InputFieldProps {
+    base: Base;
+    value: string;
+    onChange: (base: Base, value: string) => void;
+}
+
+const InputField = ({ base, value, onChange }: InputFieldProps) => {
+    const details = baseDetails[base];
+    return (
+        <div>
+            <label htmlFor={base} className="block text-sm font-medium text-brand-text-secondary mb-1">{details.name} (Base {details.base})</label>
+            <input
+                type="text"
+                id={base}
+                value={value}
+                onChange={(e) => onChange(base, e.target.value)}
+                className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
+            />
+        </div>
+    );
+};
+
 const BaseConverter = () => {
     const [values, setValues] = useState({ bin: '1010', oct: '12', dec: '10', hex: 'a' });
     const [error, setError] = useState<string | null>(null);
@@ -47,36 +69,20 @@ const BaseConverter = () => {
                 dec: decimalValue.toString(10),
                 hex: decimalValue.toString(16),
             });
-        } catch (e) {
+        } catch {
              setError(`Could not parse number. It may be too large or invalid.`);
              setValues(prev => ({...prev, [base]: value}));
         }
     }, []);
 
-    const InputField = ({ base }: { base: Base }) => {
-        const details = baseDetails[base];
-        return (
-            <div>
-                <label htmlFor={base} className="block text-sm font-medium text-brand-text-secondary mb-1">{details.name} (Base {details.base})</label>
-                <input
-                    type="text"
-                    id={base}
-                    value={values[base]}
-                    onChange={(e) => handleInputChange(base, e.target.value)}
-                    className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
-                />
-            </div>
-        );
-    };
-
     return (
         <div>
             <h2 className="text-3xl font-bold mb-6 text-brand-primary">Base Converter</h2>
             <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
-                <InputField base="dec" />
-                <InputField base="bin" />
-                <InputField base="hex" />
-                <InputField base="oct" />
+                <InputField base="dec" value={values.dec} onChange={handleInputChange} />
+                <InputField base="bin" value={values.bin} onChange={handleInputChange} />
+                <InputField base="hex" value={values.hex} onChange={handleInputChange} />
+                <InputField base="oct" value={values.oct} onChange={handleInputChange} />
 
                 {error && (
                     <div className="flex items-center gap-2 text-red-400 p-3 bg-red-900/50 rounded-md">

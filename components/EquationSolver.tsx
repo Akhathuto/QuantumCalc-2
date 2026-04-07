@@ -66,7 +66,7 @@ const FormulaExplainer = ({ details }: { details: SolvedDetails }) => {
 
 const EquationSolver = () => {
     const [equation, setEquation] = useState('x^2 - 4x + 3 = 0');
-    const [solutions, setSolutions] = useState<any[]>([]);
+    const [solutions, setSolutions] = useState<(number | math.Complex)[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [solvedDetails, setSolvedDetails] = useState<SolvedDetails | null>(null);
 
@@ -113,7 +113,7 @@ const EquationSolver = () => {
 
             const coeffs = details.coefficients.map(c => c.isFraction ? c.valueOf() : parseFloat(c.toString()));
             
-            let newSolutions: any[] = [];
+            const newSolutions: (number | math.Complex)[] = [];
 
             if (coeffs.length > 3) {
                 setError("This solver currently supports linear and quadratic equations only (up to x^2).");
@@ -163,12 +163,12 @@ const EquationSolver = () => {
             }
             setSolutions(newSolutions);
 
-        } catch (e: any) {
-            setError(e.message || "Could not solve the equation. Ensure it's a valid polynomial in 'x'.");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Could not solve the equation. Ensure it's a valid polynomial in 'x'.");
         }
     };
 
-    const formatSolution = (sol: any): string => {
+    const formatSolution = (sol: number | math.Complex): string => {
         try {
             return math.format(sol, { notation: 'fixed', precision: 5 });
         } catch {

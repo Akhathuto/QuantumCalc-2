@@ -163,14 +163,14 @@ const FunctionPlotter = () => {
                     if (typeof y === 'number' && isFinite(y)) {
                         points.push({ x: parseFloat(x.toPrecision(4)), y });
                     }
-                } catch (e) {
+                } catch {
                     // Ignore points where the function is undefined (e.g., log(-1))
                     // This allows the rest of the graph to render.
                 }
             }
             return { data: points, error: null };
-        } catch (e: any) {
-             return { data: [], error: e.message || 'Invalid function.' };
+        } catch (e) {
+             return { data: [], error: e instanceof Error ? e.message : 'Invalid function.' };
         }
     }, [xMin, xMax, expression]);
     
@@ -238,7 +238,7 @@ const ScatterPlotter = () => {
                 return { x, y };
             });
             return { data: points, error: null };
-        } catch (e: any) { return { data: [], error: e.message }; }
+        } catch (e) { return { data: [], error: e instanceof Error ? e.message : "An error occurred." }; }
     }, [dataStr]);
 
     const handleExport = () => exportToPng(chartRef, `${title.replace(/\s+/g, '_') || 'scatter-plot'}.png`);
@@ -302,7 +302,7 @@ const BarChartCreator = () => {
                 return { name, value };
             });
             return { data: points, error: null };
-        } catch (e: any) { return { data: [], error: e.message }; }
+        } catch (e) { return { data: [], error: e instanceof Error ? e.message : "An error occurred." }; }
     }, [dataStr]);
 
     const handleExport = () => exportToPng(chartRef, `${title.replace(/\s+/g, '_') || 'bar-chart'}.png`);
@@ -383,7 +383,7 @@ const HistogramCreator = () => {
                 if (histogramData[binIndex]) histogramData[binIndex].count++;
             });
             return { data: histogramData, error: null };
-        } catch (e: any) { return { data: [], error: e.message || "Invalid data format." }; }
+        } catch (e) { return { data: [], error: e instanceof Error ? e.message : "Invalid data format." }; }
     }, [dataStr, numBins]);
     
     const handleExport = () => exportToPng(chartRef, `${title.replace(/\s+/g, '_') || 'histogram'}.png`);
@@ -447,7 +447,7 @@ const PieChartCreator = () => {
                 return { name, value };
             });
             return { data: parsedData, error: null };
-        } catch (e: any) { return { data: [], error: e.message }; }
+        } catch (e) { return { data: [], error: e instanceof Error ? e.message : "An error occurred." }; }
     }, [dataStr]);
     
     const COLORS = ['#4299e1', '#ed8936', '#48bb78', '#9f7aea', '#f56565', '#4fd1c5'];
@@ -494,13 +494,13 @@ const Graph = () => {
     const [chartType, setChartType] = useState<ChartType>(() => {
         try {
             return (localStorage.getItem('graphing_activeChartType') as ChartType) || 'function';
-        } catch (e) { return 'function'; }
+        } catch { return 'function'; }
     });
 
     useEffect(() => {
         try {
             localStorage.setItem('graphing_activeChartType', chartType);
-        } catch (e) { console.error("Failed to save chart type", e); }
+        } catch { console.error("Failed to save chart type"); }
     }, [chartType]);
     
     const renderChart = () => {

@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Explanation } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const genericErrorExplanation: Explanation = {
     functionName: "Error",
@@ -40,7 +40,7 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
     `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -91,7 +91,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
     `;
     
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt,
     });
     
@@ -133,7 +133,7 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
     `;
     
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt,
     });
     

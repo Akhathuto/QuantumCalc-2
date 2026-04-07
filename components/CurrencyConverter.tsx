@@ -199,7 +199,7 @@ const CurrencyConverter: React.FC = () => {
   const [isForecastLoading, setIsForecastLoading] = useState(false);
   const [forecast, setForecast] = useState<string | null>(null);
 
-  const [historicalData, setHistoricalData] = useState<any[] | null>(null);
+  const [historicalData, setHistoricalData] = useState<{date: string, rate: number}[] | null>(null);
   const [isChartLoading, setIsChartLoading] = useState(false);
   const [chartError, setChartError] = useState<string | null>(null);
 
@@ -214,7 +214,7 @@ const CurrencyConverter: React.FC = () => {
         }
         const data: RatesData = await response.json();
         setRatesData(data);
-      } catch (e: any) {
+      } catch (e) {
         setError('Failed to fetch latest exchange rates. Please try again later.');
         console.error(e);
       } finally {
@@ -348,8 +348,8 @@ const CurrencyConverter: React.FC = () => {
         }
 
         setHistoricalData(formattedData);
-    } catch (e: any) {
-        setChartError(e.message || 'Could not load chart data.');
+    } catch (e) {
+        setChartError(e instanceof Error ? e.message : 'Could not load chart data.');
         setHistoricalData(null);
     } finally {
         setIsChartLoading(false);

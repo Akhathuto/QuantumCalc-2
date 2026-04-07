@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import {
     Calculator,
     LineChart,
-    BrainCircuit,
-    KeyRound,
     HelpCircle,
     ChevronDown,
     Beaker,
     TestTube,
-    Landmark,
-    HeartPulse,
-    Calendar
+    Landmark
 } from 'lucide-react';
 
 interface AccordionItemProps {

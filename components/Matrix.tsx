@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { create, all } from 'mathjs';
 import Button from './common/Button';
@@ -12,16 +12,18 @@ const Matrix = () => {
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        // Example matrices
-        if (size === 3) {
+    const handleSizeChange = (newSize: number) => {
+        setSize(newSize);
+        if (newSize === 3) {
             setMatrixA([1, 2, 3, 4, 5, 6, 7, 8, 9]);
             setMatrixB([9, 8, 7, 6, 5, 4, 3, 2, 1]);
         } else {
             setMatrixA([1, 2, 3, 4]);
             setMatrixB([5, 6, 7, 8]);
         }
-    }, [size]);
+        setResult(null);
+        setError(null);
+    };
 
     const handleCellChange = (matrixSetter: Dispatch<SetStateAction<number[]>>, index: number, value: string) => {
         matrixSetter(prev => {
@@ -39,7 +41,7 @@ const Matrix = () => {
         return matrix;
     };
 
-    const performOperation = (op: (a: any, b?: any) => any, requiresB: boolean = false) => {
+    const performOperation = (op: (a: math.MathType, b?: math.MathType) => math.MathType, requiresB: boolean = false) => {
         try {
             setError(null);
             const a = getMatrix(matrixA);
@@ -51,8 +53,8 @@ const Matrix = () => {
             } else {
                 setResult(math.format(res, { notation: 'fixed', precision: 4 }));
             }
-        } catch (e: any) {
-            setError(e.message || "An error occurred during calculation.");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "An error occurred during calculation.");
             setResult(null);
         }
     };
@@ -89,7 +91,7 @@ const Matrix = () => {
                 <label className="mr-4">Matrix Size:</label>
                 <select 
                     value={size} 
-                    onChange={e => setSize(parseInt(e.target.value))}
+                    onChange={e => handleSizeChange(parseInt(e.target.value))}
                     className="bg-brand-surface border-gray-600 rounded-md p-2"
                 >
                     <option value={2}>2x2</option>

@@ -3,23 +3,29 @@ import { Moon, Sun } from 'lucide-react';
 
 const Settings: React.FC = () => {
     const [toastMessage, setToastMessage] = useState('');
-    const [isDarkMode, setIsDarkMode] = useState(true);
-
-    // Effect for Theme
-    useEffect(() => {
-        // Check for saved theme in localStorage, fallback to system preference
+    const [isDarkMode, setIsDarkMode] = useState(() => {
         try {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
-                setIsDarkMode(savedTheme === 'dark');
-            } else {
-                setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
+                return savedTheme === 'dark';
             }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches;
         } catch (error) {
             console.error("Could not access theme from localStorage", error);
-            setIsDarkMode(true); // Default to dark mode
+            return true; // Default to dark mode
         }
-    }, []);
+    });
+
+    // Effect for Theme (only for initial class application if needed, but usually handled by handleThemeToggle)
+    // Actually, we should apply the class on mount if it's not already there.
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (isDarkMode) {
+            root.classList.remove('light');
+        } else {
+            root.classList.add('light');
+        }
+    }, [isDarkMode]);
     
     const showToast = (message: string) => {
         setToastMessage(message);
@@ -44,12 +50,25 @@ const Settings: React.FC = () => {
         }
     };
 
+    const handleClearAllData = () => {
+        if (window.confirm("Are you sure you want to clear all application data? This includes your calculation history, theme preferences, and calculator settings. This action cannot be undone.")) {
+            try {
+                localStorage.clear();
+                showToast("All data cleared successfully. The page will reload.");
+                setTimeout(() => window.location.reload(), 2000);
+            } catch (error) {
+                console.error("Failed to clear localStorage:", error);
+                showToast("Failed to clear data.");
+            }
+        }
+    };
+
     return (
         <div>
             <h2 className="text-3xl font-bold mb-6 text-brand-primary">Settings</h2>
             
-             <div className="bg-brand-surface/50 p-6 rounded-lg max-w-2xl mx-auto space-y-8">
-                <div>
+             <div className="bg-brand-surface/50 p-6 rounded-lg max-w-2xl mx-auto space-y-8 divide-y divide-brand-border">
+                <div className="pb-8">
                     <h3 className="text-xl font-bold mb-4 text-brand-accent flex items-center gap-2">
                         <Sun /> Appearance
                     </h3>
@@ -74,6 +93,23 @@ const Settings: React.FC = () => {
                             />
                             <Sun className={`absolute left-1.5 h-4 w-4 text-yellow-300 transition-opacity ${!isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
                             <Moon className={`absolute right-1.5 h-4 w-4 text-white transition-opacity ${isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="pt-8">
+                    <h3 className="text-xl font-bold mb-4 text-red-400 flex items-center gap-2">
+                        Data Management
+                    </h3>
+                    <div className="flex justify-between items-center">
+                        <p className="text-brand-text-secondary text-sm max-w-md">
+                            Clear all locally stored data, including history and preferences.
+                        </p>
+                        <button
+                            onClick={handleClearAllData}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-semibold transition-colors text-sm"
+                        >
+                            Clear All Data
                         </button>
                     </div>
                 </div>

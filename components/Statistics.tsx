@@ -1,17 +1,13 @@
 import { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
-import Button from './common/Button';
 
 const math = create(all);
 
 const Statistics = () => {
     const [dataStr, setDataStr] = useState('1, 5, 2, 8, 7, 9, 12, 4, 5, 8');
-    const [error, setError] = useState<string | null>(null);
-
-    const stats = useMemo(() => {
-        setError(null);
+    const { stats, error } = useMemo(() => {
         if (dataStr.trim() === '') {
-            return null;
+            return { stats: null, error: null };
         }
 
         try {
@@ -22,11 +18,10 @@ const Statistics = () => {
             });
             
             if (data.length < 2) {
-                 setError("Please enter at least two numbers to calculate statistics.");
-                 return null;
+                 return { stats: null, error: "Please enter at least two numbers to calculate statistics." };
             }
 
-            return [
+            const results = [
                 { name: 'Count', value: data.length },
                 { name: 'Sum', value: math.sum(data) },
                 { name: 'Mean', value: math.mean(data) },
@@ -39,9 +34,11 @@ const Statistics = () => {
                 { name: 'Range', value: math.max(data) - math.min(data) },
             ];
 
-        } catch (e: any) {
-            setError(e.message || "Invalid data format. Please use comma or space-separated numbers.");
-            return null;
+            return { stats: results, error: null };
+
+        } catch (e) {
+            const message = e instanceof Error ? e.message : "Invalid data format. Please use comma or space-separated numbers.";
+            return { stats: null, error: message };
         }
     }, [dataStr]);
 

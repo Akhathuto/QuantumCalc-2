@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { Droplets, Scale, Pizza, Target, Timer, PersonStanding, GlassWater, Baby, Wine, AlertCircle } from 'lucide-react';
 
@@ -141,7 +141,7 @@ const BodyFatCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem })
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium mb-1">Gender</label>
-                    <select value={gender} onChange={e => setGender(e.target.value as any)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
+                    <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                     </select>
@@ -229,7 +229,7 @@ const IdealWeightCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyste
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div>
                     <label className="block text-sm font-medium mb-1">Gender</label>
-                    <select value={gender} onChange={e => setGender(e.target.value as any)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
+                    <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                     </select>
@@ -352,7 +352,7 @@ const CalorieMacroCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyst
     const [goal, setGoal] = useState('maintenance');
     const [plan, setPlan] = useState('balanced');
 
-    const { bmr, calorieGoals } = useMemo(() => {
+    const { calorieGoals } = useMemo(() => {
         let weightKg = parseFloat(weight);
         let hCm = parseFloat(heightCm);
         const ageNum = parseInt(age);
@@ -390,7 +390,7 @@ const CalorieMacroCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyst
 
     const macroResult = useMemo(() => {
         if (!calorieGoals) return null;
-        const targetCalories = (calorieGoals as any)[goal];
+        const targetCalories = (calorieGoals as Record<string, number>)[goal];
         
         const plans: Record<string, {p: number, c: number, f: number}> = {
             balanced: { p: 0.30, c: 0.40, f: 0.30 },
@@ -423,7 +423,7 @@ const CalorieMacroCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyst
                      <Input label="Age" type="number" value={age} onChange={e => setAge(e.target.value)} />
                      <div>
                         <label className="block text-sm font-medium mb-1">Gender</label>
-                        <select value={gender} onChange={e => setGender(e.target.value as any)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
+                        <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                         </select>
@@ -511,9 +511,7 @@ const PaceCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) =>
     const [seconds, setSeconds] = useState('0');
     const [paceMin, setPaceMin] = useState('');
     const [paceSec, setPaceSec] = useState('');
-    const [result, setResult] = useState('');
-
-    const calculate = useCallback(() => {
+    const result = useMemo(() => {
         const dist = parseFloat(distance);
         const h = parseInt(hours) || 0;
         const m = parseInt(minutes) || 0;
@@ -530,7 +528,7 @@ const PaceCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) =>
             const pace = totalTimeSec / dist;
             const paceMinutes = Math.floor(pace / 60);
             const paceSeconds = Math.round(pace % 60);
-            setResult(`Pace: ${paceMinutes}:${paceSeconds.toString().padStart(2, '0')} / ${unitLabel}`);
+            return `Pace: ${paceMinutes}:${paceSeconds.toString().padStart(2, '0')} / ${unitLabel}`;
         }
         // Calculate Time
         else if (totalPaceSec > 0 && dist > 0) {
@@ -538,20 +536,16 @@ const PaceCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) =>
             const timeHours = Math.floor(time / 3600);
             const timeMinutes = Math.floor((time % 3600) / 60);
             const timeSeconds = Math.round(time % 60);
-            setResult(`Time: ${timeHours}:${timeMinutes.toString().padStart(2, '0')}:${timeSeconds.toString().padStart(2, '0')}`);
+            return `Time: ${timeHours}:${timeMinutes.toString().padStart(2, '0')}:${timeSeconds.toString().padStart(2, '0')}`;
         }
         // Calculate Distance
         else if (totalPaceSec > 0 && totalTimeSec > 0) {
             const distCalc = totalTimeSec / totalPaceSec;
-            setResult(`Distance: ${distCalc.toFixed(2)} ${unitLabel}`);
+            return `Distance: ${distCalc.toFixed(2)} ${unitLabel}`;
         } else {
-            setResult('');
+            return '';
         }
     }, [distance, hours, minutes, seconds, paceMin, paceSec, unitSystem]);
-
-    useEffect(() => {
-        calculate();
-    }, [calculate]);
 
     return (
         <div className="space-y-4">
@@ -760,7 +754,7 @@ const BACCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) => 
                 <Input label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
                  <div>
                     <label className="block text-sm font-medium mb-1">Gender</label>
-                    <select value={gender} onChange={e => setGender(e.target.value as any)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
+                    <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                     </select>

@@ -97,19 +97,27 @@ const FormulaExplainer: React.FC<{ details: SolvedDetails }> = ({ details }) => 
     );
 };
 
+interface Complex {
+    re: number;
+    im: number;
+}
+
+const isComplex = (sol: unknown): sol is Complex => {
+    return typeof sol === 'object' && sol !== null && 're' in sol && 'im' in sol;
+};
+
 // --- Helper Component for Equation Solver Solution Display ---
-const SolutionCard: React.FC<{ solution: any }> = ({ solution }) => {
-    const formatSolution = (sol: any): string => {
+const SolutionCard: React.FC<{ solution: unknown }> = ({ solution }) => {
+    const formatSolution = (sol: unknown): string => {
         try {
-            // Check if it's a complex number object from math.js
-            if (sol && typeof sol === 'object' && sol.constructor.name === 'Complex') {
+            if (isComplex(sol)) {
                 const realPart = parseFloat(sol.re.toFixed(5));
                 const imagPart = parseFloat(sol.im.toFixed(5));
                 if (imagPart === 0) return String(realPart);
                 if (realPart === 0) return `${imagPart}i`;
                 return `${realPart} ${imagPart > 0 ? '+' : '-'} ${Math.abs(imagPart)}i`;
             }
-            return math.format(sol, { notation: 'fixed', precision: 5 });
+            return math.format(sol as math.MathType, { notation: 'fixed', precision: 5 });
         } catch {
             return String(sol);
         }
@@ -129,6 +137,53 @@ const SolutionCard: React.FC<{ solution: any }> = ({ solution }) => {
 
 
 // --- Existing Calculators (Refactored) ---
+interface MatrixInputGridProps {
+    matrix: number[];
+    setter: React.Dispatch<React.SetStateAction<number[]>>;
+    label: string;
+    size: number;
+    highlight: { row: number | null, col: number | null };
+    setHighlight: React.Dispatch<React.SetStateAction<{ row: number | null, col: number | null }>>;
+    handleCellChange: (matrixSetter: React.Dispatch<React.SetStateAction<number[]>>, index: number, value: string) => void;
+    fillMatrix: (setter: React.Dispatch<React.SetStateAction<number[]>>, type: 'random' | 'identity' | 'clear') => void;
+}
+
+const MatrixInputGrid: React.FC<MatrixInputGridProps> = ({ matrix, setter, label, size, highlight, setHighlight, handleCellChange, fillMatrix }) => {
+    return (
+        <div className="flex flex-col items-center gap-2">
+            <h3 className="text-xl font-semibold mb-2">{label}</h3>
+            <div className="flex items-center gap-2">
+                <div className="text-6xl font-thin text-brand-text-secondary -mt-2 select-none">[</div>
+                <div className={`grid gap-2`} style={{gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`}}>
+                    {Array.from({ length: size * size }).map((_, i) => {
+                        const rowIndex = Math.floor(i / size);
+                        const colIndex = i % size;
+                        const isHighlighted = highlight.row === rowIndex || highlight.col === colIndex;
+
+                        return (
+                            <input
+                                key={i}
+                                type="number"
+                                value={matrix[i] ?? ''}
+                                onChange={(e) => handleCellChange(setter, i, e.target.value)}
+                                onFocus={() => setHighlight({ row: rowIndex, col: colIndex })}
+                                onBlur={() => setHighlight({ row: null, col: null })}
+                                className={`w-16 h-16 bg-gray-900/70 border-gray-600 rounded-md p-2 text-center text-lg font-mono focus:ring-brand-primary focus:border-brand-primary transition-colors duration-200 ${isHighlighted ? 'bg-brand-primary/20' : ''}`}
+                            />
+                        );
+                    })}
+                </div>
+                <div className="text-6xl font-thin text-brand-text-secondary -mt-2 select-none">]</div>
+            </div>
+            <div className="flex gap-2 mt-2">
+                <button onClick={() => fillMatrix(setter, 'random')} className="text-xs px-2 py-1 bg-brand-surface hover:bg-brand-border rounded flex items-center gap-1 transition-colors"><Shuffle size={12} /> Random</button>
+                <button onClick={() => fillMatrix(setter, 'identity')} className="text-xs px-2 py-1 bg-brand-surface hover:bg-brand-border rounded flex items-center gap-1 transition-colors"><Eye size={12} /> Identity</button>
+                <button onClick={() => fillMatrix(setter, 'clear')} className="text-xs px-2 py-1 bg-brand-surface hover:bg-brand-border rounded flex items-center gap-1 transition-colors"><Eraser size={12} /> Clear</button>
+            </div>
+        </div>
+    );
+};
+
 const MatrixCalculator = () => {
     const [size, setSize] = useState(3);
     const [matrixA, setMatrixA] = useState(Array(9).fill(0));
@@ -167,20 +222,21 @@ const MatrixCalculator = () => {
         return matrix;
     };
 
-    const performOperation = (op: (a: any, b?: any) => any, requiresB: boolean = false) => {
+    const performOperation = (op: (a: math.MathType, b?: math.MathType) => math.MathType, requiresB: boolean = false) => {
         try {
             setError(null);
             const a = getMatrix(matrixA);
             const b = requiresB ? getMatrix(matrixB) : undefined;
             const res = b ? op(math.bignumber(a), math.bignumber(b)) : op(math.bignumber(a));
             
-            if (typeof res === 'number' || res.isBigNumber) {
+            if (typeof res === 'number' || math.isBigNumber(res)) {
                 setResult(`Result: ${math.format(res, {notation: 'fixed', precision: 4})}`);
             } else {
                 setResult(math.format(res, { notation: 'fixed', precision: 4 }));
             }
-        } catch (e: any) {
-            setError(e.message || "An error occurred.");
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : "An error occurred.";
+            setError(msg);
             setResult(null);
         }
     };
@@ -214,47 +270,6 @@ const MatrixCalculator = () => {
         setter(newMatrix);
     };
 
-
-    const MatrixInputGrid: React.FC<{
-        matrix: number[];
-        setter: React.Dispatch<React.SetStateAction<number[]>>;
-        label: string;
-    }> = ({ matrix, setter, label }) => {
-        return (
-            <div className="flex flex-col items-center gap-2">
-                <h3 className="text-xl font-semibold mb-2">{label}</h3>
-                <div className="flex items-center gap-2">
-                    <div className="text-6xl font-thin text-brand-text-secondary -mt-2 select-none">[</div>
-                    <div className={`grid gap-2`} style={{gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`}}>
-                        {Array.from({ length: size * size }).map((_, i) => {
-                            const rowIndex = Math.floor(i / size);
-                            const colIndex = i % size;
-                            const isHighlighted = highlight.row === rowIndex || highlight.col === colIndex;
-
-                            return (
-                                <input
-                                    key={i}
-                                    type="number"
-                                    value={matrix[i] ?? ''}
-                                    onChange={(e) => handleCellChange(setter, i, e.target.value)}
-                                    onFocus={() => setHighlight({ row: rowIndex, col: colIndex })}
-                                    onBlur={() => setHighlight({ row: null, col: null })}
-                                    className={`w-16 h-16 bg-gray-900/70 border-gray-600 rounded-md p-2 text-center text-lg font-mono focus:ring-brand-primary focus:border-brand-primary transition-colors duration-200 ${isHighlighted ? 'bg-brand-primary/20' : ''}`}
-                                />
-                            );
-                        })}
-                    </div>
-                    <div className="text-6xl font-thin text-brand-text-secondary -mt-2 select-none">]</div>
-                </div>
-                <div className="flex gap-2 mt-2">
-                    <button onClick={() => fillMatrix(setter, 'random')} className="text-xs px-2 py-1 bg-brand-surface hover:bg-brand-border rounded flex items-center gap-1 transition-colors"><Shuffle size={12} /> Random</button>
-                    <button onClick={() => fillMatrix(setter, 'identity')} className="text-xs px-2 py-1 bg-brand-surface hover:bg-brand-border rounded flex items-center gap-1 transition-colors"><Eye size={12} /> Identity</button>
-                    <button onClick={() => fillMatrix(setter, 'clear')} className="text-xs px-2 py-1 bg-brand-surface hover:bg-brand-border rounded flex items-center gap-1 transition-colors"><Eraser size={12} /> Clear</button>
-                </div>
-            </div>
-        );
-    };
-    
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg">
             <div className="mb-6 flex justify-center items-center gap-4">
@@ -270,11 +285,11 @@ const MatrixCalculator = () => {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-center justify-items-center mb-6">
-                <MatrixInputGrid matrix={matrixA} setter={setMatrixA} label="Matrix A" />
+                <MatrixInputGrid matrix={matrixA} setter={setMatrixA} label="Matrix A" size={size} highlight={highlight} setHighlight={setHighlight} handleCellChange={handleCellChange} fillMatrix={fillMatrix} />
                 <button onClick={swapMatrices} className="p-3 bg-brand-surface hover:bg-brand-border rounded-full transition-colors" title="Swap A and B">
                     <ArrowRightLeft />
                 </button>
-                <MatrixInputGrid matrix={matrixB} setter={setMatrixB} label="Matrix B" />
+                <MatrixInputGrid matrix={matrixB} setter={setMatrixB} label="Matrix B" size={size} highlight={highlight} setHighlight={setHighlight} handleCellChange={handleCellChange} fillMatrix={fillMatrix} />
             </div>
 
             <div className="border-t border-brand-border my-6"></div>
@@ -298,6 +313,15 @@ const MatrixCalculator = () => {
     );
 };
 
+const SummaryPoint: React.FC<{ value: number; label: string; position: number; color: string }> = ({ value, label, position, color }) => (
+    <div className="absolute top-0 h-full flex flex-col items-center" style={{ left: `${position}%`, transform: 'translateX(-50%)' }}>
+        <span className="text-xs font-mono">{value.toFixed(2)}</span>
+        <div className={`w-0.5 h-3 ${color}`}></div>
+        <div className="h-2 w-px bg-brand-border"></div>
+        <span className="text-xs font-semibold text-brand-text-secondary">{label}</span>
+    </div>
+);
+
 const FiveNumberSummary: React.FC<{data: {min: number, q1: number, median: number, q3: number, max: number}}> = ({ data }) => {
     const { min, q1, median, q3, max } = data;
     const range = max - min;
@@ -307,15 +331,6 @@ const FiveNumberSummary: React.FC<{data: {min: number, q1: number, median: numbe
 
     const getPosition = (val: number) => ((val - min) / range) * 100;
   
-    const SummaryPoint: React.FC<{ value: number; label: string; position: number; color: string }> = ({ value, label, position, color }) => (
-        <div className="absolute top-0 h-full flex flex-col items-center" style={{ left: `${position}%`, transform: 'translateX(-50%)' }}>
-            <span className="text-xs font-mono">{value.toFixed(2)}</span>
-            <div className={`w-0.5 h-3 ${color}`}></div>
-            <div className="h-2 w-px bg-brand-border"></div>
-            <span className="text-xs font-semibold text-brand-text-secondary">{label}</span>
-        </div>
-    );
-
     return (
         <div className="bg-brand-bg p-6 rounded-lg">
             <h4 className="text-lg font-semibold mb-8 text-center">Five-Number Summary</h4>
@@ -407,8 +422,9 @@ const StatisticsCalculator = () => {
                 error: null,
             };
 
-        } catch (e: any) {
-            return { error: e.message || "Invalid data format." };
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : "Invalid data format.";
+            return { error: msg };
         }
     }, [dataStr, numBins]);
 
@@ -511,10 +527,10 @@ const StatisticsCalculator = () => {
 
 const EquationSolverTool = () => {
     const [equation, setEquation] = useState('x^2 - 4x + 3 = 0');
-    const [solutions, setSolutions] = useState<any[]>([]);
+    const [solutions, setSolutions] = useState<unknown[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [solvedDetails, setSolvedDetails] = useState<SolvedDetails | null>(null);
-    const [graphData, setGraphData] = useState<any[] | null>(null);
+    const [graphData, setGraphData] = useState<{ x: number; y: number }[] | null>(null);
     const [polynomial, setPolynomial] = useState<{fn: (x:number)=>number, expr: string} | null>(null);
 
 
@@ -562,8 +578,8 @@ const EquationSolverTool = () => {
                  return;
             }
             
-            const coeffs = details.coefficients.map((c: any) => parseFloat(c.toString()));
-            let newSolutions: any[] = [];
+            const coeffs = details.coefficients.map((c: unknown) => parseFloat(String(c)));
+            const newSolutions: unknown[] = [];
             let isSolvable = true;
 
             if (coeffs.length > 3) {
@@ -623,7 +639,9 @@ const EquationSolverTool = () => {
                 const simplifiedExpr = details.expression.toString();
                 setPolynomial({ fn: (x: number) => compiledExpr.evaluate({ x }), expr: simplifiedExpr });
 
-                const realRoots = newSolutions.filter(s => typeof s === 'number' || (s.im === 0)).map(s => typeof s === 'number' ? s : s.re);
+                const realRoots = newSolutions
+                    .filter((s): s is number | Complex => typeof s === 'number' || (isComplex(s) && s.im === 0))
+                    .map((s) => typeof s === 'number' ? s : s.re);
                 
                 let xMin, xMax;
                 if (realRoots.length > 0) {
@@ -651,13 +669,14 @@ const EquationSolverTool = () => {
                         if (typeof y === 'number' && isFinite(y)) {
                             data.push({ x: parseFloat(x.toPrecision(4)), y: parseFloat(y.toPrecision(4)) });
                         }
-                    } catch(e) { /* ignore points */ }
+                    } catch { /* ignore points */ }
                 }
                 setGraphData(data);
             }
 
-        } catch (e: any) {
-            setError(e.message || "Could not solve the equation. Ensure it's a valid polynomial in 'x'.");
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : "Could not solve the equation. Ensure it's a valid polynomial in 'x'.";
+            setError(msg);
         }
     }, [equation]);
 
@@ -733,6 +752,10 @@ const EquationSolverTool = () => {
 };
 
 
+const CalculationCard = ({ title, result, resultLabel }: {title:React.ReactNode, result:string, resultLabel:string}) => (
+    <div className="bg-brand-bg p-6 rounded-lg flex flex-col"><h3 className="text-xl font-semibold mb-4 text-brand-text h-16 flex items-center">{title}</h3><div className="mt-auto pt-4 border-t border-gray-700"><span className="text-brand-text-secondary">{resultLabel}</span><p className="text-2xl font-bold text-brand-accent font-mono break-all min-h-[36px]">{result}</p></div></div>
+);
+
 const PercentageCalculatorTool = () => {
     const [val1, setVal1] = useState('15'); const [val2, setVal2] = useState('75');
     const [val3, setVal3] = useState('20'); const [val4, setVal4] = useState('150');
@@ -743,9 +766,6 @@ const PercentageCalculatorTool = () => {
     const result3 = useMemo(() => { const n5 = parseFloat(val5); const n6 = parseFloat(val6); if(isNaN(n5)||isNaN(n6)||n5===0) return ''; const res = (n6 / n5) * 100; return String(parseFloat(res.toPrecision(10))); }, [val5, val6]);
 
     const inputClasses = "bg-brand-bg border border-gray-600 rounded-md text-brand-text w-24 text-center p-1 mx-1";
-    const CalculationCard = ({ title, result, resultLabel }: {title:React.ReactNode, result:string, resultLabel:string}) => (
-        <div className="bg-brand-bg p-6 rounded-lg flex flex-col"><h3 className="text-xl font-semibold mb-4 text-brand-text h-16 flex items-center">{title}</h3><div className="mt-auto pt-4 border-t border-gray-700"><span className="text-brand-text-secondary">{resultLabel}</span><p className="text-2xl font-bold text-brand-accent font-mono break-all min-h-[36px]">{result}</p></div></div>
-    );
 
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg">
@@ -791,32 +811,46 @@ const RatioCalculator = () => {
     const [c, setC] = useState('4');
     const [d, setD] = useState('');
 
-    useEffect(() => {
-        const valA = parseFloat(a); const valB = parseFloat(b);
-        const valC = parseFloat(c); const valD = parseFloat(d);
-        const emptyCount = [a,b,c,d].filter(v => v.trim() === '').length;
+    const derivedValues = useMemo(() => {
+        const valA = parseFloat(a);
+        const valB = parseFloat(b);
+        const valC = parseFloat(c);
+        const valD = parseFloat(d);
+        const emptyFields = [
+            { name: 'a', val: a },
+            { name: 'b', val: b },
+            { name: 'c', val: c },
+            { name: 'd', val: d }
+        ].filter(f => f.val.trim() === '');
 
-        if (emptyCount !== 1) return;
-        
-        try {
-            if (a.trim() === '') setA(((valB * valC) / valD).toFixed(4));
-            else if (b.trim() === '') setB(((valA * valD) / valC).toFixed(4));
-            else if (c.trim() === '') setC(((valA * valD) / valB).toFixed(4));
-            else if (d.trim() === '') setD(((valB * valC) / valA).toFixed(4));
-        } catch {}
+        if (emptyFields.length === 1) {
+            const missing = emptyFields[0].name;
+            try {
+                if (missing === 'a' && !isNaN(valB) && !isNaN(valC) && !isNaN(valD) && valD !== 0) return { a: ((valB * valC) / valD).toFixed(4) };
+                if (missing === 'b' && !isNaN(valA) && !isNaN(valC) && !isNaN(valD) && valC !== 0) return { b: ((valA * valD) / valC).toFixed(4) };
+                if (missing === 'c' && !isNaN(valA) && !isNaN(valB) && !isNaN(valD) && valB !== 0) return { c: ((valA * valD) / valB).toFixed(4) };
+                if (missing === 'd' && !isNaN(valA) && !isNaN(valB) && !isNaN(valC) && valA !== 0) return { d: ((valB * valC) / valA).toFixed(4) };
+            } catch { /* ignore */ }
+        }
+        return {};
     }, [a, b, c, d]);
+
+    const displayA = a || derivedValues.a || '';
+    const displayB = b || derivedValues.b || '';
+    const displayC = c || derivedValues.c || '';
+    const displayD = d || derivedValues.d || '';
     
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
             <div className="p-2 text-center text-sm bg-brand-bg rounded-lg">Enter three values to solve for the fourth.</div>
             <div className="flex items-center justify-center gap-4 text-2xl font-bold">
-                <Input label="A" value={a} onChange={e => setA(e.target.value)} />
+                <Input label="A" value={displayA} onChange={e => setA(e.target.value)} />
                 <span>/</span>
-                <Input label="B" value={b} onChange={e => setB(e.target.value)} />
+                <Input label="B" value={displayB} onChange={e => setB(e.target.value)} />
                 <span>=</span>
-                <Input label="C" value={c} onChange={e => setC(e.target.value)} />
+                <Input label="C" value={displayC} onChange={e => setC(e.target.value)} />
                 <span>/</span>
-                <Input label="D" value={d} onChange={e => setD(e.target.value)} />
+                <Input label="D" value={displayD} onChange={e => setD(e.target.value)} />
             </div>
         </div>
     );
@@ -832,7 +866,7 @@ const FactoringCalculator = () => {
             const factors = math.factor(num);
             
             return Array.from(factors.entries())
-                .map(([base, exp]: [any, number]) => exp > 1 ? `${base} ^ ${exp}` : String(base))
+                .map(([base, exp]: [number, number]) => exp > 1 ? `${base} ^ ${exp}` : String(base))
                 .join(' × ');
         } catch {
             return 'Cannot factorize';
@@ -929,46 +963,32 @@ const TriangleCalculator = () => {
 
 const CircleCalculator = () => {
     const [radius, setRadius] = useState('10');
-    const [diameter, setDiameter] = useState('20');
-    const [circumference, setCircumference] = useState('62.83');
-    const [area, setArea] = useState('314.16');
-    const [lastChanged, setLastChanged] = useState('radius');
 
-    useEffect(() => {
-        const r = parseFloat(radius);
-        const d = parseFloat(diameter);
-        const c = parseFloat(circumference);
-        const a = parseFloat(area);
-
-        if (lastChanged === 'radius' && !isNaN(r)) {
-            setDiameter((2 * r).toFixed(2));
-            setCircumference((2 * Math.PI * r).toFixed(2));
-            setArea((Math.PI * r * r).toFixed(2));
-        } else if (lastChanged === 'diameter' && !isNaN(d)) {
-            setRadius((d / 2).toFixed(2));
-            setCircumference((Math.PI * d).toFixed(2));
-            setArea((Math.PI * (d / 2) * (d / 2)).toFixed(2));
-        } else if (lastChanged === 'circumference' && !isNaN(c)) {
-            const newRadius = c / (2 * Math.PI);
-            setRadius(newRadius.toFixed(2));
-            setDiameter((2 * newRadius).toFixed(2));
-            setArea((Math.PI * newRadius * newRadius).toFixed(2));
-        } else if (lastChanged === 'area' && !isNaN(a)) {
-            const newRadius = Math.sqrt(a / Math.PI);
-            setRadius(newRadius.toFixed(2));
-            setDiameter((2 * newRadius).toFixed(2));
-            setCircumference((2 * Math.PI * newRadius).toFixed(2));
-        }
-    }, [radius, diameter, circumference, area, lastChanged]);
+    const r = parseFloat(radius);
+    const diameter = !isNaN(r) ? (2 * r).toFixed(2) : '';
+    const circumference = !isNaN(r) ? (2 * Math.PI * r).toFixed(2) : '';
+    const area = !isNaN(r) ? (Math.PI * r * r).toFixed(2) : '';
     
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
              <div className="p-2 text-center text-sm bg-brand-bg rounded-lg">Changing any value will calculate the others.</div>
              <div className="grid md:grid-cols-2 gap-4">
-                <Input label="Radius" type="number" value={radius} onChange={e => { setRadius(e.target.value); setLastChanged('radius'); }} />
-                <Input label="Diameter" type="number" value={diameter} onChange={e => { setDiameter(e.target.value); setLastChanged('diameter'); }} />
-                <Input label="Circumference" type="number" value={circumference} onChange={e => { setCircumference(e.target.value); setLastChanged('circumference'); }} />
-                <Input label="Area" type="number" value={area} onChange={e => { setArea(e.target.value); setLastChanged('area'); }} />
+                <Input label="Radius" type="number" value={radius} onChange={e => setRadius(e.target.value)} />
+                <Input label="Diameter" type="number" value={diameter} onChange={e => {
+                    const d = parseFloat(e.target.value);
+                    if (!isNaN(d)) setRadius((d / 2).toString());
+                    else setRadius('');
+                }} />
+                <Input label="Circumference" type="number" value={circumference} onChange={e => {
+                    const c = parseFloat(e.target.value);
+                    if (!isNaN(c)) setRadius((c / (2 * Math.PI)).toString());
+                    else setRadius('');
+                }} />
+                <Input label="Area" type="number" value={area} onChange={e => {
+                    const a = parseFloat(e.target.value);
+                    if (!isNaN(a)) setRadius(Math.sqrt(a / Math.PI).toString());
+                    else setRadius('');
+                }} />
             </div>
         </div>
     );
@@ -976,11 +996,9 @@ const CircleCalculator = () => {
 
 const StandardDeviationCalculator = () => {
     const [dataStr, setDataStr] = useState('1, 5, 2, 8, 7, 9, 12, 4, 5, 8');
-    const [error, setError] = useState<string | null>(null);
 
     const stats = useMemo(() => {
-        setError(null);
-        if (dataStr.trim() === '') return null;
+        if (dataStr.trim() === '') return { error: null, data: null };
 
         try {
             const data = dataStr.split(/[\s,]+/).filter(Boolean).map(s => {
@@ -990,22 +1008,24 @@ const StandardDeviationCalculator = () => {
             });
 
             if (data.length < 2) {
-                setError("Please enter at least two numbers.");
-                return null;
+                return { error: "Please enter at least two numbers.", data: null };
             }
 
             return {
-                count: data.length,
-                sum: math.sum(data),
-                mean: math.mean(data),
-                populationStdDev: math.std(data, 'uncorrected'),
-                sampleStdDev: math.std(data, 'unbiased'),
-                populationVariance: math.variance(data, 'uncorrected'),
-                sampleVariance: math.variance(data, 'unbiased'),
+                error: null,
+                data: {
+                    count: data.length,
+                    sum: math.sum(data),
+                    mean: math.mean(data),
+                    populationStdDev: math.std(data, 'uncorrected'),
+                    sampleStdDev: math.std(data, 'unbiased'),
+                    populationVariance: math.variance(data, 'uncorrected'),
+                    sampleVariance: math.variance(data, 'unbiased'),
+                }
             };
-        } catch (e: any) {
-            setError(e.message || "Invalid data format.");
-            return null;
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : "Invalid data format.";
+            return { error: msg, data: null };
         }
     }, [dataStr]);
 
@@ -1021,18 +1041,18 @@ const StandardDeviationCalculator = () => {
                 <label htmlFor="stddev-data-input" className="block text-lg font-medium mb-2">Enter data (comma or space-separated)</label>
                 <textarea id="stddev-data-input" value={dataStr} onChange={e => setDataStr(e.target.value)} rows={4} className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono" />
             </div>
-            {error && <div className="text-red-400 bg-red-900/50 p-3 rounded-md mb-4">{error}</div>}
+            {stats.error && <div className="text-red-400 bg-red-900/50 p-3 rounded-md mb-4">{stats.error}</div>}
             <div className="bg-brand-bg p-6 rounded-lg">
                 <h3 className="text-xl font-bold mb-4 text-brand-accent">Results</h3>
-                {stats ? (
+                {stats.data ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Count:</span><span className="font-mono font-bold">{formatValue(stats.count)}</span></div>
-                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Sum:</span><span className="font-mono font-bold">{formatValue(stats.sum)}</span></div>
-                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Mean:</span><span className="font-mono font-bold">{formatValue(stats.mean)}</span></div>
-                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Sample Std Dev (n-1):</span><span className="font-mono font-bold">{formatValue(stats.sampleStdDev)}</span></div>
-                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Population Std Dev (n):</span><span className="font-mono font-bold">{formatValue(stats.populationStdDev)}</span></div>
-                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Sample Variance:</span><span className="font-mono font-bold">{formatValue(stats.sampleVariance)}</span></div>
-                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Population Variance:</span><span className="font-mono font-bold">{formatValue(stats.populationVariance)}</span></div>
+                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Count:</span><span className="font-mono font-bold">{formatValue(stats.data.count)}</span></div>
+                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Sum:</span><span className="font-mono font-bold">{formatValue(stats.data.sum)}</span></div>
+                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Mean:</span><span className="font-mono font-bold">{formatValue(stats.data.mean)}</span></div>
+                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Sample Std Dev (n-1):</span><span className="font-mono font-bold">{formatValue(stats.data.sampleStdDev)}</span></div>
+                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Population Std Dev (n):</span><span className="font-mono font-bold">{formatValue(stats.data.populationStdDev)}</span></div>
+                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Sample Variance:</span><span className="font-mono font-bold">{formatValue(stats.data.sampleVariance)}</span></div>
+                        <div className="flex justify-between border-b border-gray-700 py-1"><span className="font-semibold text-brand-text-secondary">Population Variance:</span><span className="font-mono font-bold">{formatValue(stats.data.populationVariance)}</span></div>
                     </div>
                 ) : <p className="text-brand-text-secondary">Enter data for analysis.</p>}
             </div>
@@ -1040,50 +1060,42 @@ const StandardDeviationCalculator = () => {
     );
 };
 
+const zScores: Record<string, number> = {
+    '80': 1.28, '85': 1.44, '90': 1.645, '95': 1.96, '98': 2.33, '99': 2.576
+};
+
 const ConfidenceIntervalCalculator = () => {
     const [mean, setMean] = useState('50');
     const [stdDev, setStdDev] = useState('5');
     const [size, setSize] = useState('100');
     const [confidence, setConfidence] = useState('95');
-    const [result, setResult] = useState<any>(null);
-    const [error, setError] = useState('');
 
-    const zScores: { [key: string]: number } = {
-        '80': 1.28, '85': 1.44, '90': 1.645, '95': 1.96, '98': 2.33, '99': 2.576
-    };
-
-    const calculate = useCallback(() => {
-        setError('');
+    const result = useMemo(() => {
         const x = parseFloat(mean);
         const s = parseFloat(stdDev);
         const n = parseInt(size);
         const z = zScores[confidence];
 
         if (isNaN(x) || isNaN(s) || isNaN(n) || s < 0 || n <= 1) {
-            setError('Please enter valid inputs (n > 1, s >= 0).');
-            setResult(null);
-            return;
+            return { error: 'Please enter valid inputs (n > 1, s >= 0).', data: null };
         }
         if (!z) {
-            setError('Please select a valid confidence level.');
-            setResult(null);
-            return;
+            return { error: 'Please select a valid confidence level.', data: null };
         }
 
         const marginOfError = z * (s / Math.sqrt(n));
         const lowerBound = x - marginOfError;
         const upperBound = x + marginOfError;
         
-        setResult({
-            marginOfError: marginOfError.toFixed(4),
-            lowerBound: lowerBound.toFixed(4),
-            upperBound: upperBound.toFixed(4)
-        });
-    }, [mean, stdDev, size, confidence, zScores]);
-
-    useEffect(() => {
-        calculate();
-    }, [calculate]);
+        return {
+            error: null,
+            data: {
+                marginOfError: marginOfError.toFixed(4),
+                lowerBound: lowerBound.toFixed(4),
+                upperBound: upperBound.toFixed(4)
+            }
+        };
+    }, [mean, stdDev, size, confidence]);
 
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
@@ -1098,12 +1110,12 @@ const ConfidenceIntervalCalculator = () => {
                     </select>
                 </div>
             </div>
-            {error && <p className="text-red-400">{error}</p>}
-            {result && (
+            {result.error && <p className="text-red-400">{result.error}</p>}
+            {result.data && (
                 <div className="grid sm:grid-cols-3 gap-4">
-                    <ResultCard title="Margin of Error" value={`± ${result.marginOfError}`} />
-                    <ResultCard title="Lower Bound" value={result.lowerBound} />
-                    <ResultCard title="Upper Bound" value={result.upperBound} />
+                    <ResultCard title="Margin of Error" value={`± ${result.data.marginOfError}`} />
+                    <ResultCard title="Lower Bound" value={result.data.lowerBound} />
+                    <ResultCard title="Upper Bound" value={result.data.upperBound} />
                 </div>
             )}
         </div>
@@ -1113,38 +1125,29 @@ const ConfidenceIntervalCalculator = () => {
 
 const GcfLcmCalculator = () => {
     const [numbersStr, setNumbersStr] = useState('12, 18, 30');
-    const [result, setResult] = useState<{ gcf: any, lcm: any } | null>({ gcf: 6, lcm: 90 });
-    const [error, setError] = useState('');
 
-    const calculate = useCallback(() => {
-        setError('');
+    const result = useMemo(() => {
         const numbers = numbersStr.split(/[\s,]+/).filter(Boolean).map(s => parseInt(s));
         if (numbers.length < 2 || numbers.some(isNaN)) {
-            setError('Please enter at least two valid integers.');
-            setResult(null);
-            return;
+            return { error: 'Please enter at least two valid integers.', data: null };
         }
         try {
             const gcf = math.gcd(...numbers);
             const lcm = math.lcm(...numbers);
-            setResult({ gcf, lcm });
-        } catch (e) {
-            setError('Calculation failed. Please check your inputs.');
+            return { error: null, data: { gcf, lcm } };
+        } catch {
+            return { error: 'Calculation failed. Please check your inputs.', data: null };
         }
     }, [numbersStr]);
-
-    useEffect(() => {
-      calculate()
-    }, [calculate])
     
     return (
       <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
         <Input label="Numbers (comma or space-separated)" value={numbersStr} onChange={e => setNumbersStr(e.target.value)} />
-        {error && <p className="text-red-400">{error}</p>}
-        {result && (
+        {result.error && <p className="text-red-400">{result.error}</p>}
+        {result.data && (
           <div className="flex gap-4">
-            <ResultCard title="Greatest Common Factor (GCF)" value={String(result.gcf)} />
-            <ResultCard title="Least Common Multiple (LCM)" value={String(result.lcm)} />
+            <ResultCard title="Greatest Common Factor (GCF)" value={String(result.data.gcf)} />
+            <ResultCard title="Least Common Multiple (LCM)" value={String(result.data.lcm)} />
           </div>
         )}
       </div>
@@ -1154,18 +1157,16 @@ const GcfLcmCalculator = () => {
 const PrimeNumberCalculator = () => {
     const [checkNum, setCheckNum] = useState('17');
     const [rangeNum, setRangeNum] = useState('100');
-    const [isPrime, setIsPrime] = useState<boolean | null>(true);
-    const [primesInRange, setPrimesInRange] = useState<number[]>([]);
 
-    const handleCheck = useCallback(() => {
+    const isPrime = useMemo(() => {
         const num = parseInt(checkNum);
-        if (isNaN(num)) return;
-        setIsPrime(math.isPrime(num));
+        if (isNaN(num)) return null;
+        return math.isPrime(num);
     }, [checkNum]);
 
-    const handleGenerate = useCallback(() => {
+    const primesInRange = useMemo(() => {
         const limit = parseInt(rangeNum);
-        if (isNaN(limit) || limit < 2) { setPrimesInRange([]); return; }
+        if (isNaN(limit) || limit < 2) return [];
         const sieve = new Array(limit + 1).fill(true);
         sieve[0] = sieve[1] = false;
         for (let i = 2; i * i <= limit; i++) {
@@ -1173,14 +1174,8 @@ const PrimeNumberCalculator = () => {
                 for (let j = i * i; j <= limit; j += i) sieve[j] = false;
             }
         }
-        const primes = sieve.map((p, i) => p ? i : -1).filter(i => i !== -1);
-        setPrimesInRange(primes);
+        return sieve.map((p, i) => p ? i : -1).filter(i => i !== -1);
     }, [rangeNum]);
-
-    useEffect(() => {
-      handleCheck();
-      handleGenerate();
-    }, [handleCheck, handleGenerate])
     
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg grid md:grid-cols-2 gap-6">
@@ -1204,44 +1199,48 @@ const PrimeNumberCalculator = () => {
     );
 };
 
+interface FractionInputProps {
+    n: string;
+    d: string;
+    setN: (val: string) => void;
+    setD: (val: string) => void;
+}
+
+const FractionInput = ({ n, d, setN, setD }: FractionInputProps) => (
+    <div className="flex flex-col items-center">
+        <input type="number" value={n} onChange={e=>setN(e.target.value)} className="w-20 bg-gray-900/70 p-1 rounded-md border border-brand-border text-center" />
+        <hr className="w-20 my-1 border-brand-text" />
+        <input type="number" value={d} onChange={e=>setD(e.target.value)} className="w-20 bg-gray-900/70 p-1 rounded-md border border-brand-border text-center" />
+    </div>
+);
+
 const FractionCalculator = () => {
     const [n1, setN1] = useState('1'); const [d1, setD1] = useState('2');
     const [n2, setN2] = useState('3'); const [d2, setD2] = useState('4');
-    const [result, setResult] = useState('');
+    const [operation, setOperation] = useState<'add' | 'subtract' | 'multiply' | 'divide'>('add');
     
     const fractionMath = useMemo(() => create(all, { number: 'Fraction' }), []);
 
-    const calculate = useCallback((op: 'add' | 'subtract' | 'multiply' | 'divide') => {
+    const result = useMemo(() => {
         try {
             const f1 = fractionMath.fraction(parseInt(n1), parseInt(d1));
             const f2 = fractionMath.fraction(parseInt(n2), parseInt(d2));
-            const res = fractionMath[op](f1, f2);
-            setResult(`${res.toString()} (Decimal: ${res.valueOf().toFixed(4)})`);
+            const res = fractionMath[operation](f1, f2);
+            return `${res.toString()} (Decimal: ${res.valueOf().toFixed(4)})`;
         } catch {
-            setResult('Invalid fraction');
+            return 'Invalid fraction';
         }
-    }, [n1, d1, n2, d2, fractionMath]);
+    }, [n1, d1, n2, d2, operation, fractionMath]);
 
-    useEffect(() => {
-      calculate('add');
-    }, [calculate])
-
-    const FractionInput = ({ n, d, setN, setD }: any) => (
-        <div className="flex flex-col items-center">
-            <input type="number" value={n} onChange={e=>setN(e.target.value)} className="w-20 bg-gray-900/70 p-1 rounded-md border border-brand-border text-center" />
-            <hr className="w-20 my-1 border-brand-text" />
-            <input type="number" value={d} onChange={e=>setD(e.target.value)} className="w-20 bg-gray-900/70 p-1 rounded-md border border-brand-border text-center" />
-        </div>
-    );
     return(
         <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
             <div className="flex items-center justify-center gap-4">
                 <FractionInput n={n1} d={d1} setN={setN1} setD={setD1} />
                 <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => calculate('add')} className="p-2 bg-brand-primary rounded text-xl">+</button>
-                    <button onClick={() => calculate('subtract')} className="p-2 bg-brand-primary rounded text-xl">-</button>
-                    <button onClick={() => calculate('multiply')} className="p-2 bg-brand-primary rounded text-xl">×</button>
-                    <button onClick={() => calculate('divide')} className="p-2 bg-brand-primary rounded text-xl">÷</button>
+                    <button onClick={() => setOperation('add')} className={`p-2 rounded text-xl ${operation === 'add' ? 'bg-brand-accent' : 'bg-brand-primary'}`}>+</button>
+                    <button onClick={() => setOperation('subtract')} className={`p-2 rounded text-xl ${operation === 'subtract' ? 'bg-brand-accent' : 'bg-brand-primary'}`}>-</button>
+                    <button onClick={() => setOperation('multiply')} className={`p-2 rounded text-xl ${operation === 'multiply' ? 'bg-brand-accent' : 'bg-brand-primary'}`}>×</button>
+                    <button onClick={() => setOperation('divide')} className={`p-2 rounded text-xl ${operation === 'divide' ? 'bg-brand-accent' : 'bg-brand-primary'}`}>÷</button>
                 </div>
                 <FractionInput n={n2} d={d2} setN={setN2} setD={setD2} />
             </div>

@@ -1,9 +1,14 @@
 
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import type { InputHTMLAttributes, FC } from 'react';
-import { Landmark, PiggyBank, HandCoins, Car, Home, Percent, TrendingUp, Receipt, FileText, Bot, Banknote, Loader, Wind, Calculator, Table, Info, Briefcase } from 'lucide-react';
-import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, PieChart, Pie, Cell } from 'recharts';
+import React, { useState, useMemo, FC, InputHTMLAttributes } from 'react';
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    PieChart, Pie, Cell
+} from 'recharts';
+import {
+    Home, Car, Landmark, TrendingUp, PiggyBank, Table, HandCoins, Percent, Receipt, Wind,
+    Calculator, Briefcase, Banknote, Info, Bot, Loader
+} from 'lucide-react';
 import CustomDropdown from './common/CustomDropdown';
 import { getAutoLoanAnalysis, AutoLoanDetails } from '../services/geminiService';
 
@@ -33,7 +38,7 @@ const formatCurrency = (value: number | undefined | null, currencyCode: string =
     if (value === undefined || value === null || isNaN(value)) return '--';
     try {
         return value.toLocaleString(undefined, { style: 'currency', currency: currencyCode, maximumFractionDigits: 2 });
-    } catch (e) {
+    } catch {
         return `$${value.toFixed(2)}`;
     }
 };
@@ -42,20 +47,28 @@ interface CalculatorProps {
   currency: string;
 }
 
-const CustomChartTooltip = ({ active, payload, label, currency }: any) => {
+interface ChartPayloadItem {
+    dataKey: string;
+    name: string;
+    value: number;
+    color: string;
+    payload: Record<string, string | number | boolean | null>;
+}
+
+const CustomChartTooltip = ({ active, payload, label, currency }: { active?: boolean, payload?: ChartPayloadItem[], label?: string | number, currency: string }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
 
         // Mortgage/Retirement/Investment Chart
-        if (payload.some((p: any) => p.dataKey === 'Interest Earned' || p.dataKey === 'Interest Paid (Total)')) {
-            let reorderedPayload = [];
+        if (payload.some((p) => p.dataKey === 'Interest Earned' || p.dataKey === 'Interest Paid (Total)')) {
+            let reorderedPayload: ChartPayloadItem[] = [];
             // Mortgage Amortization
             if ('Principal Paid (Total)' in data) {
                  reorderedPayload = [
-                    payload.find((p: any) => p.dataKey === 'Remaining Balance'),
-                    payload.find((p: any) => p.dataKey === 'Principal Paid (Total)'),
-                    payload.find((p: any) => p.dataKey === 'Interest Paid (Total)'),
-                ].filter(Boolean);
+                    payload.find((p) => p.dataKey === 'Remaining Balance'),
+                    payload.find((p) => p.dataKey === 'Principal Paid (Total)'),
+                    payload.find((p) => p.dataKey === 'Interest Paid (Total)'),
+                ].filter((p): p is ChartPayloadItem => p !== undefined);
             } else { // Investment/Retirement
                 reorderedPayload = [
                     ...payload
@@ -65,7 +78,7 @@ const CustomChartTooltip = ({ active, payload, label, currency }: any) => {
             return (
                 <div className="bg-brand-surface/90 p-3 border border-brand-border rounded-lg shadow-lg">
                     <p className="font-bold text-brand-text mb-2">{label === 0 ? 'Start' : `End of Year ${label}`}</p>
-                    {reorderedPayload.map((pld: any) => (
+                    {reorderedPayload.map((pld) => (
                         <div key={pld.dataKey} style={{ color: pld.color }} className="flex justify-between gap-4">
                             <span>{pld.name}:</span>
                             <span className="font-mono font-semibold">{formatCurrency(pld.value, currency)}</span>
@@ -102,7 +115,16 @@ const CustomChartTooltip = ({ active, payload, label, currency }: any) => {
 };
 
 
-const CustomPieTooltip = ({ active, payload, currency }: any) => {
+interface PiePayloadItem {
+    name: string;
+    value: number;
+    payload: {
+        fill: string;
+        percent?: number;
+    };
+}
+
+const CustomPieTooltip = ({ active, payload, currency }: { active?: boolean, payload?: PiePayloadItem[], currency: string }) => {
     if (active && payload && payload.length) {
         const data = payload[0];
         const percent = ((data.payload.percent || 0) * 100).toFixed(2);
@@ -377,7 +399,7 @@ const InterestRateCalculator = ({ currency }: CalculatorProps) => {
         return { apr, totalPaid, totalInterest, error: null };
     }, [loanAmount, monthlyPayment, termYears]);
     
-    const currencySymbol = new Intl.NumberFormat(undefined, { style: 'currency', currency }).formatToParts(1).find(p => p.type === 'currency')?.value;
+    const currencySymbol = useMemo(() => new Intl.NumberFormat(undefined, { style: 'currency', currency }).formatToParts(1).find(p => p.type === 'currency')?.value, [currency]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -486,13 +508,11 @@ const MortgageCalculator = ({ currency }: CalculatorProps) => {
 
         for (let year = 1; year <= years; year++) {
             let interestForYear = 0;
-            let principalForYear = 0;
             for (let month = 1; month <= 12; month++) {
                 const interestForMonth = balance * monthlyRate;
                 const principalForMonth = monthlyPI - interestForMonth;
                 balance -= principalForMonth;
                 interestForYear += interestForMonth;
-                principalForYear += principalForMonth;
             }
             totalInterestPaid += interestForYear;
             amortizationData.push({
@@ -546,7 +566,7 @@ const MortgageCalculator = ({ currency }: CalculatorProps) => {
                         {result && <ResponsiveContainer>
                             <PieChart>
                                 <Pie data={result.pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2}>
-                                    {result.pieData.map((_entry: any, index: number) => (
+                                    {result.pieData.map((_entry: { name: string, value: number }, index: number) => (
                                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                     ))}
                                 </Pie>
@@ -722,7 +742,7 @@ const AutoLoanCalculator = ({ currency }: CalculatorProps) => {
                             <ResponsiveContainer>
                                 <PieChart>
                                     <Pie data={result.pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}>
-                                        {result.pieData.map((entry, index) => (
+                                        {result.pieData.map((_entry, index) => (
                                             <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                         ))}
                                     </Pie>
@@ -843,7 +863,7 @@ const InterestCalculator = ({ currency }: CalculatorProps) => {
                         <select 
                             id="si-time-unit" 
                             value={timeUnit} 
-                            onChange={e => setTimeUnit(e.target.value as any)} 
+                            onChange={e => setTimeUnit(e.target.value as 'years' | 'months' | 'days')} 
                             className="w-full bg-gray-900/70 border-gray-600 rounded-md p-2 h-[42px] focus:ring-brand-primary focus:border-brand-primary"
                         >
                             <option value="years">Years</option>
@@ -926,8 +946,8 @@ const PaymentCalculator = ({ currency }: CalculatorProps) => {
                 // ... (implementation of iterative rate calculation)
                 setError('Rate calculation is complex and best handled in the dedicated Interest Rate Calculator for now.');
             }
-        } catch (e: any) {
-            setError(e.message || 'Calculation failed. Check your inputs.');
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Calculation failed. Check your inputs.');
         }
     };
 
@@ -1187,7 +1207,7 @@ const InflationCalculator = ({ currency }: CalculatorProps) => {
     );
 };
 
-const FinanceCalculator: FC<CalculatorProps> = ({ currency }) => (
+const FinanceCalculator: FC<CalculatorProps> = () => (
     <div className="text-center text-brand-text-secondary p-8 bg-brand-bg rounded-lg">
         <Calculator size={48} className="mx-auto mb-4 text-brand-primary" />
         <p>A full Time Value of Money (TVM) solver is coming soon to handle complex financial calculations for N, I/Y, PV, PMT, and FV.</p>
@@ -1195,7 +1215,7 @@ const FinanceCalculator: FC<CalculatorProps> = ({ currency }) => (
 );
 
 const IncomeTaxCalculator: FC<CalculatorProps> = ({ currency }) => {
-    const TAX_BRACKETS_2024 = {
+    const TAX_BRACKETS_2024 = useMemo(() => ({
       single: [
         { rate: 0.10, from: 0, to: 11600 },
         { rate: 0.12, from: 11601, to: 47150 },
@@ -1214,11 +1234,12 @@ const IncomeTaxCalculator: FC<CalculatorProps> = ({ currency }) => {
         { rate: 0.35, from: 487451, to: 731200 },
         { rate: 0.37, from: 731201, to: Infinity },
       ],
-    };
-    const STANDARD_DEDUCTION_2024 = {
+    }), []);
+
+    const STANDARD_DEDUCTION_2024 = useMemo(() => ({
         single: 14600,
         marriedFilingJointly: 29200,
-    };
+    }), []);
     
     const [income, setIncome] = useState('80000');
     const [filingStatus, setFilingStatus] = useState<'single' | 'marriedFilingJointly'>('single');
@@ -1253,7 +1274,7 @@ const IncomeTaxCalculator: FC<CalculatorProps> = ({ currency }) => {
         const effectiveRate = grossIncome > 0 ? (totalTax / grossIncome) * 100 : 0;
         
         return { totalTax, effectiveRate, marginalRate: marginalRate * 100, taxBreakdown };
-    }, [income, filingStatus, currency]);
+    }, [income, filingStatus, currency, STANDARD_DEDUCTION_2024, TAX_BRACKETS_2024]);
 
     const currencySymbol = useMemo(() => new Intl.NumberFormat(undefined, { style: 'currency', currency }).formatToParts(1).find(p => p.type === 'currency')?.value, [currency]);
 
@@ -1263,7 +1284,7 @@ const IncomeTaxCalculator: FC<CalculatorProps> = ({ currency }) => {
                  <InputField label="Gross Annual Income" id="tax-income" type="number" value={income} onChange={e => setIncome(e.target.value)} currencySymbol={currencySymbol} />
                  <div>
                      <label htmlFor="tax-status" className="block text-sm font-medium text-brand-text-secondary mb-1">Filing Status</label>
-                     <select id="tax-status" value={filingStatus} onChange={e => setFilingStatus(e.target.value as any)} className="w-full bg-gray-900/70 border-gray-600 rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary">
+                     <select id="tax-status" value={filingStatus} onChange={e => setFilingStatus(e.target.value as 'single' | 'marriedFilingJointly')} className="w-full bg-gray-900/70 border-gray-600 rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary">
                          <option value="single">Single</option>
                          <option value="marriedFilingJointly">Married Filing Jointly</option>
                      </select>
@@ -1302,7 +1323,7 @@ const IncomeTaxCalculator: FC<CalculatorProps> = ({ currency }) => {
     );
 };
 
-const SalaryCalculator: FC<CalculatorProps> = ({ currency }) => (
+const SalaryCalculator: FC<CalculatorProps> = () => (
     <div className="text-center text-brand-text-secondary p-8 bg-brand-bg rounded-lg">
         <Banknote size={48} className="mx-auto mb-4 text-brand-primary" />
         <p>A salary calculator is coming soon to estimate your take-home pay after taxes and deductions.</p>
@@ -1399,9 +1420,8 @@ const FinancialCalculator = () => {
             'interest-rate': InterestRateCalculator,
             'sales-tax': SalesTaxCalculator,
         };
-        const Component = calculators[activeCalc];
-        return () => <Component currency={currency} />;
-    }, [activeCalc, currency]);
+        return calculators[activeCalc];
+    }, [activeCalc]);
 
 
     return (
@@ -1426,7 +1446,7 @@ const FinancialCalculator = () => {
                 </div>
             </div>
             <div className="bg-brand-surface/50 p-6 rounded-lg">
-                <ActiveCalculator />
+                <ActiveCalculator currency={currency} />
             </div>
         </div>
     );
