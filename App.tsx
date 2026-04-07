@@ -15,10 +15,10 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 
 // Lazy-load components with heavy dependencies (like charting libraries) to prevent startup crashes
 import Graph from './components/Graph';
-const MathTools = lazy(() => import('./components/MathTools'));
-const CurrencyConverter = lazy(() => import('./components/CurrencyConverter'));
-const FinancialCalculator = lazy(() => import('./components/FinancialCalculator'));
-const HealthCalculator = lazy(() => import('./components/HealthCalculator'));
+import MathTools from './components/MathTools';
+import CurrencyConverter from './components/CurrencyConverter';
+import FinancialCalculator from './components/FinancialCalculator';
+import HealthCalculator from './components/HealthCalculator';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<AppTab>('calculator');
