@@ -1,5 +1,5 @@
 
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Header from './components/common/Header';
 import Calculator from './components/Calculator';
 import History from './components/History';

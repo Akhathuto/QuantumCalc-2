@@ -85,7 +85,7 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
         }
     });
 
-    const jsonText = response.text.trim();
+    const jsonText = response.text?.trim() || "";
     if (!jsonText) return null;
     
     return JSON.parse(jsonText);
@@ -112,7 +112,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
         contents: prompt,
     });
     
-    return response.text;
+    return response.text || "";
 
   } catch (error) {
     console.error("Error fetching currency forecast from Gemini:", error);
@@ -155,7 +155,7 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
         contents: prompt,
     });
     
-    return response.text;
+    return response.text || "";
 
   } catch (error) {
     console.error("Error fetching auto loan analysis from Gemini:", error);
