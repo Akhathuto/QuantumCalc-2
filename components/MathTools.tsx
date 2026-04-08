@@ -1,11 +1,9 @@
 
 
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
-import { Brain, BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, RectangleHorizontal, Shuffle, AlertTriangle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Circle, Eye, LineChart as LineChartIcon } from 'lucide-react';
-import Button from './common/Button';
-import { ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, Legend, ReferenceLine } from 'recharts';
+import { BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, RectangleHorizontal, Shuffle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Circle } from 'lucide-react';
 
 // Import standalone components
 import MatrixCalculator from './Matrix';
@@ -157,10 +155,20 @@ const FactoringCalculator = () => {
         const num = parseInt(number);
         if (isNaN(num) || num < 2) return 'Enter an integer > 1';
         try {
-            const factors = math.factor(num);
+            let n = num;
+            const factors: Record<number, number> = {};
+            for (let i = 2; i * i <= n; i++) {
+                while (n % i === 0) {
+                    factors[i] = (factors[i] || 0) + 1;
+                    n /= i;
+                }
+            }
+            if (n > 1) {
+                factors[n] = 1;
+            }
             
-            return Array.from(factors.entries())
-                .map(([base, exp]: [number, number]) => exp > 1 ? `${base} ^ ${exp}` : String(base))
+            return Object.entries(factors)
+                .map(([base, exp]) => exp > 1 ? `${base} ^ ${exp}` : String(base))
                 .join(' × ');
         } catch {
             return 'Cannot factorize';
@@ -323,10 +331,11 @@ const StandardDeviationCalculator = () => {
         }
     }, [dataStr]);
 
-    const formatValue = (value: number | string | undefined) => {
+    const formatValue = (value: number | string | bigint | undefined | any) => {
         if (typeof value === 'number') return parseFloat(value.toFixed(5)).toString();
+        if (typeof value === 'bigint') return value.toString();
         if (value === undefined) return '--';
-        return value;
+        return String(value);
     };
 
     return (
@@ -426,8 +435,8 @@ const GcfLcmCalculator = () => {
             return { error: 'Please enter at least two valid integers.', data: null };
         }
         try {
-            const gcf = math.gcd(...numbers);
-            const lcm = math.lcm(...numbers);
+            const gcf = numbers.reduce((a, b) => Number(math.gcd(a, b)));
+            const lcm = numbers.reduce((a, b) => Number(math.lcm(a, b)));
             return { error: null, data: { gcf, lcm } };
         } catch {
             return { error: 'Calculation failed. Please check your inputs.', data: null };
@@ -520,7 +529,8 @@ const FractionCalculator = () => {
             const f1 = fractionMath.fraction(parseInt(n1), parseInt(d1));
             const f2 = fractionMath.fraction(parseInt(n2), parseInt(d2));
             const res = fractionMath[operation](f1, f2);
-            return `${res.toString()} (Decimal: ${res.valueOf().toFixed(4)})`;
+            const decimalValue = Number(res.valueOf());
+            return `${res.toString()} (Decimal: ${decimalValue.toFixed(4)})`;
         } catch {
             return 'Invalid fraction';
         }
@@ -589,14 +599,14 @@ const PythagoreanCalculator = () => {
         const valA = parseFloat(a); const valB = parseFloat(b); const valC = parseFloat(c);
         if (isNaN(valA) || isNaN(valB) || isNaN(valC)) return 'Invalid input';
         try {
-            if (solveFor === 'c') return `c = ${math.sqrt(math.add(math.pow(valA, 2), math.pow(valB, 2))).toFixed(4)}`;
+            if (solveFor === 'c') return `c = ${Number(math.sqrt(Number(math.add(math.pow(valA, 2), math.pow(valB, 2))))).toFixed(4)}`;
             if (solveFor === 'a') {
                 if (valC <= valB) return 'c must be > b';
-                return `a = ${math.sqrt(math.subtract(math.pow(valC, 2), math.pow(valB, 2))).toFixed(4)}`;
+                return `a = ${Number(math.sqrt(Number(math.subtract(math.pow(valC, 2), math.pow(valB, 2))))).toFixed(4)}`;
             }
             if (solveFor === 'b') {
                  if (valC <= valA) return 'c must be > a';
-                return `b = ${math.sqrt(math.subtract(math.pow(valC, 2), math.pow(valA, 2))).toFixed(4)}`;
+                return `b = ${Number(math.sqrt(Number(math.subtract(math.pow(valC, 2), math.pow(valA, 2))))).toFixed(4)}`;
             }
         } catch { return 'Error' }
     }, [a, b, c, solveFor]);

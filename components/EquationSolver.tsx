@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
 import { Brain, TrendingUp } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
@@ -168,4 +168,4 @@ const EquationSolver = () => {
     );
 };
 
-export default EquationSolver;ionSolver;
+export default EquationSolver;

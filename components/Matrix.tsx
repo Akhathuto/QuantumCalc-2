@@ -90,12 +90,12 @@ const Matrix = () => {
         return matrix;
     };
 
-    const performOperation = (op: (a: math.MathType, b?: math.MathType) => math.MathType, requiresB: boolean = false) => {
+    const performOperation = (op: (a: any, b?: any) => any, requiresB: boolean = false) => {
         try {
             setError(null);
             const a = getMatrix(matrixA);
             const b = requiresB ? getMatrix(matrixB) : undefined;
-            const res = b ? op(math.bignumber(a), math.bignumber(b)) : op(math.bignumber(a));
+            const res = b ? op(math.matrix(a), math.matrix(b)) : op(math.matrix(a));
             
             if (typeof res === 'number' || math.isBigNumber(res)) {
                 setResult(`Result: ${math.format(res, {notation: 'fixed', precision: 4})}`);

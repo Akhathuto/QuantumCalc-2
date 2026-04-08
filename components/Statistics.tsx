@@ -70,7 +70,7 @@ const Statistics = () => {
 
             const min = sortedData[0];
             const max = sortedData[data.length - 1];
-            let histogramData = [];
+            let histogramData: { name: string; count: number }[] = [];
             if (min === max) {
                  histogramData.push({ name: String(min), count: data.length });
             } else {
@@ -97,12 +97,12 @@ const Statistics = () => {
             return {
                 summary: {
                     count: data.length,
-                    sum: math.sum(data),
-                    mean: math.mean(data),
-                    median,
+                    sum: Number(math.sum(data)),
+                    mean: Number(math.mean(data)),
+                    median: Number(median),
                     mode: math.mode(data).join(', '),
-                    stdDev: math.std(data),
-                    variance: math.variance(data),
+                    stdDev: Number(math.std(data)),
+                    variance: Number(math.variance(data)),
                     min,
                     max,
                     range: max - min,
@@ -152,7 +152,7 @@ const Statistics = () => {
                                <ResultCard title="Std. Dev" value={formatValue(statsResult.summary.stdDev)} />
                                <ResultCard title="Count" value={formatValue(statsResult.summary.count)} />
                                <ResultCard title="Sum" value={formatValue(statsResult.summary.sum)} />
-                               <ResultCard title="IQR" value={formatValue(statsResult.summary.iqr)} />
+                               <ResultCard title="IQR" value={formatValue(Number(statsResult.summary.iqr))} />
                                <ResultCard title="Range" value={formatValue(statsResult.summary.range)} />
                             </div>
                         </div>

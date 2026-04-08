@@ -1,6 +1,6 @@
 
 
-import React, { useState, useMemo, FC, InputHTMLAttributes } from 'react';
+import { useState, useMemo, FC, InputHTMLAttributes, useCallback } from 'react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
@@ -94,17 +94,17 @@ const CustomChartTooltip = ({ active, payload, label, currency }: { active?: boo
                 <p className="font-bold text-brand-text mb-2">{label === '0' ? 'Start of Loan' : `End of Year ${label}`}</p>
                 <div className="flex justify-between gap-4 text-brand-text">
                     <span>Remaining Balance:</span>
-                    <span className="font-mono font-semibold">{formatCurrency(data['Remaining Balance'], currency)}</span>
+                    <span className="font-mono font-semibold">{formatCurrency(data['Remaining Balance'] as number, currency)}</span>
                 </div>
                 {label !== '0' && data['Principal Paid (Year)'] !== undefined && (
                     <>
                         <div className="flex justify-between gap-4" style={{ color: 'var(--color-accent)' }}>
                             <span>Principal Paid (This Year):</span>
-                            <span className="font-mono font-semibold">{formatCurrency(data['Principal Paid (Year)'], currency)}</span>
+                            <span className="font-mono font-semibold">{formatCurrency(data['Principal Paid (Year)'] as number, currency)}</span>
                         </div>
                         <div className="flex justify-between gap-4" style={{ color: 'var(--color-secondary)' }}>
                             <span>Interest Paid (This Year):</span>
-                            <span className="font-mono font-semibold">{formatCurrency(data['Interest Paid (Year)'], currency)}</span>
+                            <span className="font-mono font-semibold">{formatCurrency(data['Interest Paid (Year)'] as number, currency)}</span>
                         </div>
                     </>
                 )}
