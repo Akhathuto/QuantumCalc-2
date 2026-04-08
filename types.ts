@@ -18,9 +18,11 @@ export interface Explanation {
 }
 
 export type AppTab =
+  | 'landing'
   | 'calculator'
   | 'graphing'
   | 'math-tools'
+  | 'programmer'
   | 'units'
   | 'currency'
   | 'base'

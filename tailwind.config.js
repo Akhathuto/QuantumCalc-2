@@ -20,6 +20,7 @@ export default {
       },
       animation: {
         'fade-in-down': 'fade-in-down 0.2s ease-out',
+        'gradient': 'gradient 3s linear infinite',
       },
       keyframes: {
         'fade-in-down': {
@@ -31,6 +32,10 @@ export default {
             opacity: '1',
             transform: 'translateY(0)'
           },
+        },
+        'gradient': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '100%': { backgroundPosition: '200% 50%' },
         }
       }
     }

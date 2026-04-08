@@ -1,6 +1,7 @@
 
 import React from 'react';
 import {
+  Home,
   Calculator as CalculatorIcon,
   LineChart,
   Scale,
@@ -17,6 +18,7 @@ import {
   FileText,
   Settings as SettingsIcon,
   HelpCircle,
+  Wrench
 } from 'lucide-react';
 
 import Logo from './Logo';
@@ -33,10 +35,16 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
   return (
     <header className="bg-brand-surface/70 backdrop-blur-sm p-4 rounded-b-xl shadow-lg sticky top-0 z-40 mb-8">
       <div className="container mx-auto flex justify-between items-center">
-        <div onClick={() => onTabClick('calculator')}>
+        <div onClick={() => onTabClick('landing')} className="cursor-pointer">
           <Logo />
         </div>
         <nav className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
+          <Tab
+            label="Home"
+            Icon={Home}
+            isActive={activeTab === 'landing'}
+            onClick={() => onTabClick('landing')}
+          />
           <Tab
             label="Calculator"
             Icon={CalculatorIcon}
@@ -49,11 +57,18 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
             isActive={activeTab === 'graphing'}
             onClick={() => onTabClick('graphing')}
           />
-          <Tab
-            label="Math Tools"
-            Icon={Beaker}
-            isActive={activeTab === 'math-tools'}
-            onClick={() => onTabClick('math-tools')}
+          <DropdownTab
+            label="Tools"
+            Icon={Wrench}
+            activeTab={activeTab}
+            onTabClick={onTabClick}
+            subTabs={[
+              { id: 'math-tools', label: 'Math Tools', Icon: Beaker },
+              { id: 'programmer', label: 'Programmer', Icon: Binary },
+              { id: 'financial', label: 'Financial', Icon: Landmark },
+              { id: 'date', label: 'Date & Time', Icon: Calendar },
+              { id: 'health', label: 'Health', Icon: HeartPulse },
+            ]}
           />
           <DropdownTab
             label="Converters"
@@ -65,24 +80,6 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
               { id: 'currency', label: 'Currency Converter', Icon: Banknote },
               { id: 'base', label: 'Base Converter', Icon: Binary },
             ]}
-          />
-          <Tab
-            label="Financial"
-            Icon={Landmark}
-            isActive={activeTab === 'financial'}
-            onClick={() => onTabClick('financial')}
-          />
-          <Tab
-            label="Date"
-            Icon={Calendar}
-            isActive={activeTab === 'date'}
-            onClick={() => onTabClick('date')}
-          />
-          <Tab
-            label="Health"
-            Icon={HeartPulse}
-            isActive={activeTab === 'health'}
-            onClick={() => onTabClick('health')}
           />
           <DropdownTab
             label="More"

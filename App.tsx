@@ -1,10 +1,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Header from './components/common/Header';
+import LandingPage from './components/LandingPage';
 import Calculator from './components/Calculator';
 import History from './components/History';
 import { UnitConverter } from './components/UnitConverter';
 import BaseConverter from './components/BaseConverter';
+import ProgrammerCalculator from './components/ProgrammerCalculator';
 import DateCalculator from './components/DateCalculator';
 import About from './components/About';
 import TermsAndLicense from './components/TermsAndLicense';
@@ -21,7 +23,7 @@ import FinancialCalculator from './components/FinancialCalculator';
 import HealthCalculator from './components/HealthCalculator';
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState<AppTab>('calculator');
+  const [activeTab, setActiveTab] = useState<AppTab>('landing');
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
     try {
       const savedHistory = localStorage.getItem('calcHistory');
@@ -73,6 +75,9 @@ const App = () => {
     let TabComponent;
 
     switch (activeTab) {
+      case 'landing':
+        TabComponent = <LandingPage onTabClick={setActiveTab} />;
+        break;
       case 'calculator':
         TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} />;
         break;
@@ -81,6 +86,9 @@ const App = () => {
         break;
       case 'math-tools':
         TabComponent = <MathTools />;
+        break;
+      case 'programmer':
+        TabComponent = <ProgrammerCalculator />;
         break;
       case 'units':
         TabComponent = <UnitConverter />;
