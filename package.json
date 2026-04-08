@@ -16,6 +16,7 @@
     "mathjs": "^14.7.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-markdown": "^10.1.0",
     "recharts": "^2.12.7"
   },
   "devDependencies": {

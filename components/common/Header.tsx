@@ -18,7 +18,9 @@ import {
   FileText,
   Settings as SettingsIcon,
   HelpCircle,
-  Wrench
+  Wrench,
+  Code,
+  GraduationCap
 } from 'lucide-react';
 
 import Logo from './Logo';
@@ -68,6 +70,9 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
               { id: 'financial', label: 'Financial', Icon: Landmark },
               { id: 'date', label: 'Date & Time', Icon: Calendar },
               { id: 'health', label: 'Health', Icon: HeartPulse },
+              { id: 'text', label: 'Text Tools', Icon: FileText },
+              { id: 'developer', label: 'Developer Tools', Icon: Code },
+              { id: 'student', label: 'Student Tools', Icon: GraduationCap },
             ]}
           />
           <DropdownTab

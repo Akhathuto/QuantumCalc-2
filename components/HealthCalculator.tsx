@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { Droplets, Scale, Pizza, Target, Timer, PersonStanding, GlassWater, Baby, Wine, AlertCircle } from 'lucide-react';
+import { Droplets, Scale, Pizza, Target, Timer, PersonStanding, GlassWater, Baby, Wine, AlertCircle, Dumbbell, Moon, Activity } from 'lucide-react';
 
 
-type HealthCalcType = 'bmi' | 'calorie-macro' | 'bodyfat' | 'idealweight' | 'heartrate' | 'pace' | 'lbm' | 'water' | 'pregnancy' | 'bac';
+type HealthCalcType = 'bmi' | 'calorie-macro' | 'bodyfat' | 'idealweight' | 'heartrate' | 'pace' | 'lbm' | 'water' | 'pregnancy' | 'bac' | 'onerepmax' | 'sleep' | 'bloodpressure';
 type UnitSystem = 'metric' | 'imperial';
 
 // Reusable UI Components specific to Health Calculator
@@ -777,6 +777,195 @@ const BACCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) => 
     )
 }
 
+
+
+
+
+
+
+const OneRepMaxCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) => {
+    const [weight, setWeight] = useState('100');
+    const [reps, setReps] = useState('5');
+
+    const result = useMemo(() => {
+        const w = parseFloat(weight);
+        const r = parseInt(reps);
+        if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return null;
+
+        let epley = w * (1 + r / 30);
+        if (r === 1) epley = w;
+
+        const percentages = [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50].map(p => ({
+            percent: p,
+            weight: (epley * (p / 100)).toFixed(1)
+        }));
+
+        return {
+            oneRepMax: epley.toFixed(1),
+            percentages
+        };
+    }, [weight, reps]);
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label={`Weight Lifted (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+                <Input label="Repetitions" type="number" value={reps} onChange={e => setReps(e.target.value)} />
+            </div>
+            {result && (
+                <div className="mt-6 space-y-4">
+                    <div className="text-center bg-brand-bg p-4 rounded-lg">
+                        <p className="text-brand-text-secondary">Estimated One Rep Max (1RM)</p>
+                        <p className="text-4xl font-bold text-brand-accent my-2">{result.oneRepMax} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
+                        <p className="text-xs text-brand-text-secondary">Based on the Epley formula</p>
+                    </div>
+                    <div className="bg-brand-bg p-4 rounded-lg">
+                        <h4 className="font-semibold text-center mb-4">Percentages of 1RM</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {result.percentages.map(p => (
+                                <div key={p.percent} className="bg-brand-surface/50 p-2 rounded text-center">
+                                    <div className="text-brand-text-secondary text-sm">{p.percent}%</div>
+                                    <div className="font-bold">{p.weight}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const SleepCalculator: React.FC = () => {
+    const [mode, setMode] = useState<'wake' | 'sleep'>('wake');
+    const [time, setTime] = useState('07:00');
+
+    const result = useMemo(() => {
+        if (!time) return null;
+        const [hoursStr, minutesStr] = time.split(':');
+        const hours = parseInt(hoursStr);
+        const minutes = parseInt(minutesStr);
+        if (isNaN(hours) || isNaN(minutes)) return null;
+
+        const targetTime = new Date();
+        targetTime.setHours(hours, minutes, 0, 0);
+
+        const cycles = [6, 5, 4, 3]; // Number of 90-min cycles
+        const cycleLengthMs = 90 * 60 * 1000;
+        const fallAsleepMs = 15 * 60 * 1000;
+
+        const times = cycles.map(c => {
+            const t = new Date(targetTime.getTime());
+            if (mode === 'wake') {
+                t.setTime(t.getTime() - (c * cycleLengthMs) - fallAsleepMs);
+            } else {
+                t.setTime(t.getTime() + (c * cycleLengthMs) + fallAsleepMs);
+            }
+            return {
+                cycles: c,
+                hours: (c * 90) / 60,
+                timeStr: t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+        });
+
+        return times;
+    }, [mode, time]);
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-center p-1 bg-brand-bg rounded-full mb-4">
+                <UnitToggleButton label="I want to wake up at" isActive={mode === 'wake'} onClick={() => setMode('wake')} />
+                <UnitToggleButton label="I plan to sleep at" isActive={mode === 'sleep'} onClick={() => setMode('sleep')} />
+            </div>
+            <Input label="Time" type="time" value={time} onChange={e => setTime(e.target.value)} />
+            
+            {result && (
+                <div className="mt-6 bg-brand-bg p-4 rounded-lg">
+                    <h4 className="font-semibold text-center mb-4">
+                        {mode === 'wake' ? 'You should try to fall asleep at one of these times:' : 'You should set your alarm for one of these times:'}
+                    </h4>
+                    <div className="space-y-3">
+                        {result.map((r, i) => (
+                            <div key={i} className="flex justify-between items-center p-3 bg-brand-surface/50 rounded-md">
+                                <div>
+                                    <span className="text-2xl font-bold text-brand-accent">{r.timeStr}</span>
+                                </div>
+                                <div className="text-right text-sm text-brand-text-secondary">
+                                    <div>{r.cycles} Cycles</div>
+                                    <div>{r.hours} Hours of sleep</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-xs text-brand-text-secondary text-center mt-4">
+                        * Calculations include 15 minutes to fall asleep. A good night's sleep consists of 5-6 complete sleep cycles.
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const BloodPressureCalculator: React.FC = () => {
+    const [systolic, setSystolic] = useState('120');
+    const [diastolic, setDiastolic] = useState('80');
+
+    const result = useMemo(() => {
+        const sys = parseInt(systolic);
+        const dia = parseInt(diastolic);
+
+        if (isNaN(sys) || isNaN(dia) || sys <= 0 || dia <= 0) return null;
+
+        let category = '';
+        let color = '';
+        let description = '';
+
+        if (sys > 180 || dia > 120) {
+            category = 'Hypertensive Crisis';
+            color = 'text-red-600 bg-red-900/30';
+            description = 'Consult your doctor immediately.';
+        } else if (sys >= 140 || dia >= 90) {
+            category = 'High Blood Pressure (Stage 2)';
+            color = 'text-red-400 bg-red-900/20';
+            description = 'Consult your doctor.';
+        } else if ((sys >= 130 && sys <= 139) || (dia >= 80 && dia <= 89)) {
+            category = 'High Blood Pressure (Stage 1)';
+            color = 'text-orange-400 bg-orange-900/20';
+            description = 'Lifestyle changes recommended. Consult your doctor.';
+        } else if (sys >= 120 && sys <= 129 && dia < 80) {
+            category = 'Elevated';
+            color = 'text-yellow-400 bg-yellow-900/20';
+            description = 'Healthy lifestyle changes recommended.';
+        } else if (sys < 120 && dia < 80) {
+            category = 'Normal';
+            color = 'text-green-400 bg-green-900/20';
+            description = 'Keep up the good work!';
+        } else {
+            category = 'Mixed / Uncategorized';
+            color = 'text-gray-400 bg-gray-800';
+            description = 'Please check your inputs or consult a doctor.';
+        }
+
+        return { category, color, description };
+    }, [systolic, diastolic]);
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Systolic (upper number)" type="number" value={systolic} onChange={e => setSystolic(e.target.value)} />
+                <Input label="Diastolic (lower number)" type="number" value={diastolic} onChange={e => setDiastolic(e.target.value)} />
+            </div>
+            {result && (
+                <div className={`mt-6 text-center p-6 rounded-lg ${result.color.split(' ')[1]}`}>
+                    <p className="text-brand-text-secondary">Blood Pressure Category</p>
+                    <p className={`text-3xl font-bold my-2 ${result.color.split(' ')[0]}`}>{result.category}</p>
+                    <p className="text-sm">{result.description}</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const HealthCalculator: React.FC = () => {
     const [activeCalc, setActiveCalc] = useState<HealthCalcType>('calorie-macro');
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
@@ -787,15 +976,18 @@ const HealthCalculator: React.FC = () => {
         { id: 'bodyfat', label: 'Body Fat %', Icon: Droplets },
         { id: 'lbm', label: 'Lean Body Mass', Icon: PersonStanding },
         { id: 'idealweight', label: 'Ideal Weight', Icon: Scale },
+        { id: 'onerepmax', label: 'One Rep Max', Icon: Dumbbell },
         { id: 'heartrate', label: 'Heart Rate Zones', Icon: Target },
         { id: 'pace', label: 'Pace', Icon: Timer },
         { id: 'water', label: 'Water Intake', Icon: GlassWater },
+        { id: 'sleep', label: 'Sleep Cycles', Icon: Moon },
+        { id: 'bloodpressure', label: 'Blood Pressure', Icon: Activity },
         { id: 'pregnancy', label: 'Pregnancy', Icon: Baby },
         { id: 'bac', label: 'BAC', Icon: Wine },
     ];
     
     const calculatorHasUnits = useMemo(() => {
-        return ['bmi', 'calorie-macro', 'bodyfat', 'idealweight', 'pace', 'lbm', 'water', 'bac'].includes(activeCalc);
+        return ['bmi', 'calorie-macro', 'bodyfat', 'idealweight', 'pace', 'lbm', 'water', 'bac', 'onerepmax'].includes(activeCalc);
     }, [activeCalc]);
 
     const renderCalculator = () => {
@@ -805,10 +997,13 @@ const HealthCalculator: React.FC = () => {
             case 'calorie-macro': return <CalorieMacroCalculator key={key} unitSystem={unitSystem} />;
             case 'bodyfat': return <BodyFatCalculator key={key} unitSystem={unitSystem} />;
             case 'idealweight': return <IdealWeightCalculator key={key} unitSystem={unitSystem} />;
+            case 'onerepmax': return <OneRepMaxCalculator key={key} unitSystem={unitSystem} />;
             case 'heartrate': return <HeartRateCalculator key={key} />;
             case 'pace': return <PaceCalculator key={key} unitSystem={unitSystem} />;
             case 'lbm': return <LeanBodyMassCalculator key={key} unitSystem={unitSystem} />;
             case 'water': return <WaterIntakeCalculator key={key} unitSystem={unitSystem} />;
+            case 'sleep': return <SleepCalculator key={key} />;
+            case 'bloodpressure': return <BloodPressureCalculator key={key} />;
             case 'pregnancy': return <PregnancyCalculator key={key} />;
             case 'bac': return <BACCalculator key={key} unitSystem={unitSystem} />;
             default: return null;

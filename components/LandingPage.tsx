@@ -9,6 +9,9 @@ import {
   Landmark, 
   Calendar, 
   HeartPulse,
+  FileText,
+  Code,
+  GraduationCap,
   ArrowRight
 } from 'lucide-react';
 import { AppTab } from '../types';
@@ -28,6 +31,9 @@ const tools = [
   { id: 'base', name: 'Base Converter', icon: Binary, description: 'Binary, octal, decimal, and hexadecimal conversions.', color: 'text-rose-500', bg: 'bg-rose-500/10' },
   { id: 'date', name: 'Date & Time', icon: Calendar, description: 'Calculate durations, add/subtract dates, and time zones.', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
   { id: 'health', name: 'Health', icon: HeartPulse, description: 'BMI, BMR, and other health-related calculations.', color: 'text-pink-500', bg: 'bg-pink-500/10' },
+  { id: 'text', name: 'Text Tools', icon: FileText, description: 'Word count, case conversion, and text manipulation.', color: 'text-teal-500', bg: 'bg-teal-500/10' },
+  { id: 'developer', name: 'Developer Tools', icon: Code, description: 'JSON formatter, JWT decoder, and regex tester.', color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+  { id: 'student', name: 'Student Tools', icon: GraduationCap, description: 'GPA calculator, study timer, and AI tutor.', color: 'text-violet-500', bg: 'bg-violet-500/10' },
 ];
 
 const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {

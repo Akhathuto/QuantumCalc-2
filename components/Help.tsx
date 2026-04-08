@@ -6,7 +6,10 @@ import {
     ChevronDown,
     Beaker,
     TestTube,
-    Landmark
+    Landmark,
+    GraduationCap,
+    Code,
+    Type
 } from 'lucide-react';
 
 interface AccordionItemProps {
@@ -119,6 +122,43 @@ const Help: React.FC = () => {
                         <li><strong>Financial:</strong> Select a calculator type from the dropdown (e.g., Loan, Compound Interest). Fill in the required fields to get a detailed breakdown and, where applicable, a chart visualizing the results over time.</li>
                         <li><strong>Date:</strong> Calculate the duration between two dates or add/subtract a period of time from a specific date.</li>
                         <li><strong>Health:</strong> Calculate your BMI, BMR, and recommended daily calorie intake. You can switch between Metric and Imperial units.</li>
+                    </ul>
+                </AccordionItem>
+                <AccordionItem title="Student Tools" icon={GraduationCap}>
+                    <p>
+                        A comprehensive suite of tools designed specifically for high school and college students.
+                    </p>
+                    <ul>
+                        <li><strong>Nolo AI Tutor:</strong> An interactive, step-by-step AI tutor that helps you understand concepts in Math, Science, History, and more without just giving you the answer.</li>
+                        <li><strong>GPA Calculator:</strong> Track your current GPA and calculate what you need on your final exam to achieve your target grade.</li>
+                        <li><strong>Pomodoro Timer:</strong> Boost your productivity with a customizable study timer using the Pomodoro technique.</li>
+                        <li><strong>Geometry Solver:</strong> Quickly calculate the area, perimeter, and volume of various 2D and 3D shapes.</li>
+                        <li><strong>Science Tools:</strong> Includes a Molar Mass Calculator for chemistry formulas and a searchable Element Lookup (Periodic Table).</li>
+                        <li><strong>Formula Reference:</strong> A quick reference guide for essential Algebra, Calculus, and Physics formulas.</li>
+                        <li><strong>Citation Generator:</strong> Easily generate citations in MLA 9th Edition or APA 7th Edition formats.</li>
+                        <li><strong>Flashcards:</strong> Create, manage, and study custom flashcard decks to memorize important information.</li>
+                        <li><strong>Assignment Tracker:</strong> Keep track of your schoolwork, due dates, and completion status in one place.</li>
+                    </ul>
+                </AccordionItem>
+                <AccordionItem title="Developer Tools" icon={Code}>
+                    <p>
+                        Handy utilities for software developers and programmers.
+                    </p>
+                    <ul>
+                        <li><strong>JSON Formatter:</strong> Format, validate, and minify JSON data.</li>
+                        <li><strong>JWT Decoder:</strong> Decode JSON Web Tokens to view their header and payload information.</li>
+                        <li><strong>Regex Tester:</strong> Test regular expressions against text to see matches and groups.</li>
+                    </ul>
+                </AccordionItem>
+                <AccordionItem title="Text Tools" icon={Type}>
+                    <p>
+                        Utilities for analyzing and manipulating text.
+                    </p>
+                    <ul>
+                        <li><strong>Word Counter:</strong> Get real-time statistics on your text, including character, word, sentence, and paragraph counts.</li>
+                        <li><strong>Case Converter:</strong> Easily convert text between UPPERCASE, lowercase, Title Case, and sentence case.</li>
+                        <li><strong>Find and Replace:</strong> Search for specific text and replace it, with options for case sensitivity.</li>
+                        <li><strong>Hash Generator:</strong> Generate MD5, SHA-1, and SHA-256 hashes from your text.</li>
                     </ul>
                 </AccordionItem>
             </div>

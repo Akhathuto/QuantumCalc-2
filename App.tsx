@@ -21,6 +21,9 @@ import MathTools from './components/MathTools';
 import CurrencyConverter from './components/CurrencyConverter';
 import FinancialCalculator from './components/FinancialCalculator';
 import HealthCalculator from './components/HealthCalculator';
+import TextTools from './components/TextTools';
+import DeveloperTools from './components/DeveloperTools';
+import StudentTools from './components/StudentTools';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<AppTab>('landing');
@@ -108,6 +111,15 @@ const App = () => {
       case 'health':
         TabComponent = <HealthCalculator />;
         break;
+      case 'text':
+        TabComponent = <TextTools />;
+        break;
+      case 'developer':
+        TabComponent = <DeveloperTools />;
+        break;
+      case 'student':
+        TabComponent = <StudentTools />;
+        break;
       case 'history':
         TabComponent = <History history={history} loadFromHistory={loadFromHistory} clearHistory={clearHistory} toggleFavorite={toggleFavorite} />;
         break;
@@ -136,11 +148,14 @@ const App = () => {
   };
 
   return (
-    <div className="bg-brand-bg text-brand-text min-h-screen font-sans">
+    <div className="bg-brand-bg text-brand-text min-h-screen font-sans flex flex-col">
       <Header activeTab={activeTab} onTabClick={setActiveTab} />
-      <main className="container mx-auto px-4 pb-8">
+      <main className="container mx-auto px-4 pb-8 flex-1">
         {renderActiveTab()}
       </main>
+      <footer className="py-6 text-center text-brand-text-secondary text-sm border-t border-brand-border/30 mt-auto">
+        Powered by Edgtec 2025
+      </footer>
     </div>
   );
 };
