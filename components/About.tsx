@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Info, BrainCircuit, Layers, GitBranch } from 'lucide-react';
+import { Info, BrainCircuit, Layers, GitBranch, Globe } from 'lucide-react';
 
 const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
     <div className="bg-brand-surface/50 p-6 rounded-lg">
@@ -24,6 +24,23 @@ const About: React.FC = () => {
                 </p>
             </div>
             <div className="space-y-8">
+                <Section title="About Edgtec" icon={Globe}>
+                    <p>
+                        <strong>EDGTEC</strong> is the innovative technology company behind QuantumCalc. Based in South Africa, EDGTEC is a proud <strong>100% black youth-owned enterprise</strong> committed to innovation and empowerment.
+                    </p>
+                    <p>
+                        We are a passionate team of developers, designers, and AI researchers on a mission to democratize creativity and productivity. We believe that technology should be a partner in the creative process, amplifying human imagination, not replacing it. Our goal is to build a future where anyone, regardless of their technical expertise, can transform their ideas into professional-quality creations.
+                    </p>
+                    <div className="mt-4 bg-brand-bg/50 p-4 rounded-md border border-brand-border">
+                        <h4 className="font-semibold text-brand-text mb-2">Company Details</h4>
+                        <ul className="space-y-1 text-sm">
+                            <li><span className="text-brand-text-secondary">Legal Name:</span> EDGTEC</li>
+                            <li><span className="text-brand-text-secondary">Company Registration Number:</span> 2025/534716/07</li>
+                            <li><span className="text-brand-text-secondary">CSD Supplier Number:</span> MAAA1626554</li>
+                        </ul>
+                    </div>
+                </Section>
+
                 <Section title="Our Mission" icon={Info}>
                     <p>
                         QuantumCalc aims to be a comprehensive and intuitive tool for students, professionals, and enthusiasts. We provide a suite of powerful calculators in a clean, modern interface, moving beyond simple arithmetic to support complex mathematical operations, data visualization, and practical everyday calculations.

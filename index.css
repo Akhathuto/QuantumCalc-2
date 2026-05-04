@@ -23,6 +23,66 @@ html.light {
   --color-border: #e2e8f0;
 }
 
+html.neon {
+  --color-bg: #050505;
+  --color-surface: #111111;
+  --color-primary: #00ffcc;
+  --color-secondary: #ff007f;
+  --color-accent: #bc13fe;
+  --color-text: #f0f0f0;
+  --color-text-secondary: #00ffa3;
+  --color-border: #333333;
+}
+
+html.royal {
+  --color-bg: #1a0b2e;
+  --color-surface: #2d1b4d;
+  --color-primary: #ffd700;
+  --color-secondary: #ff69b4;
+  --color-accent: #9b4dff;
+  --color-text: #f8f8f8;
+  --color-text-secondary: #c084fc;
+  --color-border: #4d2d7d;
+}
+
+html.terminal {
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-primary: #00ff00;
+  --color-secondary: #00cc00;
+  --color-accent: #33ff33;
+  --color-text: #00ff00;
+  --color-text-secondary: #008800;
+  --color-border: #004400;
+}
+
+html.cyberpunk {
+  --color-bg: #130019;
+  --color-surface: #2b003a;
+  --color-primary: #ff00ff;
+  --color-secondary: #00ffff;
+  --color-accent: #ffff00;
+  --color-text: #ffffff;
+  --color-text-secondary: #ff00ff;
+  --color-border: #5a0071;
+}
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin-slow 10s linear infinite;
+  }
+  .vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+  }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 body {
     @apply bg-brand-bg text-brand-text transition-colors duration-300;
 }

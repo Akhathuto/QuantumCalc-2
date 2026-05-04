@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 import { 
   GraduationCap, 
@@ -13,14 +14,17 @@ import {
   Plus,
   Trash2,
   Send,
-  Loader2,
   Quote,
   Layers,
   CheckSquare,
   Search,
-  FlaskConical
+  FlaskConical,
+  Copy,
+  Download,
+  StickyNote
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import PeriodicTable from './PeriodicTable';
 
 // --- UI Components ---
 const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
@@ -33,19 +37,19 @@ const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive:
     </button>
 );
 
+const GRADE_POINTS: Record<string, number> = {
+    'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+    'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+    'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+    'D+': 1.3, 'D': 1.0, 'F': 0.0
+};
+
 // --- 1. GPA Calculator ---
 const GPACalculator = () => {
     const [courses, setCourses] = useState([{ id: 1, name: '', grade: 'A', credits: 3 }]);
     const [targetGrade, setTargetGrade] = useState('');
     const [currentGrade, setCurrentGrade] = useState('');
     const [finalWeight, setFinalWeight] = useState('');
-
-    const gradePoints: Record<string, number> = {
-        'A+': 4.0, 'A': 4.0, 'A-': 3.7,
-        'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-        'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-        'D+': 1.3, 'D': 1.0, 'F': 0.0
-    };
 
     const addCourse = () => setCourses([...courses, { id: Date.now(), name: '', grade: 'A', credits: 3 }]);
     const removeCourse = (id: number) => setCourses(courses.filter(c => c.id !== id));
@@ -58,7 +62,7 @@ const GPACalculator = () => {
         let totalCredits = 0;
         courses.forEach(c => {
             const credits = Number(c.credits) || 0;
-            totalPoints += (gradePoints[c.grade] || 0) * credits;
+            totalPoints += (GRADE_POINTS[c.grade] || 0) * credits;
             totalCredits += credits;
         });
         return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
@@ -87,7 +91,7 @@ const GPACalculator = () => {
                             <div className="w-24">
                                 <label className="block text-xs text-brand-text-secondary mb-1">Grade</label>
                                 <select value={course.grade} onChange={e => updateCourse(course.id, 'grade', e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none">
-                                    {Object.keys(gradePoints).map(g => <option key={g} value={g}>{g}</option>)}
+                                    {Object.keys(GRADE_POINTS).map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
                             <div className="w-24">
@@ -154,6 +158,7 @@ const PomodoroTimer = () => {
         if (isActive && timeLeft > 0) {
             interval = setInterval(() => setTimeLeft(t => t - 1), 1000);
         } else if (timeLeft === 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsActive(false);
         }
         return () => clearInterval(interval);
@@ -247,7 +252,7 @@ const GeometrySolver = () => {
         const args = currentShape.params.map(p => parseFloat(inputs[p] || '0'));
         if (args.some(isNaN) || args.some(a => a <= 0)) return null;
         return (currentShape.calc as any)(...args);
-    }, [shape, inputs, currentShape]);
+    }, [inputs, currentShape]);
 
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg max-w-2xl mx-auto">
@@ -301,17 +306,17 @@ const GeometrySolver = () => {
     );
 };
 
+const ATOMIC_WEIGHTS: Record<string, number> = {
+    H: 1.008, He: 4.0026, Li: 6.94, Be: 9.0122, B: 10.81, C: 12.011, N: 14.007, O: 15.999, 
+    F: 18.998, Ne: 20.180, Na: 22.990, Mg: 24.305, Al: 26.982, Si: 28.085, P: 30.974, S: 32.06, 
+    Cl: 35.45, K: 39.098, Ca: 40.078, Fe: 55.845, Cu: 63.546, Zn: 65.38, Ag: 107.87, I: 126.90, 
+    Au: 196.97, Hg: 200.59, Pb: 207.2, U: 238.03, Pu: 244
+};
+
 // --- 4. Science Tools ---
 const ScienceTools = () => {
+    // Molar Mass
     const [formula, setFormula] = useState('');
-    
-    // Basic atomic weights
-    const atomicWeights: Record<string, number> = {
-        H: 1.008, He: 4.0026, Li: 6.94, Be: 9.0122, B: 10.81, C: 12.011, N: 14.007, O: 15.999, 
-        F: 18.998, Ne: 20.180, Na: 22.990, Mg: 24.305, Al: 26.982, Si: 28.085, P: 30.974, S: 32.06, 
-        Cl: 35.45, K: 39.098, Ca: 40.078, Fe: 55.845, Cu: 63.546, Zn: 65.38, Ag: 107.87, I: 126.90, 
-        Au: 196.97, Hg: 200.59, Pb: 207.2
-    };
 
     const molarMass = useMemo(() => {
         if (!formula) return null;
@@ -326,17 +331,54 @@ const ScienceTools = () => {
                 const element = match[1];
                 const count = match[2] ? parseInt(match[2], 10) : 1;
                 
-                if (atomicWeights[element]) {
-                    mass += atomicWeights[element] * count;
+                if (ATOMIC_WEIGHTS[element]) {
+                    mass += ATOMIC_WEIGHTS[element] * count;
                 } else {
                     return { error: `Unknown element: ${element}` };
                 }
             }
-            return valid ? { mass: mass.toFixed(3) } : { error: 'Invalid formula format' };
+            return valid ? { mass: mass.toFixed(3) } : { error: 'Invalid formula' };
         } catch (e) {
             return { error: 'Error calculating mass' };
         }
     }, [formula]);
+
+    // Ideal Gas Law
+    const [p, setP] = useState('');
+    const [v, setV] = useState('');
+    const [n, setN] = useState('');
+    const [t, setT] = useState('');
+    const [solveFor, setSolveFor] = useState('P');
+    const R = 0.08206; // L*atm/(mol*K)
+
+    const idealResult = useMemo(() => {
+        const pNum = parseFloat(p);
+        const vNum = parseFloat(v);
+        const nNum = parseFloat(n);
+        const tNum = parseFloat(t);
+
+        try {
+            if (solveFor === 'P') {
+                if (isNaN(nNum) || isNaN(tNum) || isNaN(vNum) || vNum === 0) return null;
+                return `${((nNum * R * tNum) / vNum).toFixed(4)} atm`;
+            }
+            if (solveFor === 'V') {
+                if (isNaN(nNum) || isNaN(tNum) || isNaN(pNum) || pNum === 0) return null;
+                return `${((nNum * R * tNum) / pNum).toFixed(4)} L`;
+            }
+            if (solveFor === 'n') {
+                if (isNaN(pNum) || isNaN(vNum) || isNaN(tNum) || tNum === 0) return null;
+                return `${((pNum * vNum) / (R * tNum)).toFixed(4)} mol`;
+            }
+            if (solveFor === 'T') {
+                if (isNaN(pNum) || isNaN(vNum) || isNaN(nNum) || nNum === 0) return null;
+                return `${((pNum * vNum) / (nNum * R)).toFixed(4)} K`;
+            }
+        } catch (e) {
+            return 'Error';
+        }
+        return null;
+    }, [p, v, n, t, solveFor]);
 
     return (
         <div className="space-y-8">
@@ -366,6 +408,247 @@ const ScienceTools = () => {
                             )}
                         </div>
                     )}
+                </div>
+            </div>
+
+            <div className="bg-brand-surface/50 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2">
+                    <FlaskConical size={24} /> Ideal Gas Law Calculator (PV = nRT)
+                </h3>
+
+                
+                <div className="mb-6">
+                    <label className="block text-sm text-brand-text-secondary mb-2">Solve For:</label>
+                    <div className="flex gap-2">
+                        {['P', 'V', 'n', 'T'].map(val => (
+                            <button
+                                key={val}
+                                onClick={() => setSolveFor(val)}
+                                className={`px-4 py-2 rounded-md font-bold transition-all ${solveFor === val ? 'bg-brand-primary text-white' : 'bg-brand-bg text-brand-text-secondary hover:bg-brand-border'}`}
+                            >
+                                {val === 'P' ? 'Pressure (P)' : val === 'V' ? 'Volume (V)' : val === 'n' ? 'Moles (n)' : 'Temp (T)'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {solveFor !== 'P' && (
+                        <div>
+                            <label className="block text-sm text-brand-text-secondary mb-1">Pressure (atm)</label>
+                            <input type="number" value={p} onChange={e => setP(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" />
+                        </div>
+                    )}
+                    {solveFor !== 'V' && (
+                        <div>
+                            <label className="block text-sm text-brand-text-secondary mb-1">Volume (L)</label>
+                            <input type="number" value={v} onChange={e => setV(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" />
+                        </div>
+                    )}
+                    {solveFor !== 'n' && (
+                        <div>
+                            <label className="block text-sm text-brand-text-secondary mb-1">Moles (n)</label>
+                            <input type="number" value={n} onChange={e => setN(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" />
+                        </div>
+                    )}
+                    {solveFor !== 'T' && (
+                        <div>
+                            <label className="block text-sm text-brand-text-secondary mb-1">Temperature (K)</label>
+                            <input type="number" value={t} onChange={e => setT(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" />
+                        </div>
+                    )}
+                </div>
+
+                {idealResult !== null && (
+                    <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                        <div className="text-sm mb-1">Calculated {solveFor === 'P' ? 'Pressure' : solveFor === 'V' ? 'Volume' : solveFor === 'n' ? 'Moles' : 'Temperature'}:</div>
+                        <div className="text-3xl font-bold font-mono">{idealResult}</div>
+                    </div>
+                )}
+            </div>
+
+            <div className="bg-brand-surface/50 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2">
+                    <FlaskConical size={24} /> Combined Gas Law (P₁V₁/T₁ = P₂V₂/T₂)
+                </h3>
+                <p className="text-sm text-brand-text-secondary mb-6">Enter 5 of the 6 variables to calculate the 6th.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Initial State */}
+                    <div className="space-y-4 bg-gray-900/40 p-4 rounded-xl border border-brand-border/50">
+                        <h4 className="font-bold text-brand-text mb-2">Initial State (1)</h4>
+                        <div>
+                            <label className="block text-xs text-brand-text-secondary mb-1">P₁ (Pressure)</label>
+                            <input type="number" id="p1" className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="e.g. 1.0" />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-brand-text-secondary mb-1">V₁ (Volume)</label>
+                            <input type="number" id="v1" className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="e.g. 2.0" />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-brand-text-secondary mb-1">T₁ (Temp in K)</label>
+                            <input type="number" id="t1" className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="e.g. 298" />
+                        </div>
+                    </div>
+                    {/* Final State */}
+                    <div className="space-y-4 bg-gray-900/40 p-4 rounded-xl border border-brand-border/50">
+                        <h4 className="font-bold text-brand-text mb-2">Final State (2)</h4>
+                        <div>
+                            <label className="block text-xs text-brand-text-secondary mb-1">P₂ (Pressure)</label>
+                            <input type="number" id="p2" className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="Leave empty to solve for P₂" />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-brand-text-secondary mb-1">V₂ (Volume)</label>
+                            <input type="number" id="v2" className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="Leave empty to solve for V₂" />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-brand-text-secondary mb-1">T₂ (Temp in K)</label>
+                            <input type="number" id="t2" className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="Leave empty to solve for T₂" />
+                        </div>
+                    </div>
+                </div>
+                <div className="mt-6 flex justify-center">
+                    <button onClick={() => {
+                        const p1 = parseFloat((document.getElementById('p1') as HTMLInputElement).value);
+                        const v1 = parseFloat((document.getElementById('v1') as HTMLInputElement).value);
+                        const t1 = parseFloat((document.getElementById('t1') as HTMLInputElement).value);
+                        const p2 = parseFloat((document.getElementById('p2') as HTMLInputElement).value);
+                        const v2 = parseFloat((document.getElementById('v2') as HTMLInputElement).value);
+                        const t2 = parseFloat((document.getElementById('t2') as HTMLInputElement).value);
+                        
+                        let res = '';
+                        let count = 0;
+                        if (!isNaN(p1)) count++; if (!isNaN(v1)) count++; if (!isNaN(t1)) count++;
+                        if (!isNaN(p2)) count++; if (!isNaN(v2)) count++; if (!isNaN(t2)) count++;
+                        
+                        if (count !== 5) {
+                            alert("Please enter exactly 5 values.");
+                            return;
+                        }
+                        
+                        // P1V1/T1 = P2V2/T2
+                        if (isNaN(p1)) res = `P₁ = ${((p2 * v2 * t1) / (t2 * v1)).toFixed(4)}`;
+                        else if (isNaN(v1)) res = `V₁ = ${((p2 * v2 * t1) / (t2 * p1)).toFixed(4)}`;
+                        else if (isNaN(t1)) res = `T₁ = ${((p1 * v1 * t2) / (p2 * v2)).toFixed(4)}`;
+                        else if (isNaN(p2)) res = `P₂ = ${((p1 * v1 * t2) / (t1 * v2)).toFixed(4)}`;
+                        else if (isNaN(v2)) res = `V₂ = ${((p1 * v1 * t2) / (t1 * p2)).toFixed(4)}`;
+                        else if (isNaN(t2)) res = `T₂ = ${((p2 * v2 * t1) / (p1 * v1)).toFixed(4)}`;
+
+                        const resultDiv = document.getElementById('combined-result');
+                        if (resultDiv) {
+                            resultDiv.innerText = res;
+                            resultDiv.parentElement?.classList.remove('hidden');
+                        }
+                    }} className="w-full md:w-auto px-8 py-3 rounded-lg bg-brand-primary text-white font-bold hover:bg-brand-secondary transition-all shadow-lg shadow-brand-primary/20">
+                        Calculate Unknown Variable
+                    </button>
+                </div>
+                <div className="hidden mt-6">
+                    <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-center">
+                        <div className="text-sm mb-1">Result:</div>
+                        <div id="combined-result" className="text-3xl font-bold font-mono"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 4.5 Physics Tools ---
+const PhysicsTools = () => {
+    // Kinematics Calculator (1D)
+    // Variables: displacement (dx), initial velocity (vi), final velocity (vf), acceleration (a), time (t)
+    const [dx, setDx] = useState('');
+    const [vi, setVi] = useState('');
+    const [vf, setVf] = useState('');
+    const [a, setA] = useState('');
+    const [t, setT] = useState('');
+
+    const calculateKinematics = () => {
+        let count = 0;
+        const vals = { dx: parseFloat(dx), vi: parseFloat(vi), vf: parseFloat(vf), a: parseFloat(a), t: parseFloat(t) };
+        if (!isNaN(vals.dx)) count++; if (!isNaN(vals.vi)) count++; if (!isNaN(vals.vf)) count++; if (!isNaN(vals.a)) count++; if (!isNaN(vals.t)) count++;
+        
+        if (count < 3) { alert("Enter exactly 3 known variables."); return; }
+        if (count > 3) { alert("Enter EXACTLY 3 known variables (leave 2 empty)."); return; }
+
+        let nDx = vals.dx, nVi = vals.vi, nVf = vals.vf, nA = vals.a, nT = vals.t;
+
+        // Try to derive missing variables one by one
+        let madeProgress = true;
+        while (madeProgress) {
+            madeProgress = false;
+            
+            // Vf = Vi + at
+            if (isNaN(nVf) && !isNaN(nVi) && !isNaN(nA) && !isNaN(nT)) { nVf = nVi + nA * nT; madeProgress = true; }
+            if (isNaN(nVi) && !isNaN(nVf) && !isNaN(nA) && !isNaN(nT)) { nVi = nVf - nA * nT; madeProgress = true; }
+            if (isNaN(nA) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nT)) { nA = (nVf - nVi) / nT; madeProgress = true; }
+            if (isNaN(nT) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nA)) { nT = (nVf - nVi) / nA; madeProgress = true; }
+
+            // dx = Vi*t + 0.5*a*t^2
+            if (isNaN(nDx) && !isNaN(nVi) && !isNaN(nA) && !isNaN(nT)) { nDx = nVi * nT + 0.5 * nA * nT * nT; madeProgress = true; }
+            if (isNaN(nVi) && !isNaN(nDx) && !isNaN(nA) && !isNaN(nT) && nT !== 0) { nVi = (nDx - 0.5 * nA * nT * nT) / nT; madeProgress = true; }
+            if (isNaN(nA) && !isNaN(nDx) && !isNaN(nVi) && !isNaN(nT) && nT !== 0) { nA = (2 * (nDx - nVi * nT)) / (nT * nT); madeProgress = true; }
+
+            // vf^2 = vi^2 + 2*a*dx
+            if (isNaN(nVf) && !isNaN(nVi) && !isNaN(nA) && !isNaN(nDx)) { 
+                const sq = nVi * nVi + 2 * nA * nDx;
+                if (sq >= 0) { nVf = Math.sqrt(sq); madeProgress = true; } // Might be +/- 
+            }
+            if (isNaN(nVi) && !isNaN(nVf) && !isNaN(nA) && !isNaN(nDx)) { 
+                const sq = nVf * nVf - 2 * nA * nDx;
+                if (sq >= 0) { nVi = Math.sqrt(sq); madeProgress = true; }
+            }
+            if (isNaN(nA) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nDx) && nDx !== 0) { nA = (nVf * nVf - nVi * nVi) / (2 * nDx); madeProgress = true; }
+            if (isNaN(nDx) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nA) && nA !== 0) { nDx = (nVf * nVf - nVi * nVi) / (2 * nA); madeProgress = true; }
+
+            // dx = 0.5 * (vi + vf) * t
+            if (isNaN(nDx) && !isNaN(nVi) && !isNaN(nVf) && !isNaN(nT)) { nDx = 0.5 * (nVi + nVf) * nT; madeProgress = true; }
+            if (isNaN(nT) && !isNaN(nDx) && !isNaN(nVi) && !isNaN(nVf)) { nT = (2 * nDx) / (nVi + nVf); madeProgress = true; }
+        }
+
+        setDx(isNaN(nDx) ? '' : nDx.toFixed(4));
+        setVi(isNaN(nVi) ? '' : nVi.toFixed(4));
+        setVf(isNaN(nVf) ? '' : nVf.toFixed(4));
+        setA(isNaN(nA) ? '' : nA.toFixed(4));
+        setT(isNaN(nT) ? '' : nT.toFixed(4));
+    };
+
+    return (
+        <div className="space-y-8">
+            <div className="bg-brand-surface/50 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2">
+                    <Triangle size={24} className="rotate-90" /> Kinematics Calculator (1D)
+                </h3>
+                <p className="text-sm text-brand-text-secondary mb-6">Enter exactly 3 known variables and click calculate to find the remaining 2.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label className="block text-sm text-brand-text-secondary mb-1">Displacement (Δx)</label>
+                        <input type="number" value={dx} onChange={e => setDx(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="m" />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-brand-text-secondary mb-1">Initial Velocity (vᵢ)</label>
+                        <input type="number" value={vi} onChange={e => setVi(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="m/s" />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-brand-text-secondary mb-1">Final Velocity (v_f)</label>
+                        <input type="number" value={vf} onChange={e => setVf(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="m/s" />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-brand-text-secondary mb-1">Acceleration (a)</label>
+                        <input type="number" value={a} onChange={e => setA(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="m/s²" />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-brand-text-secondary mb-1">Time (t)</label>
+                        <input type="number" value={t} onChange={e => setT(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded border border-brand-border focus:border-brand-primary outline-none" placeholder="s" />
+                    </div>
+                </div>
+                <div className="mt-6 flex gap-4">
+                    <button onClick={calculateKinematics} className="px-8 py-3 rounded-lg bg-brand-primary text-white font-bold hover:bg-brand-secondary transition-all shadow-lg shadow-brand-primary/20">
+                        Calculate Missing
+                    </button>
+                    <button onClick={() => { setDx(''); setVi(''); setVf(''); setA(''); setT(''); }} className="px-6 py-3 rounded-lg bg-red-500/20 text-red-400 font-bold hover:bg-red-500/30 transition-all">
+                        Clear All
+                    </button>
                 </div>
             </div>
         </div>
@@ -696,95 +979,69 @@ const AssignmentTracker = () => {
     );
 };
 
-// --- 9. Element Lookup ---
-const ElementLookup = () => {
-    const [search, setSearch] = useState('');
-    
-    const elements = [
-        { num: 1, sym: 'H', name: 'Hydrogen', mass: 1.008, group: 'Nonmetal' },
-        { num: 2, sym: 'He', name: 'Helium', mass: 4.0026, group: 'Noble Gas' },
-        { num: 3, sym: 'Li', name: 'Lithium', mass: 6.94, group: 'Alkali Metal' },
-        { num: 4, sym: 'Be', name: 'Beryllium', mass: 9.0122, group: 'Alkaline Earth' },
-        { num: 5, sym: 'B', name: 'Boron', mass: 10.81, group: 'Metalloid' },
-        { num: 6, sym: 'C', name: 'Carbon', mass: 12.011, group: 'Nonmetal' },
-        { num: 7, sym: 'N', name: 'Nitrogen', mass: 14.007, group: 'Nonmetal' },
-        { num: 8, sym: 'O', name: 'Oxygen', mass: 15.999, group: 'Nonmetal' },
-        { num: 9, sym: 'F', name: 'Fluorine', mass: 18.998, group: 'Halogen' },
-        { num: 10, sym: 'Ne', name: 'Neon', mass: 20.180, group: 'Noble Gas' },
-        { num: 11, sym: 'Na', name: 'Sodium', mass: 22.990, group: 'Alkali Metal' },
-        { num: 12, sym: 'Mg', name: 'Magnesium', mass: 24.305, group: 'Alkaline Earth' },
-        { num: 13, sym: 'Al', name: 'Aluminum', mass: 26.982, group: 'Post-Transition Metal' },
-        { num: 14, sym: 'Si', name: 'Silicon', mass: 28.085, group: 'Metalloid' },
-        { num: 15, sym: 'P', name: 'Phosphorus', mass: 30.974, group: 'Nonmetal' },
-        { num: 16, sym: 'S', name: 'Sulfur', mass: 32.06, group: 'Nonmetal' },
-        { num: 17, sym: 'Cl', name: 'Chlorine', mass: 35.45, group: 'Halogen' },
-        { num: 18, sym: 'Ar', name: 'Argon', mass: 39.95, group: 'Noble Gas' },
-        { num: 19, sym: 'K', name: 'Potassium', mass: 39.098, group: 'Alkali Metal' },
-        { num: 20, sym: 'Ca', name: 'Calcium', mass: 40.078, group: 'Alkaline Earth' },
-        { num: 26, sym: 'Fe', name: 'Iron', mass: 55.845, group: 'Transition Metal' },
-        { num: 29, sym: 'Cu', name: 'Copper', mass: 63.546, group: 'Transition Metal' },
-        { num: 30, sym: 'Zn', name: 'Zinc', mass: 65.38, group: 'Transition Metal' },
-        { num: 47, sym: 'Ag', name: 'Silver', mass: 107.87, group: 'Transition Metal' },
-        { num: 79, sym: 'Au', name: 'Gold', mass: 196.97, group: 'Transition Metal' },
-        { num: 80, sym: 'Hg', name: 'Mercury', mass: 200.59, group: 'Transition Metal' },
-        { num: 82, sym: 'Pb', name: 'Lead', mass: 207.2, group: 'Post-Transition Metal' },
-    ];
+// --- 9. Notes Tool ---
 
-    const filtered = elements.filter(e => 
-        e.name.toLowerCase().includes(search.toLowerCase()) || 
-        e.sym.toLowerCase().includes(search.toLowerCase()) ||
-        e.num.toString() === search
-    );
+const NotesTool = () => {
+    const [notes, setNotes] = useState<string>(() => localStorage.getItem('quantumcalc_notes') || '');
+    const [lastSaved, setLastSaved] = useState<string>('');
+
+    useEffect(() => {
+        localStorage.setItem('quantumcalc_notes', notes);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLastSaved(new Date().toLocaleTimeString());
+    }, [notes]);
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            <div className="bg-brand-surface/50 p-6 rounded-lg border border-brand-border">
-                <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2">
-                    <FlaskConical size={24} /> Element Lookup
-                </h3>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-text-secondary" size={18} />
-                    <input 
-                        type="text" 
-                        value={search} 
-                        onChange={e => setSearch(e.target.value)} 
-                        placeholder="Search by name, symbol, or atomic number..." 
-                        className="w-full bg-gray-900/70 pl-10 p-3 rounded border border-brand-border focus:border-brand-primary outline-none"
-                    />
+        <div className="space-y-4">
+            <div className="flex justify-between items-center bg-brand-surface/50 p-4 rounded-xl border border-brand-border">
+                <div className="flex items-center gap-3">
+                    <StickyNote className="text-brand-primary" size={24} />
+                    <div>
+                        <h3 className="text-xl font-bold text-brand-text">Scratchpad</h3>
+                        <p className="text-[10px] text-brand-text-secondary uppercase">Autosaves locally</p>
+                    </div>
                 </div>
+                <div className="text-xs text-brand-text-secondary">Last saved: {lastSaved}</div>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filtered.map(e => (
-                    <div key={e.num} className="bg-brand-surface p-4 rounded-lg border border-brand-border flex items-center gap-4 hover:border-brand-primary/50 transition-colors">
-                        <div className="w-14 h-14 shrink-0 rounded bg-gray-900 flex flex-col items-center justify-center border border-brand-border/50">
-                            <span className="text-[10px] text-brand-text-secondary -mb-1">{e.num}</span>
-                            <span className="text-lg font-bold text-brand-primary">{e.sym}</span>
-                        </div>
-                        <div className="min-w-0">
-                            <div className="font-bold truncate">{e.name}</div>
-                            <div className="text-xs text-brand-text-secondary truncate">{e.mass} g/mol</div>
-                            <div className="text-[10px] text-brand-accent mt-1 truncate">{e.group}</div>
-                        </div>
-                    </div>
-                ))}
-                {filtered.length === 0 && (
-                    <div className="col-span-full text-center p-8 text-brand-text-secondary">
-                        No elements found matching "{search}".
-                    </div>
-                )}
+            <textarea 
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Start typing your notes, derivations, or problem drafts..."
+                className="w-full h-96 bg-brand-surface border border-brand-border rounded-xl p-6 text-brand-text outline-none focus:ring-2 focus:ring-brand-primary font-mono text-sm shadow-inner"
+            />
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => {
+                        const blob = new Blob([notes], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'quantumcalc_notes.txt';
+                        a.click();
+                    }}
+                    className="flex-1 py-3 bg-brand-primary text-white font-bold rounded-xl hover:bg-brand-secondary transition-all"
+                >
+                    Export as .txt
+                </button>
+                <button 
+                    onClick={() => setNotes('')}
+                    className="px-6 py-3 bg-red-400/20 text-red-400 font-bold rounded-xl hover:bg-red-400/30 transition-all border border-red-400/20"
+                >
+                    Clear All
+                </button>
             </div>
         </div>
     );
 };
 
-// --- 10. AI Tutor ---
+// --- 10. AI Tutor Workspace ---
 const AITutor = () => {
     const [messages, setMessages] = useState<{role: 'user'|'model', text: string}[]>([
         { role: 'model', text: "Hi! I'm Nolo, your AI Tutor. Ask me a math, physics, or chemistry problem, and I'll help you solve it step-by-step instead of just giving you the answer. I can also help you with writing, history, and general high school subjects!" }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [workspaceMode, setWorkspaceMode] = useState<'chat' | 'step-by-step' | 'explanation'>('chat');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -795,31 +1052,33 @@ const AITutor = () => {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+    const handleSend = async (quickPrompt?: string) => {
+        const userText = quickPrompt || input.trim();
+        if (!userText || isLoading) return;
         
-        const userText = input.trim();
-        setInput('');
+        if (!quickPrompt) setInput('');
         setMessages(prev => [...prev, { role: 'user', text: userText }]);
         setIsLoading(true);
 
         try {
             const apiKey = process.env.GEMINI_API_KEY;
-            if (!apiKey) {
-                throw new Error("Gemini API key is not configured.");
-            }
+            if (!apiKey) throw new Error("Gemini API key is not configured.");
             
             const ai = new GoogleGenAI({ apiKey });
             
-            // Build history for context (simple concatenation for this example)
-            const historyText = messages.map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`).join('\n\n');
-            const prompt = `${historyText}\n\nStudent: ${userText}`;
+            let systemPrompt = "You are Nolo, an AI step-by-step tutor for high school students. Break it down into clear, logical steps. Use markdown for formatting.";
             
+            if (workspaceMode === 'step-by-step') {
+                systemPrompt += " FOCUS: Be extremely pedantic about steps. Use [Step 1], [Step 2] formatting. For formulas, use LaTeX-style backticks.";
+            } else if (workspaceMode === 'explanation') {
+                systemPrompt += " FOCUS: Explain the THEORY and CONCEPTS behind the problem rather than just the math solving.";
+            }
+
             const response = await ai.models.generateContent({
-                model: "gemini-3.1-pro-preview",
-                contents: prompt,
+                model: "gemini-2.5-flash",
+                contents: userText,
                 config: {
-                    systemInstruction: "You are Nolo, an AI step-by-step tutor for high school students. When given a math, physics, or chemistry problem, do NOT just give the final answer. Break it down into clear, logical steps so the student can learn how to solve it themselves. Ask guiding questions if necessary. For history, literature, or writing, provide constructive feedback and encourage critical thinking. Use markdown for formatting.",
+                    systemInstruction: systemPrompt,
                 }
             });
             
@@ -831,58 +1090,145 @@ const AITutor = () => {
         }
     };
 
+    const copyChat = () => {
+        const text = messages.map(m => `**${m.role === 'user' ? 'Student' : 'Nolo AI'}**: ${m.text}`).join('\n\n');
+        navigator.clipboard.writeText(text);
+        alert('Chat copied to clipboard as Markdown!');
+    };
+
+    const downloadChat = () => {
+        const text = messages.map(m => `**${m.role === 'user' ? 'Student' : 'Nolo AI'}**: ${m.text}`).join('\n\n');
+        const blob = new Blob([text], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nolo-tutor-session-${new Date().toISOString().slice(0,10)}.md`;
+        a.click();
+    };
+
+    const quickActions = [
+        { label: 'Summarize Concept', icon: BookOpen, prompt: 'Explain the core concepts of ' },
+        { label: 'Step-by-Step Solve', icon: BrainCircuit, prompt: 'Help me solve this problem step-by-step: ' },
+        { label: 'Analyze Proof', icon: Search, prompt: 'Check this derivation for errors and explain why: ' },
+        { label: 'Test Knowledge', icon: CheckSquare, prompt: 'Give me 3 practice problems regarding ' },
+    ];
+
     return (
-        <div className="bg-brand-surface/50 rounded-lg border border-brand-border flex flex-col h-[600px]">
-            <div className="p-4 border-b border-brand-border bg-brand-surface/80 flex items-center gap-3 rounded-t-lg">
-                <BrainCircuit className="text-brand-primary" />
-                <div>
-                    <h3 className="font-bold text-brand-text">Nolo - AI Step-by-Step Tutor</h3>
-                    <p className="text-xs text-brand-text-secondary">Powered by Gemini 3.1 Pro</p>
+        <div className="flex flex-col lg:flex-row gap-4 h-[650px]">
+            {/* Sidebar Controls */}
+            <div className="lg:w-48 flex flex-col gap-3">
+                <h4 className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest pl-2">Mode</h4>
+                {(['chat', 'step-by-step', 'explanation'] as const).map(mode => (
+                    <button
+                        key={mode}
+                        onClick={() => setWorkspaceMode(mode)}
+                        className={`p-3 rounded-xl text-xs font-bold transition-all border ${workspaceMode === mode ? 'bg-brand-primary text-white border-brand-primary shadow-lg' : 'bg-brand-surface border-brand-border text-brand-text-secondary hover:border-brand-primary/50'}`}
+                    >
+                        {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </button>
+                ))}
+                
+                <div className="mt-auto space-y-2">
+                    <h4 className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest pl-2">Presets</h4>
+                    {quickActions.map(action => (
+                        <button
+                            key={action.label}
+                            onClick={() => setInput(action.prompt)}
+                            className="w-full p-2 text-[10px] bg-brand-surface border border-brand-border rounded-lg text-left hover:bg-brand-primary/10 transition-colors flex items-center gap-2"
+                        >
+                            <action.icon size={12} className="text-brand-primary" />
+                            {action.label}
+                        </button>
+                    ))}
                 </div>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user' ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-gray-800 text-brand-text rounded-tl-none'}`}>
-                            {msg.role === 'user' ? (
-                                <div className="whitespace-pre-wrap">{msg.text}</div>
-                            ) : (
-                                <div className="markdown-body text-sm">
-                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+
+            {/* Main Workspace */}
+            <div className="flex-1 bg-brand-surface/50 rounded-2xl border border-brand-border flex flex-col overflow-hidden shadow-inner">
+                <div className="p-4 border-b border-brand-border bg-brand-surface/80 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white">
+                            <BrainCircuit size={18} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-brand-text text-sm">Workspace Environment</h3>
+                            <p className="text-[10px] text-brand-text-secondary">Logic Engine: Gemini 3.1 Pro</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <button onClick={copyChat} className="p-2 text-brand-text-secondary hover:bg-brand-surface rounded-lg transition-colors" title="Copy Chat">
+                            <Copy size={16} />
+                        </button>
+                        <button onClick={downloadChat} className="p-2 text-brand-text-secondary hover:bg-brand-surface rounded-lg transition-colors" title="Download Session">
+                            <Download size={16} />
+                        </button>
+                        <button onClick={() => setMessages([messages[0]])} className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors" title="Clear Chat">
+                            <RotateCcw size={16} />
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                    {messages.map((msg, idx) => (
+                        <motion.div 
+                            key={idx}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div className={`max-w-[85%] p-4 rounded-2xl shadow-sm ${msg.role === 'user' ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-brand-surface border border-brand-border text-brand-text rounded-tl-none'}`}>
+                                {msg.role === 'user' ? (
+                                    <div className="whitespace-pre-wrap font-medium">{msg.text}</div>
+                                ) : (
+                                    <div className="markdown-body prose prose-invert prose-sm">
+                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))}
+                    {isLoading && (
+                        <div className="flex justify-start">
+                             <div className="bg-brand-surface border border-brand-border p-4 rounded-2xl rounded-tl-none flex items-center gap-3">
+                                <div className="flex gap-1">
+                                    <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-bounce" />
+                                    <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                                    <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-bounce [animation-delay:0.4s]" />
                                 </div>
-                            )}
+                                <span className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">Processing Data...</span>
+                            </div>
                         </div>
-                    </div>
-                ))}
-                {isLoading && (
-                    <div className="flex justify-start">
-                        <div className="bg-gray-800 text-brand-text p-3 rounded-lg rounded-tl-none flex items-center gap-2">
-                            <Loader2 size={16} className="animate-spin text-brand-primary" />
-                            <span className="text-sm text-brand-text-secondary">Thinking...</span>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+                
+                <div className="p-4 bg-brand-bg/50 border-t border-brand-border">
+                    <div className="flex gap-3">
+                        <div className="flex-1 relative">
+                            <textarea 
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                    }
+                                }}
+                                placeholder="Paste equation or problem description..."
+                                className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 text-sm outline-none focus:border-brand-primary min-h-[50px] max-h-[150px] resize-none"
+                            />
+                            <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                                <span className="text-[10px] text-brand-text-secondary font-mono">Shift+Enter for newline</span>
+                            </div>
                         </div>
+                        <button 
+                            onClick={() => handleSend()}
+                            disabled={isLoading || !input.trim()}
+                            className="bg-brand-primary hover:bg-brand-secondary disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 rounded-xl transition-all shadow-lg shadow-brand-primary/20 flex items-center justify-center font-bold"
+                        >
+                            <Send size={20} />
+                        </button>
                     </div>
-                )}
-                <div ref={messagesEndRef} />
-            </div>
-            
-            <div className="p-4 border-t border-brand-border bg-brand-surface/80 rounded-b-lg">
-                <div className="flex gap-2">
-                    <input 
-                        type="text" 
-                        value={input}
-                        onChange={e => setInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSend()}
-                        placeholder="Type your math or science problem here..."
-                        className="flex-1 bg-gray-900/70 p-3 rounded-md border border-brand-border focus:border-brand-primary outline-none"
-                    />
-                    <button 
-                        onClick={handleSend}
-                        disabled={isLoading || !input.trim()}
-                        className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md transition-colors flex items-center justify-center"
-                    >
-                        <Send size={20} />
-                    </button>
                 </div>
             </div>
         </div>
@@ -897,12 +1243,14 @@ const StudentTools: React.FC = () => {
         { id: 'gpa', label: 'Grades & GPA', Icon: GraduationCap },
         { id: 'pomodoro', label: 'Study Timer', Icon: Timer },
         { id: 'geometry', label: 'Geometry', Icon: Triangle },
-        { id: 'science', label: 'Science', Icon: Atom },
+        { id: 'science', label: 'Chemistry', Icon: Atom },
+        { id: 'physics', label: 'Physics', Icon: Triangle },
         { id: 'formulas', label: 'Formulas', Icon: BookOpen },
+        { id: 'notes', label: 'Scratchpad', Icon: StickyNote },
         { id: 'citations', label: 'Citations', Icon: Quote },
         { id: 'flashcards', label: 'Flashcards', Icon: Layers },
         { id: 'assignments', label: 'Assignments', Icon: CheckSquare },
-        { id: 'elements', label: 'Elements', Icon: FlaskConical },
+        { id: 'elements', label: 'Periodic Table', Icon: FlaskConical },
         { id: 'tutor', label: 'Nolo AI Tutor', Icon: BrainCircuit },
     ];
 
@@ -912,11 +1260,13 @@ const StudentTools: React.FC = () => {
             case 'pomodoro': return <PomodoroTimer />;
             case 'geometry': return <GeometrySolver />;
             case 'science': return <ScienceTools />;
+            case 'physics': return <PhysicsTools />;
             case 'formulas': return <FormulaReference />;
+            case 'notes': return <NotesTool />;
             case 'citations': return <CitationGenerator />;
             case 'flashcards': return <Flashcards />;
             case 'assignments': return <AssignmentTracker />;
-            case 'elements': return <ElementLookup />;
+            case 'elements': return <PeriodicTable />;
             case 'tutor': return <AITutor />;
             default: return null;
         }

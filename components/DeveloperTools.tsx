@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Braces, Key, Regex, Code } from 'lucide-react';
+import { Braces, Key, Regex, Code, Lock, RefreshCw, Layers } from 'lucide-react';
 
 // Reusable UI Components
 const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
@@ -11,6 +11,102 @@ const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive:
         {label}
     </button>
 );
+
+const EncoderDecoder = () => {
+    const [input, setInput] = useState('');
+    const [output, setOutput] = useState('');
+    const [mode, setMode] = useState<'b64' | 'url' | 'html'>('b64');
+
+    const handleEncode = () => {
+        try {
+            if (mode === 'b64') setOutput(window.btoa(input));
+            else if (mode === 'url') setOutput(encodeURIComponent(input));
+            else setOutput(input.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m] || m)));
+        } catch (e) {
+            setOutput('Encoding failed: Check input format');
+        }
+    };
+
+    const handleDecode = () => {
+        try {
+            if (mode === 'b64') setOutput(window.atob(input));
+            else if (mode === 'url') setOutput(decodeURIComponent(input));
+            else {
+                const doc = new DOMParser().parseFromString(input, "text/html");
+                setOutput(doc.documentElement.textContent || "");
+            }
+        } catch (e) {
+            setOutput('Decoding failed: Check input format');
+        }
+    };
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
+            <div className="flex gap-2">
+                {(['b64', 'url', 'html'] as const).map(m => (
+                    <button 
+                        key={m}
+                        onClick={() => setMode(m)}
+                        className={`text-xs px-3 py-1 rounded-full border ${mode === m ? 'bg-brand-primary border-brand-primary text-white' : 'border-brand-border text-brand-text-secondary'}`}
+                    >
+                        {m.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <textarea
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    placeholder="Enter text..."
+                    className="h-48 bg-gray-900/70 p-4 rounded-md border border-brand-border font-mono text-sm"
+                />
+                <textarea
+                    readOnly
+                    value={output}
+                    placeholder="Result will appear here..."
+                    className="h-48 bg-gray-900/70 p-4 rounded-md border border-brand-border font-mono text-sm text-brand-accent"
+                />
+            </div>
+            <div className="flex gap-2">
+                <button onClick={handleEncode} className="flex-1 py-2 bg-brand-primary rounded-md font-bold">Encode</button>
+                <button onClick={handleDecode} className="flex-1 py-2 bg-brand-secondary rounded-md font-bold">Decode</button>
+            </div>
+        </div>
+    );
+};
+
+const Hasher = () => {
+    const [input, setInput] = useState('');
+    const [output, setOutput] = useState('');
+
+    const generateHash = async () => {
+        if (!input) return;
+        const msgUint8 = new TextEncoder().encode(input);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        setOutput(hashHex);
+    };
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4 text-center">
+            <textarea
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="Enter string to hash (SHA-256)..."
+                className="w-full h-32 bg-gray-900/70 p-4 rounded-md border border-brand-border font-mono text-sm"
+            />
+            <button onClick={generateHash} className="w-full py-2 bg-brand-accent rounded-md font-bold flex items-center justify-center gap-2">
+                <RefreshCw size={16} /> Generate SHA-256 Hash
+            </button>
+            {output && (
+                <div className="p-4 bg-brand-bg rounded border border-brand-border font-mono text-sm break-all text-brand-primary">
+                    {output}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const JsonFormatter = () => {
     const [input, setInput] = useState('');
@@ -244,6 +340,8 @@ const DeveloperTools: React.FC = () => {
         { id: 'json', label: 'JSON Formatter', Icon: Braces },
         { id: 'jwt', label: 'JWT Decoder', Icon: Key },
         { id: 'regex', label: 'Regex Tester', Icon: Regex },
+        { id: 'encoder', label: 'Encoder/Decoder', Icon: Layers },
+        { id: 'hasher', label: 'SHA-256 Hasher', Icon: Lock },
     ];
 
     const renderTool = () => {
@@ -251,6 +349,8 @@ const DeveloperTools: React.FC = () => {
             case 'json': return <JsonFormatter />;
             case 'jwt': return <JwtDecoder />;
             case 'regex': return <RegexTester />;
+            case 'encoder': return <EncoderDecoder />;
+            case 'hasher': return <Hasher />;
             default: return null;
         }
     };

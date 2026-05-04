@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { AuthProvider } from './components/AuthProvider';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -9,5 +10,7 @@ if (!rootElement) {
 
 const root = createRoot(rootElement);
 root.render(
-  <App />
+  <AuthProvider>
+    <App />
+  </AuthProvider>
 );

@@ -12,12 +12,12 @@ const ProgrammerCalculator: React.FC = () => {
 
     // Format helpers
     const formatBin = (val: bigint, size: WordSize) => {
-        let bin = BigInt.asUintN(size, val).toString(2);
+        const bin = BigInt.asUintN(size, val).toString(2);
         return bin.padStart(size, '0').replace(/(.{4})/g, '$1 ').trim();
     };
 
     const formatHex = (val: bigint, size: WordSize) => {
-        let hex = BigInt.asUintN(size, val).toString(16).toUpperCase();
+        const hex = BigInt.asUintN(size, val).toString(16).toUpperCase();
         return hex;
     };
 
@@ -39,7 +39,7 @@ const ProgrammerCalculator: React.FC = () => {
         }
 
         try {
-            let cleanVal = strValue.replace(/\s/g, '').toLowerCase();
+            const cleanVal = strValue.replace(/\s/g, '').toLowerCase();
             let parsed: bigint;
             
             if (base === 'bin') {

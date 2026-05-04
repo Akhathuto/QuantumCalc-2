@@ -1,4 +1,5 @@
 export interface HistoryEntry {
+  id?: string;
   expression: string;
   result: string;
   timestamp: string;
@@ -21,6 +22,7 @@ export type AppTab =
   | 'landing'
   | 'calculator'
   | 'graphing'
+  | 'periodic'
   | 'math-tools'
   | 'programmer'
   | 'units'
@@ -34,6 +36,7 @@ export type AppTab =
   | 'student'
   | 'history'
   | 'about'
+  | 'contact'
   | 'terms'
   | 'settings'
   | 'help';

@@ -1,14 +1,15 @@
 
 
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
-import { BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, RectangleHorizontal, Shuffle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Circle } from 'lucide-react';
+import { BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, RectangleHorizontal, Shuffle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Circle, Book, Activity, Landmark, Binary } from 'lucide-react';
 
 // Import standalone components
 import MatrixCalculator from './Matrix';
 import StatisticsCalculator from './Statistics';
 import EquationSolverTool from './EquationSolver';
+import FormulaLibrary from './FormulaLibrary';
 
 
 const math = create(all, { number: 'BigNumber', precision: 64 });
@@ -728,6 +729,157 @@ const RandomNumberGenerator = () => {
 };
 
 
+const SymbolicMathTool = () => {
+    const [expression, setExpression] = useState('x^2 + 2x + 1');
+    const [variable, setVariable] = useState('x');
+
+    const result = useMemo(() => {
+        if (!expression.trim()) return { derivative: '', integral: '', error: null };
+        try {
+            const derivative = math.derivative(expression, variable);
+            return {
+                derivative: derivative.toString(),
+                integral: "Use AI Assistant for complex integrals (Coming Soon to Native)",
+                error: null
+            };
+        } catch (e) {
+            return { derivative: '', integral: '', error: e instanceof Error ? e.message : 'Invalid expression' };
+        }
+    }, [expression, variable]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border space-y-6">
+            <div className="grid md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                    <Input label="Expression" value={expression} onChange={e => setExpression(e.target.value)} placeholder="e.g. x^3 + x^2" />
+                </div>
+                <Input label="Variable" value={variable} onChange={e => setVariable(e.target.value)} />
+            </div>
+            {result.error && <p className="text-red-400 text-sm">{result.error}</p>}
+            <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-brand-bg p-6 rounded-xl space-y-2 border border-brand-border shadow-sm group hover:border-brand-primary transition-all">
+                    <h4 className="text-xs font-bold text-brand-primary uppercase tracking-widest">Derivative d/d{variable}</h4>
+                    <p className="text-2xl font-mono font-bold text-brand-text truncate">{result.derivative || 'Ready'}</p>
+                </div>
+                <div className="bg-brand-bg p-6 rounded-xl space-y-2 border border-brand-border shadow-sm opacity-50 grayscale">
+                    <h4 className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest">Integral ∫ dx (Native Support Ltd)</h4>
+                    <p className="text-sm italic">Coming soon... Try AI Tutor for integrals.</p>
+                </div>
+            </div>
+            <div className="p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/20">
+                <p className="text-xs text-brand-text-secondary flex items-baseline gap-2">
+                    <span className="font-bold text-brand-primary">💡 PRO TIP:</span> 
+                    Symbolic differentiation is calculated locally. For step-by-step proofs, use the **AI Tutor** in a split view.
+                </p>
+            </div>
+        </div>
+    );
+};
+
+const FinancialCalculator = () => {
+    const [mode, setMode] = useState<'compound' | 'loan'>('compound');
+    const [principal, setPrincipal] = useState('1000');
+    const [rate, setRate] = useState('5');
+    const [time, setTime] = useState('5');
+    const [compounding, setCompounding] = useState('1'); 
+
+    const result = useMemo(() => {
+        const p = parseFloat(principal);
+        const r = parseFloat(rate) / 100;
+        const t = parseFloat(time);
+        const n = parseFloat(compounding);
+
+        if (isNaN(p) || isNaN(r) || isNaN(t)) return null;
+
+        if (mode === 'compound') {
+            const amount = p * Math.pow(1 + r / n, n * t);
+            return { total: amount.toFixed(2), interest: (amount - p).toFixed(2) };
+        } else {
+            const monthlyRate = r / 12;
+            const months = t * 12;
+            const emi = (p * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+            return { total: (emi * months).toFixed(2), monthly: emi.toFixed(2), interest: (emi * months - p).toFixed(2) };
+        }
+    }, [principal, rate, time, compounding, mode]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border space-y-6">
+            <div className="flex bg-brand-bg p-1 rounded-xl border border-brand-border h-12">
+                <button onClick={() => setMode('compound')} className={`flex-1 rounded-lg text-sm font-bold transition-all ${mode === 'compound' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>Compound Interest</button>
+                <button onClick={() => setMode('loan')} className={`flex-1 rounded-lg text-sm font-bold transition-all ${mode === 'loan' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>Loan / EMI</button>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+                <Input label="Principal Amount ($)" value={principal} onChange={e => setPrincipal(e.target.value)} type="number" />
+                <Input label="Interest Rate (%)" value={rate} onChange={e => setRate(e.target.value)} type="number" />
+                <Input label="Term (Years)" value={time} onChange={e => setTime(e.target.value)} type="number" />
+                {mode === 'compound' && (
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest pl-1">Compounding</label>
+                        <select value={compounding} onChange={e => setCompounding(e.target.value)} className="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-brand-primary outline-none">
+                            <option value="1">Annually</option>
+                            <option value="4">Quarterly</option>
+                            <option value="12">Monthly</option>
+                            <option value="365">Daily</option>
+                        </select>
+                    </div>
+                )}
+            </div>
+            {result && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <ResultCard title={`Total ${mode === 'compound' ? 'Value' : 'Repayment'}`} value={`$${result.total}`} />
+                    {mode === 'loan' && <ResultCard title="Monthly EMI" value={`$${result.monthly}`} />}
+                    <ResultCard title="Total Interest" value={`$${result.interest}`} />
+                </div>
+            )}
+        </div>
+    );
+};
+
+const BaseNCalculator = () => {
+    const [val, setVal] = useState('255');
+    const [fromBase, setFromBase] = useState<number>(10);
+
+    const conversions = useMemo(() => {
+        try {
+            const decimal = parseInt(val, fromBase);
+            if (isNaN(decimal)) return null;
+            return {
+                dec: decimal.toString(10),
+                hex: decimal.toString(16).toUpperCase(),
+                bin: decimal.toString(2),
+                oct: decimal.toString(8)
+            };
+        } catch { return null; }
+    }, [val, fromBase]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border space-y-6">
+            <div className="grid md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                    <Input label="Value" value={val} onChange={e => setVal(e.target.value)} placeholder="Enter number..." />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest pl-1">From Base</label>
+                    <select value={fromBase} onChange={e => setFromBase(parseInt(e.target.value))} className="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-brand-primary outline-none">
+                        <option value="10">Decimal (10)</option>
+                        <option value="16">Hex (16)</option>
+                        <option value="2">Binary (2)</option>
+                        <option value="8">Octal (8)</option>
+                    </select>
+                </div>
+            </div>
+            {conversions && (
+                <div className="grid grid-cols-2 gap-4">
+                    <ResultCard title="DEC" value={conversions.dec} />
+                    <ResultCard title="HEX" value={conversions.hex} />
+                    <ResultCard title="BIN" value={conversions.bin} />
+                    <ResultCard title="OCT" value={conversions.oct} />
+                </div>
+            )}
+        </div>
+    );
+};
+
 // --- Main Component ---
 const MathTools: React.FC = () => {
     const [activeCalc, setActiveCalc] = useState('statistics');
@@ -753,6 +905,10 @@ const MathTools: React.FC = () => {
         { id: 'distance', label: 'Distance', Icon: Ruler },
         { id: 'area', label: 'Area', Icon: RectangleHorizontal },
         { id: 'random', label: 'Random Numbers', Icon: Shuffle },
+        { id: 'symbolic', label: 'Symbolic Math', Icon: Activity },
+        { id: 'financial', label: 'Financial', Icon: Landmark },
+        { id: 'basen', label: 'Base-N / Programmer', Icon: Binary },
+        { id: 'formulas', label: 'Formula Library', Icon: Book },
     ];
 
     const renderCalculator = () => {
@@ -760,6 +916,10 @@ const MathTools: React.FC = () => {
             case 'matrix': return <MatrixCalculator />;
             case 'statistics': return <StatisticsCalculator />;
             case 'equations': return <EquationSolverTool />;
+            case 'formulas': return <FormulaLibrary />;
+            case 'symbolic': return <SymbolicMathTool />;
+            case 'financial': return <FinancialCalculator />;
+            case 'basen': return <BaseNCalculator />;
             case 'percentage': return <PercentageCalculatorTool />;
             case 'gcf-lcm': return <GcfLcmCalculator />;
             case 'prime': return <PrimeNumberCalculator />;

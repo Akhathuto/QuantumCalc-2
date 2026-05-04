@@ -20,13 +20,17 @@ import {
   HelpCircle,
   Wrench,
   Code,
-  GraduationCap
+  GraduationCap,
+  Mail,
+  LogOut,
+  LogIn
 } from 'lucide-react';
 
 import Logo from './Logo';
 import Tab from './Tab';
 import DropdownTab from './DropdownTab';
 import { AppTab } from '../../types';
+import { useAuth } from '../AuthProvider';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -34,6 +38,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
+  const { user, signInWithGoogle, logout } = useAuth();
+
   return (
     <header className="bg-brand-surface/70 backdrop-blur-sm p-4 rounded-b-xl shadow-lg sticky top-0 z-40 mb-8">
       <div className="container mx-auto flex justify-between items-center">
@@ -95,10 +101,30 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
               { id: 'history', label: 'History', Icon: History },
               { id: 'help', label: 'Help & FAQ', Icon: HelpCircle },
               { id: 'about', label: 'About', Icon: Info },
+              { id: 'contact', label: 'Contact', Icon: Mail },
               { id: 'settings', label: 'Settings', Icon: SettingsIcon },
               { id: 'terms', label: 'Terms & License', Icon: FileText },
             ]}
           />
+          {user ? (
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-brand-text-secondary hover:bg-brand-surface hover:text-brand-primary"
+              title={`Logged in as ${user.displayName || user.email}`}
+            >
+              <img src={user.photoURL || ''} alt="Profile" className="w-6 h-6 rounded-full" />
+              <LogOut size={18} />
+              <span className="hidden sm:inline text-sm font-medium">Logout</span>
+            </button>
+          ) : (
+            <button
+              onClick={signInWithGoogle}
+              className="flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-brand-text-secondary hover:bg-brand-surface hover:text-brand-primary"
+            >
+              <LogIn size={18} />
+              <span className="hidden sm:inline text-sm font-medium">Login</span>
+            </button>
+          )}
         </nav>
       </div>
     </header>

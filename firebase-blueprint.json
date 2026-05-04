@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "email": { "type": "string", "format": "email", "description": "User email" },
+        "displayName": { "type": "string", "description": "User display name" },
+        "photoURL": { "type": "string", "description": "User photo URL" },
+        "createdAt": { "type": "timestamp", "description": "Account creation time" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "HistoryEntry": {
+      "title": "HistoryEntry",
+      "description": "A calculation history entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "expression": { "type": "string" },
+        "result": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "isFavorite": { "type": "boolean" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "expression", "result", "timestamp", "isFavorite", "userId"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "User preferences",
+      "type": "object",
+      "properties": {
+        "theme": { "type": "string", "enum": ["light", "dark", "system"] },
+        "defaultCalculator": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["userId"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "A message submitted via the contact form",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "status": { "type": "string", "enum": ["new", "read", "replied"] }
+      },
+      "required": ["name", "email", "subject", "message", "createdAt", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "/history/{entryId}": {
+      "schema": { "$ref": "#/entities/HistoryEntry" },
+      "description": "User calculation history"
+    },
+    "/settings/{userId}": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "User settings"
+    },
+    "/contact_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ContactMessage" },
+      "description": "Contact form submissions"
+    }
+  }
+}

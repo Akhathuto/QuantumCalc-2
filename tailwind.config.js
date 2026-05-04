@@ -8,6 +8,9 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      gridTemplateColumns: {
+        '18': 'repeat(18, minmax(0, 1fr))',
+      },
       colors: {
         'brand-bg': 'var(--color-bg)',
         'brand-surface': 'var(--color-surface)',

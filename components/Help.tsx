@@ -44,7 +44,6 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, icon: Icon, childr
     );
 };
 
-
 const Help: React.FC = () => {
     return (
         <div>
@@ -99,10 +98,17 @@ const Help: React.FC = () => {
                     </ul>
                 </AccordionItem>
                  <AccordionItem title="Math Tools" icon={Beaker}>
+                     <p>
+                        A comprehensive toolkit for advanced and everyday mathematical calculations.
+                     </p>
                      <ul>
                         <li><strong>Matrix Calculator:</strong> Select a size (2x2 or 3x3), input your values for Matrix A and B, and select an operation to perform.</li>
-                        <li><strong>Statistics Calculator:</strong> Enter a list of numbers separated by spaces or commas to get a full statistical analysis, including mean, median, and standard deviation.</li>
-                        <li><strong>Equation Solver:</strong> Enter a linear (e.g., <code>2x-10=0</code>) or quadratic (e.g., <code>x^2-4=0</code>) equation to find the value(s) of 'x'. A step-by-step breakdown of the formula used is also provided.</li>
+                        <li><strong>Statistics Calculator:</strong> Enter a list of numbers separated by spaces or commas to get a full statistical analysis. Also includes Confidence Intervals.</li>
+                        <li><strong>Equation Solver:</strong> Enter a linear (e.g., <code>2x-10=0</code>) or quadratic equation to find the value(s) of 'x'. A step-by-step breakdown is provided.</li>
+                        <li><strong>Fractions & Ratios:</strong> Perform arithmetic directly on fractions or solve ratio problems (A/B = C/D).</li>
+                        <li><strong>Factors & Primes:</strong> Prime factorization, GCF/LCM, and primality testing.</li>
+                        <li><strong>Constants & Powers:</strong> Advanced Exponent, Root, and Logarithm tools.</li>
+                        <li><strong>Geometry Tools:</strong> Specialized calculators for Triangle properties (sides, angles, area) and Circle measurements.</li>
                     </ul>
                 </AccordionItem>
                 <AccordionItem title="Converters" icon={TestTube}>
@@ -110,7 +116,7 @@ const Help: React.FC = () => {
                         The app includes a variety of converters for different needs.
                     </p>
                      <ul>
-                        <li><strong>Unit/Currency/Base:</strong> Select the 'From' and 'To' units/currencies/bases. As you type in one field, the other will update in real-time.</li>
+                        <li><strong>Unit/Currency/Base:</strong> Select the 'From' and 'To' fields. As you type in one field, the other will update in real-time.</li>
                         <li><strong>Percentage:</strong> Includes three common percentage calculation types. Simply fill in the blanks in the sentences to get your result.</li>
                     </ul>
                 </AccordionItem>
@@ -126,14 +132,15 @@ const Help: React.FC = () => {
                 </AccordionItem>
                 <AccordionItem title="Student Tools" icon={GraduationCap}>
                     <p>
-                        A comprehensive suite of tools designed specifically for high school and college students.
+                        A comprehensive suite of tools designed specifically for high school and college students. Includes a globally accessible <strong>Scratchpad</strong> for taking notes anywhere in the app!
                     </p>
                     <ul>
                         <li><strong>Nolo AI Tutor:</strong> An interactive, step-by-step AI tutor that helps you understand concepts in Math, Science, History, and more without just giving you the answer.</li>
                         <li><strong>GPA Calculator:</strong> Track your current GPA and calculate what you need on your final exam to achieve your target grade.</li>
                         <li><strong>Pomodoro Timer:</strong> Boost your productivity with a customizable study timer using the Pomodoro technique.</li>
                         <li><strong>Geometry Solver:</strong> Quickly calculate the area, perimeter, and volume of various 2D and 3D shapes.</li>
-                        <li><strong>Science Tools:</strong> Includes a Molar Mass Calculator for chemistry formulas and a searchable Element Lookup (Periodic Table).</li>
+                        <li><strong>Periodic Table (Chemistry):</strong> A full interactive periodic table, searchable element lookup, and detailed properties for every element (accessed from main menu).</li>
+                        <li><strong>Science Tools:</strong> Includes a Molar Mass Calculator and Ideal Gas Law Calculator (inside Student Tools).</li>
                         <li><strong>Formula Reference:</strong> A quick reference guide for essential Algebra, Calculus, and Physics formulas.</li>
                         <li><strong>Citation Generator:</strong> Easily generate citations in MLA 9th Edition or APA 7th Edition formats.</li>
                         <li><strong>Flashcards:</strong> Create, manage, and study custom flashcard decks to memorize important information.</li>
@@ -145,6 +152,7 @@ const Help: React.FC = () => {
                         Handy utilities for software developers and programmers.
                     </p>
                     <ul>
+                        <li><strong>Programmer Calculator:</strong> A specialized calculator for Base-N mathematics (Dec, Hex, Oct, Bin) that supports bitwise operations (AND, OR, XOR, Shifts) and varying word sizes up to 64-bit.</li>
                         <li><strong>JSON Formatter:</strong> Format, validate, and minify JSON data.</li>
                         <li><strong>JWT Decoder:</strong> Decode JSON Web Tokens to view their header and payload information.</li>
                         <li><strong>Regex Tester:</strong> Test regular expressions against text to see matches and groups.</li>

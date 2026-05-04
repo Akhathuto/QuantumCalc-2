@@ -5,7 +5,7 @@ import {
     PieChart, Pie, Cell, ScatterChart, Scatter, BarChart, Bar
 } from 'recharts';
 import { create, all } from 'mathjs';
-import { AlertTriangle, Download, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Download, ChevronDown, AlertTriangle } from 'lucide-react';
 
 const math = create(all);
 
@@ -133,81 +133,162 @@ const exportToPng = (chartRef: RefObject<HTMLDivElement>, fileName: string) => {
 
 // --- Chart Components ---
 
+interface PlotFunction {
+    id: string;
+    expression: string;
+    color: string;
+    visible: boolean;
+}
+
 const FunctionPlotter = () => {
-    const [expression, setExpression] = useState('sin(x)');
+    const [functions, setFunctions] = useState<PlotFunction[]>([
+        { id: '1', expression: 'sin(x)', color: '#4299e1', visible: true }
+    ]);
     const [xMin, setXMin] = useState('-10');
     const [xMax, setXMax] = useState('10');
-    const [title, setTitle] = useState('Function Plot');
+    const [title, setTitle] = useState('Dynamic Function Plot');
     const [xLabel, setXLabel] = useState('x');
     const [yLabel, setYLabel] = useState('f(x)');
-    const [lineColor, setLineColor] = useState('#4299e1');
     const chartRef = useRef<HTMLDivElement>(null);
 
-    const { data, error } = useMemo(() => {
+    const addFunction = () => {
+        const colors = ['#f56565', '#48bb78', '#ed8936', '#9f7aea', '#4fd1c5'];
+        const newColor = colors[functions.length % colors.length];
+        setFunctions([...functions, { id: Date.now().toString(), expression: '', color: newColor, visible: true }]);
+    };
+
+    const removeFunction = (id: string) => {
+        if (functions.length > 1) {
+            setFunctions(functions.filter(f => f.id !== id));
+        }
+    };
+
+    const updateFunction = (id: string, updates: Partial<PlotFunction>) => {
+        setFunctions(functions.map(f => f.id === id ? { ...f, ...updates } : f));
+    };
+
+    const { datasets, error } = useMemo(() => {
         const min = parseFloat(xMin);
         const max = parseFloat(xMax);
-        if (isNaN(min) || isNaN(max)) return { data: [], error: "X Min/Max must be numbers."};
-        if (min >= max) return { data: [], error: "X Max must be > X Min." };
-        if (!expression.trim()) return { data: [], error: "Please enter a function." };
+        if (isNaN(min) || isNaN(max)) return { datasets: [], error: "X Min/Max must be numbers."};
+        if (min >= max) return { datasets: [], error: "X Max must be > X Min." };
+        
+        const combinedData: any[] = [];
+        const step = (max - min) / 200;
 
         try {
-            const node = math.parse(expression);
-            const code = node.compile();
-            const points: {x: number, y: number}[] = [];
-            const step = (max - min) / 200;
+            const compiledFunctions = functions.filter(f => f.visible && f.expression.trim()).map(f => {
+                try {
+                    return { id: f.id, code: math.parse(f.expression).compile() };
+                } catch {
+                    return null;
+                }
+            }).filter(Boolean);
 
             for (let i = 0; i <= 200; i++) {
                 const x = min + i * step;
-                try {
-                    const y = code.evaluate({ x });
-                    if (typeof y === 'number' && isFinite(y)) {
-                        points.push({ x: parseFloat(x.toPrecision(4)), y });
+                const point: any = { x: parseFloat(x.toPrecision(4)) };
+                compiledFunctions.forEach(cf => {
+                    try {
+                        const y = cf!.code.evaluate({ x });
+                        if (typeof y === 'number' && isFinite(y)) {
+                            point[`y_${cf!.id}`] = y;
+                        }
+                    } catch {
+                        // Ignore evaluation errors for a specific point
                     }
-                } catch {
-                    // Ignore points where the function is undefined (e.g., log(-1))
-                    // This allows the rest of the graph to render.
-                }
+                });
+                combinedData.push(point);
             }
-            return { data: points, error: null };
+            return { datasets: combinedData, error: null };
         } catch (e) {
-             return { data: [], error: e instanceof Error ? e.message : 'Invalid function.' };
+             return { datasets: [], error: e instanceof Error ? e.message : 'Invalid function detected.' };
         }
-    }, [xMin, xMax, expression]);
+    }, [xMin, xMax, functions]);
     
     const handleExport = () => exportToPng(chartRef, `${title.replace(/\s+/g, '_') || 'function-plot'}.png`);
 
     return (
-        <div className="bg-brand-surface/50 p-6 rounded-lg">
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1 space-y-4">
-                    <Input id="function_expr" label="Function y = f(x)" type="text" value={expression} onChange={e => setExpression(e.target.value)} placeholder="e.g., sin(x)" />
-                     <div className="grid grid-cols-2 gap-2">
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-brand-text uppercase tracking-widest">Equations</h4>
+                            <button onClick={addFunction} className="p-1.5 bg-brand-primary/10 text-brand-primary rounded-lg hover:bg-brand-primary hover:text-white transition-all">
+                                <Plus size={16} />
+                            </button>
+                        </div>
+                        {functions.map(f => (
+                            <div key={f.id} className="flex items-center gap-2 group">
+                                <input 
+                                    type="color" 
+                                    value={f.color} 
+                                    onChange={e => updateFunction(f.id, { color: e.target.value })}
+                                    className="w-8 h-8 rounded cursor-pointer bg-transparent border-none"
+                                />
+                                <div className="flex-1 relative">
+                                    <input 
+                                        type="text"
+                                        placeholder="sin(x)..."
+                                        value={f.expression}
+                                        onChange={e => updateFunction(f.id, { expression: e.target.value })}
+                                        className="w-full bg-brand-bg border border-brand-border rounded-lg p-2 pr-8 font-mono text-sm focus:ring-2 focus:ring-brand-primary outline-none"
+                                    />
+                                    {f.expression && (
+                                        <button 
+                                            onClick={() => updateFunction(f.id, { visible: !f.visible })}
+                                            className={`absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold ${f.visible ? 'text-brand-primary' : 'text-brand-text-secondary line-through'}`}
+                                        >
+                                            {f.visible ? 'HIDE' : 'SHOW'}
+                                        </button>
+                                    )}
+                                </div>
+                                <button onClick={() => removeFunction(f.id)} className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all">
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
                         <Input id="function_xmin" label="X Min" type="text" value={xMin} onChange={e => setXMin(e.target.value)} />
                         <Input id="function_xmax" label="X Max" type="text" value={xMax} onChange={e => setXMax(e.target.value)} />
                     </div>
+
                     <ErrorDisplay error={error} />
-                    <CollapsibleSection title="Customize Chart">
+
+                    <CollapsibleSection title="Chart Preferences">
                          <Input id="function_title" label="Chart Title" type="text" value={title} onChange={e => setTitle(e.target.value)} />
-                         <Input id="function_xlabel" label="X-Axis Label" type="text" value={xLabel} onChange={e => setXLabel(e.target.value)} />
-                         <Input id="function_ylabel" label="Y-Axis Label" type="text" value={yLabel} onChange={e => setYLabel(e.target.value)} />
-                         <div>
-                            <label htmlFor="line_color" className="block text-sm font-medium text-brand-text-secondary mb-1">Line Color</label>
-                            <input id="line_color" type="color" value={lineColor} onChange={e => setLineColor(e.target.value)} className="w-full h-10 p-1 bg-gray-900/70 border-gray-600 rounded-md cursor-pointer" />
-                        </div>
+                         <div className="grid grid-cols-2 gap-2">
+                            <Input id="function_xlabel" label="X-Axis" type="text" value={xLabel} onChange={e => setXLabel(e.target.value)} />
+                            <Input id="function_ylabel" label="Y-Axis" type="text" value={yLabel} onChange={e => setYLabel(e.target.value)} />
+                         </div>
                     </CollapsibleSection>
                 </div>
                 <div className="lg:col-span-2">
-                    <div ref={chartRef}>
-                        <h3 className="text-xl font-bold text-center mb-2 min-h-[28px]">{title}</h3>
+                    <div ref={chartRef} className="bg-brand-bg/30 p-4 rounded-xl border border-brand-border">
+                        <h3 className="text-xl font-bold text-center mb-6">{title}</h3>
                         <div className="h-96 w-full">
                             <ResponsiveContainer>
-                                <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                                    <XAxis type="number" dataKey="x" domain={['dataMin', 'dataMax']} stroke="var(--color-text-secondary)" label={{ value: xLabel, position: 'insideBottom', offset: -15 }}/>
-                                    <YAxis stroke="var(--color-text-secondary)" label={{ value: yLabel, angle: -90, position: 'insideLeft' }}/>
-                                    <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }} />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="y" stroke={lineColor} strokeWidth={2} dot={false} name={`y = ${expression}`} />
+                                <LineChart data={datasets} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.5} />
+                                    <XAxis type="number" dataKey="x" domain={['dataMin', 'dataMax']} stroke="var(--color-text-secondary)" label={{ value: xLabel, position: 'insideBottom', offset: -15 }} tick={{fontSize: 10}} />
+                                    <YAxis stroke="var(--color-text-secondary)" label={{ value: yLabel, angle: -90, position: 'insideLeft' }} tick={{fontSize: 10}} />
+                                    <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', borderRadius: '12px' }} itemStyle={{fontSize: '12px'}} />
+                                    <Legend wrapperStyle={{fontSize: '12px', paddingTop: '20px'}} />
+                                    {functions.map(f => f.visible && f.expression && (
+                                        <Line 
+                                            key={f.id}
+                                            type="monotone" 
+                                            dataKey={`y_${f.id}`} 
+                                            stroke={f.color} 
+                                            strokeWidth={2} 
+                                            dot={false} 
+                                            name={`y = ${f.expression}`} 
+                                            animationDuration={300}
+                                        />
+                                    ))}
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

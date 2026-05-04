@@ -1,7 +1,7 @@
 {
   "name": "quantumcalc-react-app",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@google/genai": "^1.20.0",
+    "firebase": "^12.12.0",
     "lucide-react": "^0.544.0",
     "mathjs": "^14.7.0",
+    "motion": "^12.38.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-markdown": "^10.1.0",
