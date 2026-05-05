@@ -2,12 +2,14 @@ import React from 'react';
 import { Shield, FileText } from 'lucide-react';
 
 const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
-    <div className="bg-brand-surface/50 p-6 rounded-lg">
-        <h3 className="text-xl font-bold mb-4 text-brand-accent flex items-center gap-2">
-            <Icon size={22} />
+    <div className="bg-brand-surface/30 backdrop-blur-md p-10 rounded-[2.5rem] border border-brand-border/60 group hover:border-brand-primary/40 transition-all duration-500">
+        <h3 className="text-2xl font-black mb-8 text-brand-text flex items-center gap-4 tracking-tighter italic">
+            <div className="p-3 rounded-2xl bg-brand-primary/10 text-brand-primary group-hover:rotate-6 transition-transform text-brand-primary">
+                <Icon size={24} />
+            </div>
             {title}
         </h3>
-        <div className="prose prose-invert prose-sm max-w-none text-brand-text-secondary space-y-4">
+        <div className="prose prose-invert prose-sm max-w-none text-brand-text-secondary/80 leading-relaxed space-y-6 font-light">
             {children}
         </div>
     </div>
@@ -15,18 +17,31 @@ const Section: React.FC<{ title: string; icon: React.ElementType; children: Reac
 
 const TermsAndLicense: React.FC = () => {
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary">Terms of Use & License</h2>
-            <div className="space-y-8">
-                <Section title="Terms of Use" icon={Shield}>
-                    <p>
-                        Welcome to QuantumCalc. This application is provided as-is, without any warranties or guarantees of any kind.
+        <div className="max-w-5xl mx-auto py-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-secondary/10 text-brand-secondary text-[10px] font-black uppercase tracking-[0.3em] mb-4">
+                        <Shield size={14} /> Legal Framework
+                    </div>
+                    <h2 className="text-5xl font-black text-brand-text tracking-tighter italic">
+                        Terms & <span className="text-brand-secondary">License</span>
+                    </h2>
+                    <p className="text-brand-text-secondary font-light text-lg mt-2">
+                        Review the operational parameters and governance of the QuantumCalc suite.
+                    </p>
+                </div>
+            </div>
+
+            <div className="space-y-12">
+                <Section title="Operational Protocols" icon={Shield}>
+                    <p className="text-lg text-brand-text">
+                        Welcome to QuantumCalc. This architecture is provided <strong className="italic">"as-is"</strong>, without any warranties regarding precision or absolute truth.
                     </p>
                     <p>
-                        The calculators and tools provided here are intended for informational and educational purposes only. They are not a substitute for professional financial, medical, or legal advice. While we strive for accuracy, we cannot guarantee that the calculations are free from errors or suitable for your specific needs.
+                        The tools provided herein are engineered for informational and educational synchronization. They do not constitute professional financial, medical, or legal directives. While the core engines are optimized for high-fidelity computation, architectural anomalies may occur. 
                     </p>
                     <p>
-                        By using this application, you agree that the creators and maintainers are not liable for any damages or losses arising from your use of, or reliance on, the information provided. Always verify critical calculations with a qualified professional.
+                        Initialization of this software constitutes agreement that EDGTEC and its architects are not liable for any data degradation or systemic errors resulting from reliance on these computations. Always verify mission-critical data with verified human experts.
                     </p>
                 </Section>
 

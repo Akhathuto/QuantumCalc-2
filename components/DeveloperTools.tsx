@@ -5,9 +5,13 @@ import { Braces, Key, Regex, Code, Lock, RefreshCw, Layers } from 'lucide-react'
 const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-3 py-2 flex items-center gap-2 rounded-md font-semibold transition-colors text-sm ${isActive ? 'bg-brand-primary text-white' : 'bg-brand-surface hover:bg-brand-border'}`}
+        className={`flex-shrink-0 px-5 py-3 flex items-center gap-2.5 rounded-xl font-bold transition-all duration-300 text-sm ${
+            isActive 
+                ? 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20 scale-105' 
+                : 'bg-brand-surface border border-brand-border text-brand-text-secondary hover:text-brand-text hover:border-brand-primary/30'
+        }`}
     >
-        <Icon size={16} />
+        <Icon size={18} />
         {label}
     </button>
 );
@@ -357,24 +361,37 @@ const DeveloperTools: React.FC = () => {
 
     return (
         <div>
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary flex items-center gap-3">
-                <Code size={32} />
-                Developer Tools
-            </h2>
+            <div className="mb-10 text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest mb-4">
+                    <Code size={14} /> Developer Workspace
+                </div>
+                <h2 className="text-4xl font-extrabold text-brand-text mb-2 tracking-tight flex items-center justify-center gap-3">
+                    <Braces size={36} className="text-brand-primary" /> Engineering Suite
+                </h2>
+                <p className="text-brand-text-secondary max-w-2xl mx-auto font-light text-lg">
+                    Production-grade tools for modern developers. Encode, decode, format, and hash with ease.
+                </p>
+            </div>
             
-            <div className="flex justify-center flex-wrap gap-2 mb-6">
-                {tools.map(tool => (
-                     <SubNavButton 
-                        key={tool.id}
-                        label={tool.label} 
-                        icon={tool.Icon}
-                        isActive={activeTool === tool.id} 
-                        onClick={() => setActiveTool(tool.id)} 
-                     />
-                ))}
+            <div className="sticky top-[80px] z-30 bg-brand-bg/90 backdrop-blur-md pb-4 pt-2 -mx-4 px-4 mb-8">
+                <div className="flex overflow-x-auto no-scrollbar gap-3 py-2 mask-fade-edges">
+                    <div className="flex gap-2 mx-auto sm:justify-center min-w-max px-2">
+                        {tools.map(tool => (
+                            <SubNavButton 
+                                key={tool.id}
+                                label={tool.label} 
+                                icon={tool.Icon}
+                                isActive={activeTool === tool.id} 
+                                onClick={() => setActiveTool(tool.id)} 
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            {renderTool()}
+            <div className="bg-brand-surface/30 p-4 md:p-8 rounded-[2rem] border border-brand-border/50 shadow-2xl">
+                {renderTool()}
+            </div>
         </div>
     );
 };

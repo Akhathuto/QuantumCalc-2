@@ -6,6 +6,7 @@ import { getFormulaExplanation } from '../services/geminiService';
 import Button from './common/Button';
 import { create, all } from 'mathjs';
 import { Loader, Brain, FlaskConical } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 const math = create(all);
 // Add nPr, nCr, and pmt functions
@@ -417,12 +418,12 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
   };
   
   const styles = {
-    op: 'bg-brand-secondary hover:bg-orange-500 text-white',
-    mem: 'bg-teal-600 hover:bg-teal-500 text-white',
-    clear: 'bg-red-500/80 hover:bg-red-500 text-white',
-    num: 'bg-brand-surface hover:bg-gray-600 text-brand-text',
-    func: 'bg-brand-primary/80 hover:bg-brand-primary text-white',
-    active: 'bg-brand-primary text-white',
+    op: 'bg-brand-secondary hover:bg-orange-500 text-white font-black',
+    mem: 'bg-brand-surface border border-brand-border hover:bg-brand-border text-brand-text-secondary text-xs',
+    clear: 'bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20',
+    num: 'bg-brand-surface/40 hover:bg-brand-surface text-brand-text font-bold border border-brand-border/30',
+    func: 'bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-brand-bg font-bold border border-brand-primary/20',
+    active: 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20',
   };
 
   const buttonGrid: { label: string, secondLabel?: string, action: () => void, secondAction?: () => void, className: string, colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = [
@@ -448,43 +449,38 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
           { label: 'ln', action: () => handleFunction('log('), className: styles.func, title: 'Natural Logarithm (ln)' },
       ],
       [
-          { label: 'sinh', secondLabel: 'asinh', action: () => handleFunction('sinh('), secondAction: () => handleFunction('asinh('), className: styles.func, title: 'Hyperbolic Sine', secondTitle: 'Inverse Hyperbolic Sine' },
-          { label: 'cosh', secondLabel: 'acosh', action: () => handleFunction('cosh('), secondAction: () => handleFunction('acosh('), className: styles.func, title: 'Hyperbolic Cosine', secondTitle: 'Inverse Hyperbolic Cosine' },
-          { label: 'tanh', secondLabel: 'atanh', action: () => handleFunction('tanh('), secondAction: () => handleFunction('atanh('), className: styles.func, title: 'Hyperbolic Tangent', secondTitle: 'Inverse Hyperbolic Tangent' },
-          { label: 'nCr', action: () => handleFunction('nCr('), className: styles.func, title: 'Combinations' },
-          { label: 'nPr', action: () => handleFunction('nPr('), className: styles.func, title: 'Permutations' },
+          { label: 'MC', action: memoryClear, className: styles.mem, title: 'Memory Clear' },
+          { label: 'MR', action: memoryRecall, className: styles.mem, title: 'Memory Recall' },
+          { label: 'M+', action: memoryAdd, className: styles.mem, title: 'Memory Add' },
+          { label: 'M-', action: memorySubtract, className: styles.mem, title: 'Memory Subtract' },
+          { label: 'EE', action: () => handleInput('E'), className: styles.func, title: 'Exponent (e.g. 1.23E4)' },
       ],
        [
           { label: '7', action: () => handleInput('7'), className: styles.num },
           { label: '8', action: () => handleInput('8'), className: styles.num },
           { label: '9', action: () => handleInput('9'), className: styles.num },
           { label: '÷', action: () => handleOp('÷'), className: styles.op, title: 'Divide' },
-          { label: 'MC', action: memoryClear, className: styles.mem, title: 'Memory Clear' },
+          { label: '%', action: () => handleInput('%'), className: styles.func, title: 'Percentage' },
       ],
       [
           { label: '4', action: () => handleInput('4'), className: styles.num },
           { label: '5', action: () => handleInput('5'), className: styles.num },
           { label: '6', action: () => handleInput('6'), className: styles.num },
           { label: '×', action: () => handleOp('×'), className: styles.op, title: 'Multiply' },
-          { label: 'MR', action: memoryRecall, className: styles.mem, title: 'Memory Recall' },
+          { label: '(', action: () => handleInput('('), className: styles.func, title: 'Open Parenthesis' },
       ],
       [
           { label: '1', action: () => handleInput('1'), className: styles.num },
           { label: '2', action: () => handleInput('2'), className: styles.num },
           { label: '3', action: () => handleInput('3'), className: styles.num },
           { label: '−', action: () => handleOp('−'), className: styles.op, title: 'Subtract' },
-          { label: 'M+', action: memoryAdd, className: styles.mem, title: 'Memory Add' },
+          { label: ')', action: () => handleInput(')'), className: styles.func, title: 'Close Parenthesis' },
       ],
       [
           { label: '0', action: () => handleInput('0'), className: styles.num, colSpan: 2 },
           { label: '.', action: () => handleInput('.'), className: styles.num, title: 'Decimal Point' },
           { label: '+', action: () => handleOp('+'), className: styles.op, title: 'Add' },
-          { label: 'M-', action: memorySubtract, className: styles.mem, title: 'Memory Subtract' },
-      ],
-      [
-          { label: '%', action: () => handleInput('%'), className: styles.func, title: 'Percentage' },
-          { label: 'EE', action: () => handleInput('E'), className: styles.func, title: 'Exponent (e.g. 1.23E4)' },
-          { label: '=', action: calculate, className: styles.op, colSpan: 3, title: 'Equals (Enter)' },
+          { label: '=', action: calculate, className: styles.op, title: 'Equals (Enter)' },
       ]
   ];
 
@@ -494,33 +490,42 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
     <>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3">
-            <div className="bg-gray-900/50 rounded-lg p-4 text-right min-h-[160px] flex flex-col justify-between relative border border-brand-border">
+            <div className="bg-brand-surface/40 backdrop-blur-xl rounded-3xl p-6 text-right min-h-[180px] flex flex-col justify-between relative border border-brand-border/50 shadow-inner group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                
                 {/* Ticker Tape */}
-                <div className="h-20 overflow-y-auto text-right text-sm text-brand-text-secondary pr-1 scrollbar-thin scrollbar-thumb-brand-surface">
-                    {tickerHistory.map((item, index) => (
-                        <div key={item.timestamp + index} className="opacity-70 animate-fade-in-down">
-                            <span className="truncate">{item.expression} = </span>
-                            <span className="font-semibold">{item.result}</span>
-                        </div>
-                    ))}
+                <div className="h-16 overflow-y-auto text-right text-xs text-brand-text-secondary pr-1 scrollbar-none font-mono opacity-60">
+                    <AnimatePresence initial={false}>
+                      {tickerHistory.map((item, index) => (
+                          <motion.div 
+                            key={item.timestamp + index} 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex justify-end gap-2"
+                          >
+                              <span className="opacity-50">{item.expression}</span>
+                              <span className="text-brand-primary font-bold">{item.result}</span>
+                          </motion.div>
+                      ))}
+                    </AnimatePresence>
                 </div>
 
                 {/* Main Display */}
-                <div className="border-t border-brand-border/50 pt-2 relative">
-                    <div className="absolute top-2 left-3 flex items-center gap-4 text-xs font-bold z-10">
-                        {isSecond && <span className="bg-yellow-500 text-black px-1.5 py-0.5 rounded animate-fade-in-down">2nd</span>}
-                        <span className="text-brand-primary">{angleMode.toUpperCase()}</span>
-                        {memory !== null && <span className="text-teal-400 animate-fade-in-down">M</span>}
+                <div className="relative pt-2">
+                    <div className="flex items-center justify-end gap-4 text-[10px] font-black tracking-widest mb-1">
+                        {isSecond && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-yellow-500 text-black px-1.5 py-0.5 rounded-sm">2ND</motion.span>}
+                        <span className="text-brand-primary opacity-80">{angleMode.toUpperCase()}</span>
+                        {memory !== null && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-cyan-400">MEM</motion.span>}
                     </div>
                     {/* Expression Line */}
-                    <div className="text-brand-text-secondary text-xl break-words h-7 overflow-x-auto text-right font-mono transition-opacity duration-300" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
+                    <div className="text-brand-text-secondary text-lg break-words h-7 overflow-x-auto text-right font-mono tracking-tighter opacity-70" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
                     {/* Input/Result Line */}
-                    <div className="text-4xl font-bold text-brand-text break-words min-h-[48px] overflow-x-auto text-right font-mono transition-all duration-200">
+                    <div className="text-5xl font-black text-brand-text break-words min-h-[60px] overflow-x-auto text-right font-mono tracking-tighter leading-none">
                         {currentInput}
                     </div>
                      {/* Error Line */}
-                    <div className="text-red-400 text-sm font-semibold h-5 text-right transition-opacity duration-300">
-                      {error && <span className="animate-fade-in-down">{error}</span>}
+                    <div className="text-red-400 text-xs font-bold h-4 text-right">
+                      {error && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{error}</motion.span>}
                     </div>
                 </div>
             </div>

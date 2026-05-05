@@ -3,12 +3,14 @@ import React from 'react';
 import { Info, BrainCircuit, Layers, GitBranch, Globe } from 'lucide-react';
 
 const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
-    <div className="bg-brand-surface/50 p-6 rounded-lg">
-        <h3 className="text-xl font-bold mb-4 text-brand-accent flex items-center gap-2">
-            <Icon size={22} />
+    <div className="bg-brand-surface/30 backdrop-blur-md p-10 rounded-[2.5rem] border border-brand-border/60 group hover:border-brand-primary/40 transition-all duration-500">
+        <h3 className="text-2xl font-black mb-8 text-brand-text flex items-center gap-4 tracking-tighter italic">
+            <div className="p-3 rounded-2xl bg-brand-primary/10 text-brand-primary group-hover:rotate-6 transition-transform">
+                <Icon size={24} />
+            </div>
             {title}
         </h3>
-        <div className="prose prose-invert prose-sm max-w-none text-brand-text-secondary space-y-4">
+        <div className="prose prose-invert prose-sm max-w-none text-brand-text-secondary/80 leading-relaxed space-y-6 font-light">
             {children}
         </div>
     </div>
@@ -16,28 +18,44 @@ const Section: React.FC<{ title: string; icon: React.ElementType; children: Reac
 
 const About: React.FC = () => {
     return (
-        <div>
-            <div className="text-center mb-8">
-                <h2 className="text-4xl font-extrabold text-brand-primary tracking-tight">About QuantumCalc</h2>
-                <p className="mt-3 max-w-2xl mx-auto text-lg text-brand-text-secondary">
-                    A modern, feature-rich calculator designed for a wide range of mathematical and practical tasks.
+        <div className="max-w-5xl mx-auto py-12">
+            <div className="text-center mb-20 space-y-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-[0.3em] mb-2 mx-auto">
+                    <Info size={14} /> Intelligence Core
+                </div>
+                <h2 className="text-5xl md:text-7xl font-black text-brand-text tracking-tighter leading-none italic">
+                    About <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">QuantumCalc</span>
+                </h2>
+                <p className="max-w-2xl mx-auto text-xl text-brand-text-secondary font-light">
+                    A hyper-advanced, modular intelligence suite designed for the next generation of engineers, students, and architects.
                 </p>
+                <div className="h-px w-24 bg-brand-primary/40 mx-auto mt-12" />
             </div>
-            <div className="space-y-8">
-                <Section title="About Edgtec" icon={Globe}>
-                    <p>
-                        <strong>EDGTEC</strong> is the innovative technology company behind QuantumCalc. Based in South Africa, EDGTEC is a proud <strong>100% black youth-owned enterprise</strong> committed to innovation and empowerment.
+
+            <div className="space-y-12">
+                <Section title="The Vision: EDGTEC" icon={Globe}>
+                    <p className="text-lg">
+                        <strong className="text-brand-primary">EDGTEC</strong> is the parent architecture behind QuantumCalc. Engineered in South Africa, EDGTEC is a <strong className="text-brand-text">100% black youth-owned enterprise</strong> focused on breaking scientific boundaries.
                     </p>
                     <p>
-                        We are a passionate team of developers, designers, and AI researchers on a mission to democratize creativity and productivity. We believe that technology should be a partner in the creative process, amplifying human imagination, not replacing it. Our goal is to build a future where anyone, regardless of their technical expertise, can transform their ideas into professional-quality creations.
+                        We are a collective of digital architects, data scientists, and creative engineers. We believe that computation should be a seamless extension of human intent—a partnership that amplifies creativity and accelerates discovery.
                     </p>
-                    <div className="mt-4 bg-brand-bg/50 p-4 rounded-md border border-brand-border">
-                        <h4 className="font-semibold text-brand-text mb-2">Company Details</h4>
-                        <ul className="space-y-1 text-sm">
-                            <li><span className="text-brand-text-secondary">Legal Name:</span> EDGTEC</li>
-                            <li><span className="text-brand-text-secondary">Company Registration Number:</span> 2025/534716/07</li>
-                            <li><span className="text-brand-text-secondary">CSD Supplier Number:</span> MAAA1626554</li>
-                        </ul>
+                    <div className="mt-8 bg-brand-bg/50 p-6 rounded-3xl border border-brand-border/60 shadow-inner">
+                        <h4 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em] mb-6">Core Registry</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-1">
+                                <span className="block text-[10px] text-brand-text-secondary uppercase tracking-widest opacity-50">Entity</span>
+                                <span className="block font-black text-brand-text text-xs">EDGTEC</span>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="block text-[10px] text-brand-text-secondary uppercase tracking-widest opacity-50">Registration</span>
+                                <span className="block font-black text-brand-text text-xs">2025/534716/07</span>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="block text-[10px] text-brand-text-secondary uppercase tracking-widest opacity-50">Network ID</span>
+                                <span className="block font-black text-brand-text text-xs">MAAA1626554</span>
+                            </div>
+                        </div>
                     </div>
                 </Section>
 

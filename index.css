@@ -76,6 +76,16 @@ html.cyberpunk {
     text-orientation: mixed;
     transform: rotate(180deg);
   }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .mask-fade-edges {
+    mask-image: linear-gradient(to bottom, transparent, black 1rem, black calc(100% - 1rem), transparent);
+  }
 }
 
 @keyframes spin-slow {

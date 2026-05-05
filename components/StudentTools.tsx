@@ -25,14 +25,19 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import PeriodicTable from './PeriodicTable';
+import { useAuth } from './AuthProvider';
 
 // --- UI Components ---
 const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-3 py-2 flex items-center gap-2 rounded-md font-semibold transition-colors text-sm ${isActive ? 'bg-brand-primary text-white' : 'bg-brand-surface hover:bg-brand-border'}`}
+        className={`flex-shrink-0 px-5 py-3 flex items-center gap-2.5 rounded-xl font-bold transition-all duration-300 text-sm ${
+            isActive 
+                ? 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20 scale-105' 
+                : 'bg-brand-surface border border-brand-border text-brand-text-secondary hover:text-brand-text hover:border-brand-primary/30'
+        }`}
     >
-        <Icon size={16} />
+        <Icon size={18} />
         {label}
     </button>
 );
@@ -1237,6 +1242,7 @@ const AITutor = () => {
 
 // --- Main Student Tools Component ---
 const StudentTools: React.FC = () => {
+    const { user, userData } = useAuth();
     const [activeTool, setActiveTool] = useState('gpa');
 
     const tools = [
@@ -1274,31 +1280,52 @@ const StudentTools: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <div className="mb-8 text-center">
-                <h2 className="text-3xl font-bold mb-2 text-brand-primary flex items-center justify-center gap-3">
-                    <GraduationCap size={36} />
-                    Student & Academic Tools
+            <div className="mb-8 text-center pt-4">
+                <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest mb-4"
+                >
+                    <GraduationCap size={14} /> Academic Workspace
+                </motion.div>
+                <h2 className="text-4xl font-extrabold text-brand-text mb-2 tracking-tight text-center flex items-center justify-center gap-3">
+                    <GraduationCap size={36} className="text-brand-primary" />
+                    Welcome back, <span className="text-brand-primary">{user?.displayName?.split(' ')[0] || 'Scholar'}</span>.
                 </h2>
-                <p className="text-brand-text-secondary max-w-2xl mx-auto">
-                    A suite of tools designed to help you study smarter, solve complex problems, and manage your academic life.
+                <p className="text-brand-text-secondary max-w-2xl mx-auto font-light text-lg">
+                    {userData?.school ? `Solving the impossible at ${userData.school}. ` : 'Your all-in-one suite for academic excellence. '}
+                    {userData?.grade ? `Currently focused on ${userData.grade}.` : ''}
                 </p>
             </div>
             
-            <div className="flex justify-center flex-wrap gap-2 mb-8">
-                {tools.map(tool => (
-                     <SubNavButton 
-                        key={tool.id}
-                        label={tool.label} 
-                        icon={tool.Icon}
-                        isActive={activeTool === tool.id} 
-                        onClick={() => setActiveTool(tool.id)} 
-                     />
-                ))}
+            <div className="sticky top-[80px] z-30 bg-brand-bg/90 backdrop-blur-md pb-4 pt-2 -mx-4 px-4 mb-4">
+                <div className="flex overflow-x-auto no-scrollbar gap-3 py-2 mask-fade-edges">
+                    <div className="flex gap-2 mx-auto sm:justify-center min-w-max px-2">
+                        {tools.map(tool => (
+                            <SubNavButton 
+                                key={tool.id}
+                                label={tool.label} 
+                                icon={tool.Icon}
+                                isActive={activeTool === tool.id} 
+                                onClick={() => setActiveTool(tool.id)} 
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            <div className="bg-brand-surface/30 p-4 md:p-6 rounded-xl border border-brand-border/50 shadow-lg">
-                {renderTool()}
-            </div>
+            <motion.div 
+                key={activeTool}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-brand-surface/40 backdrop-blur-sm p-4 md:p-8 rounded-[2rem] border border-brand-border/50 shadow-2xl relative overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+                <div className="relative z-10">
+                    {renderTool()}
+                </div>
+            </motion.div>
         </div>
     );
 };

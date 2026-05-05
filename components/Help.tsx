@@ -23,37 +23,47 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, icon: Icon, childr
     const [isOpen, setIsOpen] = useState(startOpen);
 
     return (
-        <div className="border-b border-brand-border last:border-b-0">
+        <div className="border border-brand-border rounded-2xl bg-brand-surface/40 overflow-hidden transition-all duration-300">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center p-4 text-left hover:bg-brand-surface/50 focus:outline-none focus:bg-brand-surface/50"
+                className="w-full flex justify-between items-center p-6 text-left hover:bg-brand-surface/60 focus:outline-none transition-colors"
                 aria-expanded={isOpen}
             >
-                <span className="flex items-center gap-3 font-semibold text-lg text-brand-text">
-                    <Icon size={20} className="text-brand-primary" />
-                    {title}
-                </span>
-                <ChevronDown size={20} className={`text-brand-text-secondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {isOpen && (
-                <div className="p-4 pt-0 text-brand-text-secondary prose prose-invert prose-sm max-w-none">
-                    {children}
+                <div className="flex items-center gap-4">
+                  <div className="p-2.5 rounded-xl bg-brand-primary/10 text-brand-primary">
+                    <Icon size={22} />
+                  </div>
+                  <span className="font-bold text-lg text-brand-text">
+                      {title}
+                  </span>
                 </div>
-            )}
+                <ChevronDown size={20} className={`text-brand-text-secondary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                <div className="overflow-hidden">
+                    <div className="p-6 pt-0 text-brand-text-secondary prose prose-invert prose-sm max-w-none text-base leading-relaxed">
+                        {children}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
 const Help: React.FC = () => {
     return (
-        <div>
-            <div className="text-center mb-8">
-                <h2 className="text-4xl font-extrabold text-brand-primary tracking-tight">Help & FAQ</h2>
-                <p className="mt-3 max-w-2xl mx-auto text-lg text-brand-text-secondary">
-                    Your guide to getting the most out of QuantumCalc.
+        <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
+            <div className="text-center space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-xs font-mono uppercase tracking-widest mb-2">
+                    <HelpCircle size={14} /> Knowledge Base
+                </div>
+                <h2 className="text-4xl md:text-5xl font-black text-brand-text tracking-tight">Help & FAQ</h2>
+                <p className="max-w-xl mx-auto text-lg text-brand-text-secondary font-light">
+                    Everything you need to master QuantumCalc and unlock its full potential.
                 </p>
             </div>
-            <div className="bg-brand-surface/50 rounded-lg max-w-4xl mx-auto">
+            
+            <div className="space-y-4">
                 <AccordionItem title="Frequently Asked Questions" icon={HelpCircle} startOpen={true}>
                     <h4>How do the AI features like Formula Explorer work?</h4>
                     <p>

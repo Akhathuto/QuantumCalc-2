@@ -12,9 +12,6 @@ import {
   GraduationCap,
   ArrowRight,
   History,
-  Zap,
-  Star,
-  Quote,
   Lightbulb,
   Search,
   Type,
@@ -65,14 +62,25 @@ const toolCategories = [
   }
 ];
 
-const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, history }) => {
-  const { user } = useAuth();
+const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
+  const { user, userData } = useAuth();
   const [mathFact, setMathFact] = useState<string>('Loading a brain-teasing fact...');
   const [isLoadingFact, setIsLoadingFact] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // ... useEffect logic ...
-  
+  const getGreeting = () => {
+    if (!userData?.role) return `Hello, ${user?.displayName?.split(' ')[0] || 'Explorer'}.`;
+    
+    const name = user?.displayName?.split(' ')[0] || 'User';
+    switch (userData.role) {
+      case 'student': return `Ready to learn, ${name}?`;
+      case 'teacher': return `Class is in session, ${name}.`;
+      case 'business_owner': return `Strategy time, ${name}.`;
+      case 'employee': return `Getting it done, ${name}.`;
+      default: return `Welcome back, ${name}.`;
+    }
+  };
+
   const filteredCategories = toolCategories.map(cat => ({
     ...cat,
     tools: cat.tools.filter(tool => tool.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -113,208 +121,173 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, history }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-      {/* Header Section */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <motion.h1 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="text-4xl md:text-5xl font-extrabold tracking-tight text-brand-text"
-          >
-            Welcome back, <span className="text-brand-primary">{user?.displayName?.split(' ')[0] || 'Explorer'}</span>.
-          </motion.h1>
-          <motion.p 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-brand-text-secondary mt-2 text-lg font-light"
-          >
-            Your computational cockpit is ready. What are we solving today?
-          </motion.p>
-        </div>
-        <div className="flex items-center gap-3 bg-brand-surface/50 p-2 rounded-2xl border border-brand-border">
-          <div className="relative group cursor-pointer">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center text-center space-y-6 pt-10 pb-8 relative">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest mb-4"
+        >
+          <GraduationCap size={14} /> QuantumCalc Workspace
+        </motion.div>
+        
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl md:text-6xl font-extrabold tracking-tight text-brand-text leading-tight"
+        >
+          Solve complex problems <br className="md:hidden" />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">
+            step-by-step.
+          </span>
+        </motion.h1>
+
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="text-brand-text-secondary text-lg md:text-xl font-light max-w-2xl"
+        >
+          {getGreeting()} <br className="hidden md:block" />
+          Your unified workspace for mathematics, science, and development is ready.
+        </motion.p>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="relative w-full max-w-md mx-auto mt-8 group"
+        >
+          <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative flex items-center bg-brand-surface border border-brand-border rounded-full p-2 shadow-2xl">
+            <Search size={20} className="text-brand-text-secondary ml-3" />
             <input 
               type="text" 
-              placeholder="Search tools... (Ctrl+K)"
+              placeholder="Search workspaces... (Ctrl+K)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm w-48 pl-2"
+              className="bg-transparent border-none outline-none text-sm w-full py-2 px-3 text-brand-text placeholder-brand-text-secondary/50 font-medium"
             />
-            <Search size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-text-secondary" />
           </div>
-        </div>
-      </header>
+        </motion.div>
+      </section>
 
-      {/* Bento Grid */}
+      {/* Dynamic Bento Grid */}
       <motion.div 
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-6 grid-rows-none md:grid-rows-2 gap-4 h-auto md:h-[600px]"
+        className="grid grid-cols-1 md:grid-cols-12 gap-8"
       >
-        {/* Featured: AI Solver Teaser */}
+        {/* Main AI Teaser */}
         <motion.div 
           variants={itemVariants}
-          className="md:col-span-3 md:row-span-2 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-3xl p-8 relative overflow-hidden group cursor-pointer shadow-2xl shadow-brand-primary/20"
           onClick={() => onTabClick('student')}
+          className="md:col-span-8 bg-gradient-to-br from-brand-surface to-brand-bg rounded-[2rem] p-8 md:p-12 border border-brand-border relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-brand-primary/10 transition-all duration-500"
         >
-          <div className="relative z-10 h-full flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-white/20 backdrop-blur-md p-2 rounded-xl">
-                  <GraduationCap className="text-white" size={24} />
-                </div>
-                <span className="text-white/80 font-mono text-xs uppercase tracking-widest">Enhanced Learning</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-                Solve anything with <br/> the AI Math Workspace.
-              </h2>
-              <p className="text-white/70 max-w-sm mb-6">
-                Type word problems, complex formulas, or ask Nolo for a step-by-step walkthrough.
-              </p>
+          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 group-hover:bg-brand-primary/10 transition-colors duration-700 pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col h-full justify-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest w-max mb-6">
+              <GraduationCap size={14} /> AI Problem Solver
             </div>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-brand-text mb-4 tracking-tight leading-tight">
+              {userData?.school ? `Solve anything at ${userData.school}.` : 'Access the AI Math Workspace.'}
+            </h2>
+            <p className="text-brand-text-secondary text-base md:text-lg max-w-md mb-8">
+              {userData?.grade ? `Optimized for ${userData.grade}. ` : ''}Type equations, ask questions, and let the QuantumCalc Engine guide you step-by-step.
+            </p>
             <div className="flex items-center gap-4">
-              <span className="bg-white text-brand-primary px-4 py-2 rounded-full font-bold text-sm">Get Started</span>
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-brand-primary bg-brand-surface flex items-center justify-center text-[10px] text-brand-primary font-bold">
-                    v{i}.0
-                  </div>
-                ))}
-              </div>
+              <span className="bg-brand-text text-brand-bg px-6 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2">
+                Open Workspace <ArrowRight size={16} />
+              </span>
             </div>
-          </div>
-          {/* Decorative Elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-white/20 transition-all duration-700" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl -ml-16 -mb-16" />
-          <Zap className="absolute top-12 right-12 text-white/5 opacity-0 group-hover:opacity-10 transition-opacity" size={200} />
-        </motion.div>
-
-        {/* History Recap */}
-        <motion.div 
-          variants={itemVariants}
-          className="md:col-span-3 md:row-span-1 bg-brand-surface rounded-3xl p-6 border border-brand-border flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <History size={18} className="text-brand-primary" />
-              <h3 className="font-bold text-brand-text">Recent Computations</h3>
-            </div>
-            <button onClick={() => onTabClick('history')} className="text-xs text-brand-primary hover:underline">View All</button>
-          </div>
-          <div className="space-y-2">
-            {history.length > 0 ? (
-              history.slice(0, 3).map((entry, idx) => (
-                <div key={idx} className="group flex items-center justify-between p-3 rounded-xl bg-brand-bg hover:bg-brand-surface transition-colors border border-transparent hover:border-brand-border cursor-pointer" onClick={() => onTabClick('history')}>
-                  <div className="truncate pr-4">
-                    <p className="text-sm font-mono text-brand-text">{entry.expression}</p>
-                    <p className="text-xs text-brand-text-secondary truncate">{entry.result}</p>
-                  </div>
-                  <ArrowRight size={14} className="text-brand-text-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              ))
-            ) : (
-                <p className="text-sm text-brand-text-secondary italic">Your calculation history will appear here.</p>
-            )}
           </div>
         </motion.div>
 
-        {/* Fact of the Day */}
+        {/* Fact of the day */}
         <motion.div 
           variants={itemVariants}
-          className="md:col-span-2 md:row-span-1 bg-brand-surface rounded-3xl p-6 border border-brand-border flex flex-col justify-between group overflow-hidden"
+          className="md:col-span-4 bg-brand-surface rounded-[2rem] p-8 border border-brand-border flex flex-col relative overflow-hidden group"
         >
-          <div className="flex items-center gap-2 mb-2">
-            <Lightbulb size={18} className="text-amber-500" />
-            <h3 className="font-bold text-brand-text text-sm">Quick Insight</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-brand-secondary">
+              <Lightbulb size={20} />
+              <h3 className="font-bold text-xs tracking-widest uppercase">Insight</h3>
+            </div>
           </div>
-          <div className="relative">
-             <AnimatePresence mode="wait">
+          
+          <div className="flex-grow flex items-center">
+            <AnimatePresence mode="wait">
               {isLoadingFact ? (
-                <motion.div 
-                  key="loader"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-2 h-16"
-                >
+                <motion.div key="loader" className="space-y-3 w-full">
                   <div className="h-4 bg-brand-border rounded w-full animate-pulse" />
-                  <div className="h-4 bg-brand-border rounded w-2/3 animate-pulse" />
+                  <div className="h-4 bg-brand-border rounded w-5/6 animate-pulse" />
+                  <div className="h-4 bg-brand-border rounded w-4/6 animate-pulse" />
                 </motion.div>
               ) : (
                 <motion.p 
                   key="fact"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="text-brand-text-secondary text-sm italic leading-relaxed h-16 line-clamp-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-brand-text text-lg font-serif italic leading-relaxed"
                 >
                   "{mathFact}"
                 </motion.p>
               )}
             </AnimatePresence>
           </div>
-          <div className="mt-4 flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-brand-text-secondary">
-             <span>AI Curated</span>
-             <Quote size={12} className="opacity-20" />
+          <div className="mt-4 pt-4 border-t border-brand-border/50">
+             <p className="text-[10px] text-brand-text-secondary uppercase tracking-widest">Fact of the moment</p>
           </div>
         </motion.div>
 
-        {/* User Stats / Action */}
-        <motion.div 
-          variants={itemVariants}
-          className="md:col-span-1 md:row-span-1 bg-brand-accent/5 rounded-3xl p-6 border border-brand-accent/20 flex flex-col items-center justify-center text-center hover:bg-brand-accent/10 transition-colors cursor-pointer group"
-          onClick={() => onTabClick('settings')}
-        >
-          <Star className="text-brand-accent mb-2 group-hover:scale-125 transition-transform" size={24} />
-          <p className="text-xs font-bold text-brand-accent uppercase tracking-tighter">Premium</p>
-          <p className="text-[10px] text-brand-text-secondary mt-1">v2.1 Stable</p>
+        {/* Categories / Modules */}
+        <motion.div variants={itemVariants} className="md:col-span-12 mt-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-4 border-b border-brand-border">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-brand-text">
+                {searchQuery ? 'Search Results' : 'Comprehensive Modules'}
+              </h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {filteredCategories.map((category, idx) => (
+              <div key={idx} className="space-y-4">
+                <h3 className="text-xs font-semibold text-brand-text-secondary uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-2 h-2 bg-brand-primary rounded-full" />
+                  {category.name}
+                </h3>
+                <div className="flex flex-col gap-2">
+                  {category.tools.map(tool => {
+                    const Icon = tool.icon;
+                    return (
+                      <button
+                        key={tool.id}
+                        onClick={() => onTabClick(tool.id as AppTab)}
+                        className="flex items-center gap-4 p-3 rounded-2xl bg-brand-surface/50 hover:bg-brand-surface border border-transparent hover:border-brand-border group transition-all duration-300 text-left"
+                      >
+                        <div className={`p-2.5 rounded-xl ${tool.bg} ${tool.color} group-hover:scale-110 transition-transform duration-300`}>
+                          <Icon size={20} />
+                        </div>
+                        <div className="flex-1">
+                          <span className="block text-sm font-bold text-brand-text group-hover:text-brand-primary transition-colors">
+                            {tool.name}
+                          </span>
+                        </div>
+                        <ArrowRight size={16} className="ml-auto text-brand-border group-hover:text-brand-primary opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
         </motion.div>
       </motion.div>
-
-      {/* Categories Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-brand-text">
-          {searchQuery ? `Results for "${searchQuery}"` : 'Explore All Modules'}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {filteredCategories.map((category, idx) => (
-            <motion.div 
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + idx * 0.1 }}
-              className="space-y-4"
-            >
-              <h3 className="text-xs font-bold text-brand-text-secondary uppercase tracking-[0.2em] pb-2 border-b border-brand-border flex items-center justify-between">
-                {category.name}
-                <span className="text-[10px] font-mono opacity-50">[{category.tools.length}]</span>
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {category.tools.map(tool => {
-                  const Icon = tool.icon;
-                  return (
-                    <button
-                      key={tool.id}
-                      onClick={() => onTabClick(tool.id as AppTab)}
-                      className="flex items-center gap-3 p-3 bg-brand-surface/40 hover:bg-brand-surface rounded-xl border border-brand-border hover:border-brand-primary/50 transition-all group"
-                    >
-                      <div className={`p-2 rounded-lg ${tool.bg} ${tool.color} group-hover:scale-110 transition-transform`}>
-                        <Icon size={18} />
-                      </div>
-                      <span className="text-xs font-bold text-brand-text group-hover:text-brand-primary transition-colors">{tool.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Search logic will go here if we want dynamic filtering, for now we remove the duplicate assistant button */}
     </div>
   );
 };

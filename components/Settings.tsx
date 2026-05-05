@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Check, Download, Trash2, ArrowUpRight } from 'lucide-react';
+import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save } from 'lucide-react';
+import { useAuth } from './AuthProvider';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+
+const roles = [
+    { id: 'student', title: 'Student', icon: GraduationCap, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { id: 'teacher', title: 'Teacher', icon: School, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { id: 'business_owner', title: 'Business Owner', icon: Building2, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { id: 'employee', title: 'Employee', icon: HardHat, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { id: 'normal_user', title: 'Personal Use', icon: UserIcon, color: 'text-gray-400', bg: 'bg-gray-400/10' },
+];
 
 const themes = [
     { id: 'dark', name: 'Original Dark', color: 'bg-[#1a202c]' },
@@ -10,13 +21,16 @@ const themes = [
     { id: 'cyberpunk', name: 'Cyberpunk', color: 'bg-[#130019]' },
 ];
 
+import { googleDriveService } from '../services/googleDriveService';
+import { Cloud, RefreshCw, AlertCircle } from 'lucide-react';
+
 const Settings: React.FC = () => {
+    const { user, userData, accessToken } = useAuth();
     const [toastMessage, setToastMessage] = useState('');
     const [isDarkMode, setIsDarkMode] = useState(() => {
         try {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
-                 // Initialize correctly based on saved theme
                  const root = window.document.documentElement;
                  if (savedTheme !== 'dark') root.className = savedTheme;
                  else root.className = '';
@@ -25,7 +39,7 @@ const Settings: React.FC = () => {
             return window.matchMedia('(prefers-color-scheme: dark)').matches;
         } catch (error) {
             console.error("Could not access theme from localStorage", error);
-            return true; // Default to dark mode
+            return true;
         }
     });
 
@@ -42,8 +56,6 @@ const Settings: React.FC = () => {
         showToast(`${themeId.charAt(0).toUpperCase() + themeId.slice(1)} theme applied!`);
     };
 
-    // Effect for Theme (only for initial class application if needed, but usually handled by handleThemeToggle)
-    // Actually, we should apply the class on mount if it's not already there.
     useEffect(() => {
         const root = window.document.documentElement;
         if (isDarkMode) {
@@ -109,54 +121,248 @@ const Settings: React.FC = () => {
         }
     };
 
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [isRestoring, setIsRestoring] = useState(false);
+    const [editRole, setEditRole] = useState(userData?.role || '');
+    const [editGrade, setEditGrade] = useState(userData?.grade || '');
+    const [editSchool, setEditSchool] = useState(userData?.school || '');
+
+    useEffect(() => {
+        if (userData) {
+            setEditRole(userData.role || '');
+            setEditGrade(userData.grade || '');
+            setEditSchool(userData.school || '');
+        }
+    }, [userData]);
+
+    const handleUpdateProfile = async () => {
+        if (!user) return;
+        setIsSavingProfile(true);
+        try {
+            const profileData: any = {
+                role: editRole,
+                onboarded: true,
+            };
+
+            if (['student', 'teacher'].includes(editRole)) {
+                profileData.grade = editGrade || null;
+            }
+
+            profileData.school = editSchool || null;
+
+            // 1. Update Firestore
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, profileData);
+
+            // 2. Sync to Google Drive
+            if (accessToken) {
+                try {
+                    await googleDriveService.saveProfile(accessToken, profileData);
+                    showToast("Profile updated and synced to Google Drive!");
+                } catch (driveError) {
+                    console.error("Failed to sync to Google Drive:", driveError);
+                    showToast("Profile updated locally, but Drive sync failed.");
+                }
+            } else {
+                showToast("Profile updated successfully!");
+            }
+        } catch (error) {
+            console.error("Profile update failed", error);
+            showToast("Failed to update profile.");
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
+
+    const handleRestoreFromDrive = async () => {
+        if (!accessToken || !user) return;
+        setIsRestoring(true);
+        try {
+            const driveProfile = await googleDriveService.getProfile(accessToken);
+            if (driveProfile) {
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, {
+                    role: driveProfile.role,
+                    grade: driveProfile.grade,
+                    school: driveProfile.school,
+                    onboarded: driveProfile.onboarded
+                });
+                showToast("Profile restored from Google Drive!");
+            } else {
+                showToast("No profile found on your Google Drive.");
+            }
+        } catch (error) {
+            console.error("Restore failed", error);
+            showToast("Failed to restore from Google Drive.");
+        } finally {
+            setIsRestoring(false);
+        }
+    };
+
     return (
         <div>
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary">Settings</h2>
+            <div className="mb-10 text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest mb-4">
+                    <UserIcon size={14} /> Personalization
+                </div>
+                <h2 className="text-4xl font-extrabold text-brand-text mb-2 tracking-tight flex items-center justify-center gap-3">
+                    <Palette size={36} className="text-brand-primary" /> App Settings
+                </h2>
+                <p className="text-brand-text-secondary max-w-2xl mx-auto font-light text-lg">
+                    Manage your identity, sync preferences, and customize the interface to match your workflow.
+                </p>
+            </div>
             
-             <div className="bg-brand-surface/50 p-6 rounded-lg max-w-2xl mx-auto space-y-8 divide-y divide-brand-border">
-                <div className="pb-8">
-                    <h3 className="text-xl font-bold mb-4 text-brand-accent flex items-center gap-2">
-                        <Sun /> Appearance
+             <div className="max-w-3xl mx-auto space-y-8 pb-20">
+                {user && (
+                    <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
+                        <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary">
+                                <UserIcon size={24} />
+                            </div>
+                            User Profile
+                        </h3>
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black text-brand-primary uppercase tracking-[0.2em] ml-1">Identity Role</label>
+                                    <select 
+                                        value={editRole}
+                                        onChange={(e) => setEditRole(e.target.value)}
+                                        className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all cursor-pointer appearance-none"
+                                    >
+                                        <option value="">Select Role...</option>
+                                        {roles.map(r => (
+                                            <option key={r.id} value={r.id}>{r.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {['student', 'teacher'].includes(editRole) && (
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-black text-brand-primary uppercase tracking-[0.2em] ml-1">Grade / Level</label>
+                                        <input
+                                            type="text"
+                                            value={editGrade}
+                                            onChange={(e) => setEditGrade(e.target.value)}
+                                            placeholder="e.g. 10th Grade"
+                                            className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                                        />
+                                    </div>
+                                )}
+                                <div className="space-y-3 md:col-span-2">
+                                    <label className="text-xs font-black text-brand-primary uppercase tracking-[0.2em] ml-1">
+                                        {['student', 'teacher'].includes(editRole) ? 'School / Institution' : 'Company / Organization'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editSchool}
+                                        onChange={(e) => setEditSchool(e.target.value)}
+                                        placeholder="Name of your institution"
+                                        className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleUpdateProfile}
+                                disabled={isSavingProfile}
+                                className="w-full group flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-brand-primary text-brand-bg font-black text-lg hover:shadow-xl hover:shadow-brand-primary/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                            >
+                                {isSavingProfile ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} className="group-hover:scale-110 transition-transform" />}
+                                {isSavingProfile ? 'UPDATING...' : 'SAVE ALL CHANGES'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {user && (
+                    <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
+                        <h3 className="text-2xl font-bold mb-6 text-brand-text flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                                <Cloud size={24} />
+                            </div>
+                            Cloud Sync
+                        </h3>
+                        <div className="bg-brand-bg/40 backdrop-blur-sm border border-brand-border/40 rounded-[1.5rem] p-6 space-y-6">
+                            <div className="flex items-center gap-5">
+                                <div className={`p-4 rounded-full ${accessToken ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                    {accessToken ? <Check size={28} /> : <AlertCircle size={28} />}
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-black text-brand-text tracking-tight italic">Google Drive Integration</h4>
+                                    <p className="text-brand-text-secondary text-sm font-light">
+                                        {accessToken 
+                                            ? "Connected and ready to sync. Your data is encrypted on your personal drive." 
+                                            : "Connect your Google account to enable secure cloud backups."}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <button
+                                    onClick={handleUpdateProfile}
+                                    disabled={!accessToken || isSavingProfile}
+                                    className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary font-black transition-all text-sm disabled:opacity-30 border border-brand-primary/20 uppercase tracking-widest"
+                                >
+                                    <RefreshCw size={18} className={isSavingProfile ? 'animate-spin' : ''} />
+                                    Manual Sync
+                                </button>
+                                <button
+                                    onClick={handleRestoreFromDrive}
+                                    disabled={!accessToken || isRestoring}
+                                    className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-brand-border/60 text-brand-text hover:bg-brand-surface/50 transition-all text-sm disabled:opacity-30 font-black uppercase tracking-widest"
+                                >
+                                    {isRestoring ? <RefreshCw className="animate-spin" size={18} /> : <Download size={18} />}
+                                    Restore Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
+                    <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-brand-accent/10 text-brand-accent">
+                            <Sun size={24} />
+                        </div>
+                        Interface Core
                     </h3>
-                      <div className="flex justify-between items-center">
-                        <p className="text-brand-text-secondary text-sm max-w-md">
-                            Manually switch between light and dark themes. This will override your system setting.
-                        </p>
+                    
+                    <div className="flex justify-between items-center bg-brand-bg/40 p-6 rounded-2xl border border-brand-border/40 mb-10">
+                        <div>
+                            <h4 className="font-bold text-brand-text mb-1">Advanced Theme Toggle</h4>
+                            <p className="text-brand-text-secondary text-xs font-light">Force app-wide luminosity mode</p>
+                        </div>
                         <button
                             onClick={handleThemeToggle}
-                            role="switch"
-                            aria-checked={isDarkMode}
-                            aria-label="Theme toggle"
-                            className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-surface focus:ring-brand-primary ${
-                                isDarkMode ? 'bg-brand-primary' : 'bg-gray-400'
+                            className={`relative inline-flex items-center h-8 w-14 rounded-full transition-all duration-500 shadow-inner ${
+                                isDarkMode ? 'bg-brand-primary' : 'bg-gray-700'
                             }`}
                         >
-                            <span className="sr-only">Switch to {isDarkMode ? 'light' : 'dark'} mode</span>
                             <span
-                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 ease-in-out ${
-                                    isDarkMode ? 'translate-x-6' : 'translate-x-1'
+                                className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-500 ease-spring ${
+                                    isDarkMode ? 'translate-x-[1.75rem]' : 'translate-x-[0.25rem]'
                                 }`}
                             />
-                            <Sun className={`absolute left-1.5 h-4 w-4 text-yellow-300 transition-opacity ${!isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
-                            <Moon className={`absolute right-1.5 h-4 w-4 text-white transition-opacity ${isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
+                            <Sun className={`absolute left-2 h-4 w-4 text-yellow-500 transition-opacity ${!isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
+                            <Moon className={`absolute right-2 h-4 w-4 text-brand-bg transition-opacity ${isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
                         </button>
                     </div>
 
-                    <div className="mt-8">
-                        <h4 className="text-sm font-bold text-brand-text mb-4 uppercase tracking-widest flex items-center gap-2">
-                           <Palette size={16} /> Advanced Themes
+                    <div>
+                        <h4 className="text-[10px] font-black text-brand-primary mb-6 uppercase tracking-[0.3em] flex items-center gap-2 bg-brand-primary/5 w-fit px-3 py-1 rounded-full">
+                           <Palette size={14} /> Aesthetic Presets
                         </h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                             {themes.map(theme => (
                                 <button
                                     key={theme.id}
                                     onClick={() => selectTheme(theme.id)}
-                                    className={`group relative p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${currentThemeId === theme.id ? 'border-brand-primary bg-brand-primary/5' : 'border-brand-border bg-brand-surface hover:border-brand-primary/30'}`}
+                                    className={`group relative p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 active:scale-95 ${currentThemeId === theme.id ? 'border-brand-primary bg-brand-primary/5 shadow-lg shadow-brand-primary/10' : 'border-brand-border bg-brand-bg/50 hover:border-brand-primary/40 hover:bg-brand-bg'}`}
                                 >
-                                    <div className={`w-10 h-10 rounded-full shadow-lg ${theme.color} flex items-center justify-center`}>
-                                        {currentThemeId === theme.id && <Check className="text-white" size={20} />}
+                                    <div className={`w-14 h-14 rounded-2xl shadow-xl ${theme.color} flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform duration-500`}>
+                                        {currentThemeId === theme.id && <Check className="text-white drop-shadow-md" size={28} />}
                                     </div>
-                                    <span className={`text-xs font-bold ${currentThemeId === theme.id ? 'text-brand-primary' : 'text-brand-text-secondary group-hover:text-brand-text'}`}>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${currentThemeId === theme.id ? 'text-brand-primary' : 'text-brand-text-secondary group-hover:text-brand-text'}`}>
                                         {theme.name}
                                     </span>
                                 </button>
@@ -165,44 +371,46 @@ const Settings: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="pt-8">
-                    <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2">
-                        Data Management
-                    </h3>
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center p-4 bg-brand-surface border border-brand-border rounded-xl">
+                <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -mr-16 -mt-16" />
+                    <h3 className="text-2xl font-bold mb-8 text-brand-text">Data & Security</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="group flex flex-col justify-between p-6 bg-brand-bg/40 border border-brand-border/40 rounded-3xl hover:border-brand-primary/40 transition-all">
                             <div>
-                                <h4 className="font-bold text-brand-text">Export Backup</h4>
-                                <p className="text-brand-text-secondary text-xs">Download all your data (History, Notes, Settings) as a JSON file.</p>
+                                <h4 className="font-black text-brand-text italic mb-2">Export Brain</h4>
+                                <p className="text-brand-text-secondary text-xs font-light leading-relaxed">Download a complete snapshot of your logic patterns and history for cold storage.</p>
                             </div>
                             <button
                                 onClick={handleExportData}
-                                className="flex items-center gap-2 px-4 py-2 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary rounded-xl font-bold transition-all text-sm"
+                                className="mt-6 flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-brand-bg rounded-xl font-black transition-all text-[10px] uppercase tracking-widest border border-brand-primary/20"
                             >
-                                <Download size={16} /> Export
+                                <Download size={16} /> Execute Export
                             </button>
                         </div>
 
-                        <div className="flex justify-between items-center p-4 bg-brand-surface border border-brand-border rounded-xl">
+                        <div className="flex flex-col justify-between p-6 bg-red-500/5 border border-red-500/10 rounded-3xl hover:border-red-500/30 transition-all">
                             <div>
-                                <h4 className="font-bold text-red-400">Clear All Data</h4>
-                                <p className="text-brand-text-secondary text-xs">Permanently remove everything from local storage.</p>
+                                <h4 className="font-black text-red-500 italic mb-2">Nuclear Reset</h4>
+                                <p className="text-brand-text-secondary text-xs font-light leading-relaxed">Permanently purge all local memory. This action is instantaneous and irreversible.</p>
                             </div>
                             <button
                                 onClick={handleClearAllData}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-bold transition-all text-sm"
+                                className="mt-6 flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl font-black transition-all text-[10px] uppercase tracking-widest border border-red-500/20"
                             >
-                                <Trash2 size={16} /> Reset App
+                                <Trash2 size={16} /> Purge Memory
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="pt-8 text-center">
-                    <p className="text-brand-text-secondary text-xs italic">QuantumCalc v3.0 Premium Experience</p>
-                    <div className="mt-2 flex justify-center gap-4">
-                         <a href="#" className="text-brand-primary text-xs flex items-center gap-1 hover:underline">Privacy Policy <ArrowUpRight size={10} /></a>
-                         <a href="#" className="text-brand-primary text-xs flex items-center gap-1 hover:underline">Terms of Service <ArrowUpRight size={10} /></a>
+                <div className="pt-12 text-center">
+                    <div className="inline-block px-4 py-2 rounded-full bg-brand-surface/50 border border-brand-border/40 mb-6 font-mono text-[10px] tracking-widest text-brand-text-secondary">
+                        QUANTUM_OS VERSION_3.0.4_STABLE
+                    </div>
+                    <div className="flex justify-center gap-10">
+                         <a href="#" className="text-brand-text-secondary text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-colors">Privacy Protcol</a>
+                         <a href="#" className="text-brand-text-secondary text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-colors">Core License</a>
+                         <a href="#" className="text-brand-text-secondary text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-colors">Support Hub</a>
                     </div>
                 </div>
             </div>

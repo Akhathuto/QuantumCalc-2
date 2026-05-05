@@ -32,9 +32,10 @@ import FloatingAssistant from './components/FloatingAssistant';
 import Scratchpad from './components/Scratchpad';
 import CommandPalette from './components/CommandPalette';
 import PeriodicTable from './components/PeriodicTable';
+import ProfileOnboarding from './components/ProfileOnboarding';
 
 const App = () => {
-  const { user } = useAuth();
+  const { user, userData, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<AppTab>('landing');
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
     try {
@@ -239,8 +240,17 @@ const App = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="bg-brand-bg min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-brand-bg text-brand-text min-h-screen font-sans flex flex-col">
+      {user && userData && !userData.onboarded && <ProfileOnboarding />}
       <Header activeTab={activeTab} onTabClick={setActiveTab} />
       <main className="container mx-auto px-4 pb-8 flex-1">
         {renderActiveTab()}

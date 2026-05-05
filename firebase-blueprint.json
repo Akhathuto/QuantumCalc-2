@@ -9,9 +9,13 @@
         "email": { "type": "string", "format": "email", "description": "User email" },
         "displayName": { "type": "string", "description": "User display name" },
         "photoURL": { "type": "string", "description": "User photo URL" },
+        "role": { "type": "string", "enum": ["student", "teacher", "business_owner", "normal_user", "employee"], "description": "User role" },
+        "grade": { "type": "string", "description": "Grade or level (for students/teachers)" },
+        "school": { "type": "string", "description": "School or organization" },
+        "onboarded": { "type": "boolean", "description": "Whether the user has completed onboarding" },
         "createdAt": { "type": "timestamp", "description": "Account creation time" }
       },
-      "required": ["uid", "email", "createdAt"]
+      "required": ["uid", "email", "createdAt", "onboarded"]
     },
     "HistoryEntry": {
       "title": "HistoryEntry",
