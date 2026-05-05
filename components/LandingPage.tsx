@@ -26,6 +26,7 @@ import { GoogleGenAI } from "@google/genai";
 
 interface LandingPageProps {
   onTabClick: (tabId: AppTab) => void;
+  onLoginClick: () => void;
   history: HistoryEntry[];
 }
 
@@ -62,7 +63,7 @@ const toolCategories = [
   }
 ];
 
-const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) => {
   const { user, userData } = useAuth();
   const [mathFact, setMathFact] = useState<string>('Loading a brain-teasing fact...');
   const [isLoadingFact, setIsLoadingFact] = useState(true);
@@ -91,7 +92,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3-flash-preview",
           contents: "Provide a one-sentence fun and surprising fact about mathematics, physics, or productivity. Keep it engaging and concise.",
         });
         setMathFact(response.text || 'Mathematics is the language of the universe.');
@@ -253,7 +254,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
               </h2>
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {filteredCategories.map((category, idx) => (
               <div key={idx} className="space-y-4">
@@ -287,6 +287,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
             ))}
           </div>
         </motion.div>
+
+        {!user && (
+          <motion.div 
+            variants={itemVariants}
+            className="md:col-span-12 mt-16 p-12 rounded-[3rem] bg-brand-primary/5 border border-brand-primary/20 text-center relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.1),transparent)]" />
+            <h2 className="text-3xl md:text-5xl font-black text-brand-text mb-6 tracking-tighter">
+              Unlock the full potential.
+            </h2>
+            <p className="text-brand-text-secondary text-lg max-w-xl mx-auto mb-10 leading-relaxed font-light">
+              Connect your account to sync your history across devices, access advanced AI workspaces, and personalize your experience.
+            </p>
+            <button 
+              onClick={onLoginClick}
+              className="inline-flex items-center gap-3 px-10 py-5 bg-brand-primary text-brand-bg rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-primary/40"
+            >
+              Get Started for Free <ArrowRight size={20} />
+            </button>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

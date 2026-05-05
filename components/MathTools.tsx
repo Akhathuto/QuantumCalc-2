@@ -3,7 +3,9 @@
 
 import { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
-import { BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, RectangleHorizontal, Shuffle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Circle, Book, Activity, Landmark, Binary } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useAuth } from './AuthProvider';
+import { BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, Shuffle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Book, Landmark, Activity } from 'lucide-react';
 
 // Import standalone components
 import MatrixCalculator from './Matrix';
@@ -882,33 +884,30 @@ const BaseNCalculator = () => {
 
 // --- Main Component ---
 const MathTools: React.FC = () => {
+    const { user, signInWithGoogle } = useAuth();
     const [activeCalc, setActiveCalc] = useState('statistics');
 
     const calculatorList = [
         { id: 'statistics', label: 'Statistics', Icon: BarChart },
         { id: 'matrix', label: 'Matrix', Icon: Table },
-        { id: 'stddev', label: 'Standard Deviation', Icon: BarChartHorizontal },
-        { id: 'confidence', label: 'Confidence Interval', Icon: Scaling },
-        { id: 'equations', label: 'Equation Solver', Icon: FunctionSquare },
+        { id: 'stddev', label: 'Std Dev', Icon: BarChartHorizontal },
+        { id: 'confidence', label: 'Confidence', Icon: Scaling },
+        { id: 'equations', label: 'Equations', Icon: FunctionSquare },
         { id: 'percentage', label: 'Percentage', Icon: Percent },
         { id: 'rounding', label: 'Rounding', Icon: Eraser },
-        { id: 'ratio', label: 'Ratio & Proportion', Icon: GitCompareArrows },
+        { id: 'ratio', label: 'Ratio', Icon: GitCompareArrows },
         { id: 'fractions', label: 'Fractions', Icon: DivideCircle },
         { id: 'factoring', label: 'Factoring', Icon: Atom },
-        { id: 'perm-comb', label: 'Permutation/Combination', Icon: ArrowRightLeft },
-        { id: 'gcf-lcm', label: 'GCF & LCM', Icon: Sigma },
-        { id: 'prime', label: 'Prime Numbers', Icon: ShieldCheck },
-        { id: 'powers', label: 'Powers & Roots', Icon: Superscript },
-        { id: 'pythagorean', label: 'Pythagorean Theorem', Icon: Triangle },
-        { id: 'triangle', label: 'Triangle Solver', Icon: Triangle },
-        { id: 'circle', label: 'Circle Solver', Icon: Circle },
+        { id: 'perm-comb', label: 'Combinatorics', Icon: ArrowRightLeft },
+        { id: 'gcf-lcm', label: 'GCD/LCM', Icon: Sigma },
+        { id: 'prime', label: 'Primes', Icon: ShieldCheck },
+        { id: 'powers', label: 'Powers', Icon: Superscript },
+        { id: 'pythagorean', label: 'Triangle', Icon: Triangle },
         { id: 'distance', label: 'Distance', Icon: Ruler },
-        { id: 'area', label: 'Area', Icon: RectangleHorizontal },
-        { id: 'random', label: 'Random Numbers', Icon: Shuffle },
-        { id: 'symbolic', label: 'Symbolic Math', Icon: Activity },
-        { id: 'financial', label: 'Financial', Icon: Landmark },
-        { id: 'basen', label: 'Base-N / Programmer', Icon: Binary },
-        { id: 'formulas', label: 'Formula Library', Icon: Book },
+        { id: 'random', label: 'Random', Icon: Shuffle },
+        { id: 'symbolic', label: 'Symbolic', Icon: Activity },
+        { id: 'financial', label: 'Finance', Icon: Landmark },
+        { id: 'formulas', label: 'Formulas', Icon: Book },
     ];
 
     const renderCalculator = () => {
@@ -942,10 +941,31 @@ const MathTools: React.FC = () => {
     };
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary">Math Tools Suite</h2>
+        <div className="max-w-7xl mx-auto py-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 className="text-3xl md:text-5xl font-black text-brand-primary tracking-tighter">Math Tools</h2>
+                    <p className="text-brand-text-secondary">Professional computation suite for elite engineers.</p>
+                </div>
+                {!user && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        onClick={signInWithGoogle}
+                        className="flex items-center gap-3 p-3 bg-brand-primary/5 border border-brand-primary/20 rounded-2xl group cursor-pointer hover:bg-brand-primary/10 transition-all"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                            <ShieldCheck size={20} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest leading-none mb-1">Cloud Sync Disabled</p>
+                            <p className="text-xs text-brand-text-secondary group-hover:text-brand-text transition-colors">Sign in to sync your workspace.</p>
+                        </div>
+                    </motion.div>
+                )}
+            </div>
             
-            <div className="flex justify-center flex-wrap gap-2 mb-6">
+            <div className="flex justify-start overflow-x-auto gap-2 mb-10 pb-4 scrollbar-hide no-scrollbar">
                 {calculatorList.map(calc => (
                      <SubNavButton 
                         key={calc.id}
@@ -957,7 +977,36 @@ const MathTools: React.FC = () => {
                 ))}
             </div>
 
-            {renderCalculator()}
+            <motion.div 
+                key={activeCalc} 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="relative"
+            >
+                {renderCalculator()}
+
+                {!user && (
+                    <div className="mt-12 p-8 md:p-12 rounded-[3.5rem] bg-brand-surface border border-brand-border flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px] group-hover:scale-110 transition-transform" />
+                        <div className="relative z-10 flex items-center gap-6">
+                             <div className="w-16 h-16 rounded-3xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                                <Landmark size={32} />
+                             </div>
+                             <div>
+                                <h4 className="font-black text-brand-text text-2xl tracking-tight mb-2">Build your math vault.</h4>
+                                <p className="text-brand-text-secondary max-w-md font-light">Join QuantumCalc to persist these calculations, access advanced AI tutoring, and sync your full workspace.</p>
+                             </div>
+                        </div>
+                        <button 
+                            onClick={signInWithGoogle}
+                            className="relative z-10 w-full md:w-auto px-10 py-5 bg-brand-text text-brand-bg rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.03] active:scale-[0.97] transition-all shadow-xl"
+                        >
+                            Get Started Free
+                        </button>
+                    </div>
+                )}
+            </motion.div>
         </div>
     );
 };

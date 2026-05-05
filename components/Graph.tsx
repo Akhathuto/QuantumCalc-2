@@ -5,7 +5,13 @@ import {
     PieChart, Pie, Cell, ScatterChart, Scatter, BarChart, Bar
 } from 'recharts';
 import { create, all } from 'mathjs';
-import { Plus, Trash2, Download, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Download, ChevronDown, AlertTriangle, ShieldCheck, Activity } from 'lucide-react';
+import Plotly from 'plotly.js-dist-min';
+import createPlotlyComponent from 'react-plotly.js/factory';
+import { motion } from 'motion/react';
+import { useAuth } from './AuthProvider';
+
+const Plot = createPlotlyComponent(Plotly);
 
 const math = create(all);
 
@@ -569,21 +575,229 @@ const PieChartCreator = () => {
     );
 };
 
-// --- Main Graphing Component ---
-const Graph = () => {
-    type ChartType = 'function' | 'scatter' | 'bar' | 'histogram' | 'pie';
-    const [chartType, setChartType] = useState<ChartType>(() => {
-        try {
-            return (localStorage.getItem('graphing_activeChartType') as ChartType) || 'function';
-        } catch { return 'function'; }
-    });
+const Surface3DPlotter = () => {
+    const [expression, setExpression] = useState('sin(sqrt(x^2 + y^2))');
+    const [xMin, setXMin] = useState('-10');
+    const [xMax, setXMax] = useState('10');
+    const [yMin, setYMin] = useState('-10');
+    const [yMax, setYMax] = useState('10');
+    const [resolution, setResolution] = useState('50');
 
-    useEffect(() => {
+    const { data, error } = useMemo(() => {
         try {
-            localStorage.setItem('graphing_activeChartType', chartType);
-        } catch { console.error("Failed to save chart type"); }
-    }, [chartType]);
-    
+            const xMinVal = parseFloat(xMin), xMaxVal = parseFloat(xMax), yMinVal = parseFloat(yMin), yMaxVal = parseFloat(yMax), res = parseInt(resolution);
+            const compiled = math.parse(expression).compile();
+            const xValues: number[] = [], yValues: number[] = [], zValues: number[][] = [];
+            const xStep = (xMaxVal - xMinVal) / res, yStep = (yMaxVal - yMinVal) / res;
+            for (let i = 0; i <= res; i++) xValues.push(xMinVal + i * xStep);
+            for (let j = 0; j <= res; j++) yValues.push(yMinVal + j * yStep);
+            for (let j = 0; j <= res; j++) {
+                const zRow: number[] = [];
+                for (let i = 0; i <= res; i++) {
+                    const z = compiled.evaluate({ x: xValues[i], y: yValues[j] });
+                    zRow.push(typeof z === 'number' && isFinite(z) ? z : 0);
+                }
+                zValues.push(zRow);
+            }
+            return { data: [{ z: zValues, x: xValues, y: yValues, type: 'surface', colorscale: 'Viridis' }], error: null };
+        } catch (e) { return { data: null, error: "Invalid expression or parameters." }; }
+    }, [expression, xMin, xMax, yMin, yMax, resolution]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1 space-y-4">
+                    <Input id="s_expr" label="Surface z = f(x, y)" value={expression} onChange={e => setExpression(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-2">
+                        <Input id="s_xmin" label="X Min" value={xMin} onChange={e => setXMin(e.target.value)} />
+                        <Input id="s_xmax" label="X Max" value={xMax} onChange={e => setXMax(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <Input id="s_ymin" label="Y Min" value={yMin} onChange={e => setYMin(e.target.value)} />
+                        <Input id="s_ymax" label="Y Max" value={yMax} onChange={e => setYMax(e.target.value)} />
+                    </div>
+                    <Input id="s_res" label="Resolution" type="number" value={resolution} onChange={e => setResolution(e.target.value)} />
+                    <ErrorDisplay error={error} />
+                </div>
+                <div className="lg:col-span-2 h-[500px] bg-brand-bg/30 p-4 rounded-xl border border-brand-border">
+                    {data && <Plot data={data as any} layout={{ autosize: true, margin: { l: 0, r: 0, b: 0, t: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', font: { color: '#ffffff' }, scene: { xaxis: { gridcolor: '#444' }, yaxis: { gridcolor: '#444' }, zaxis: { gridcolor: '#444' } } }} style={{ width: '100%', height: '100%' }} useResizeHandler={true} />}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const PolarPlotter = () => {
+    const [expression, setExpression] = useState('2 * sin(5 * theta)');
+    const [thetaMax, setThetaMax] = useState('2 * PI');
+
+    const { data, error } = useMemo(() => {
+        try {
+            const tMax = math.evaluate(thetaMax), compiled = math.parse(expression).compile();
+            const thetaValues: number[] = [], rValues: number[] = [], res = 200, step = tMax / res;
+            for (let i = 0; i <= res; i++) {
+                const t = i * step;
+                thetaValues.push((t * 180) / Math.PI);
+                rValues.push(compiled.evaluate({ theta: t }));
+            }
+            return { data: [{ type: 'scatterpolar', mode: 'lines', r: rValues, theta: thetaValues, line: { color: '#6366f1', width: 3 }, fill: 'toself', fillcolor: 'rgba(99, 102, 241, 0.1)' }], error: null };
+        } catch (e) { return { data: null, error: "Invalid expression." }; }
+    }, [expression, thetaMax]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1 space-y-4">
+                    <Input id="p_expr" label="Polar r = f(θ)" value={expression} onChange={e => setExpression(e.target.value)} />
+                    <Input id="p_tmax" label="θ Max" value={thetaMax} onChange={e => setThetaMax(e.target.value)} />
+                    <ErrorDisplay error={error} />
+                </div>
+                <div className="lg:col-span-2 h-[500px] bg-brand-bg/30 p-4 rounded-xl border border-brand-border">
+                    {data && <Plot data={data as any} layout={{ polar: { bgcolor: 'rgba(255,255,255,0.05)', radialaxis: { gridcolor: '#444' }, angularaxis: { gridcolor: '#444' } }, paper_bgcolor: 'rgba(0,0,0,0)', font: { color: '#ffffff' }, margin: { l: 40, r: 40, b:40, t:40 } }} style={{ width: '100%', height: '100%' }} useResizeHandler={true} />}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ContourPlotter = () => {
+    const [expression, setExpression] = useState('x^2 - y^2');
+    const { data, error } = useMemo(() => {
+        try {
+            const compiled = math.parse(expression).compile();
+            const xValues: number[] = [], yValues: number[] = [], zValues: number[][] = [], res = 40;
+            for (let i = 0; i <= res; i++) xValues.push(-5 + i * (10 / res));
+            for (let j = 0; j <= res; j++) yValues.push(-5 + j * (10 / res));
+            for (let j = 0; j <= res; j++) {
+                const zRow = [];
+                for (let i = 0; i <= res; i++) zRow.push(compiled.evaluate({ x: xValues[i], y: yValues[j] }));
+                zValues.push(zRow);
+            }
+            return { data: [{ z: zValues, x: xValues, y: yValues, type: 'contour', colorscale: 'Viridis' }], error: null };
+        } catch (e) { return { data: null, error: "Invalid" }; }
+    }, [expression]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1 space-y-4">
+                    <Input id="c_expr" label="f(x, y)" value={expression} onChange={e => setExpression(e.target.value)} />
+                    <ErrorDisplay error={error} />
+                </div>
+                <div className="lg:col-span-2 h-[500px] bg-brand-bg/30 p-4 rounded-xl border border-brand-border">
+                    {data && <Plot data={data as any} layout={{ paper_bgcolor: 'rgba(0,0,0,0)', font: { color: '#ffffff' } }} style={{ width: '100%', height: '100%' }} />}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const VectorFieldPlotter = () => {
+    const [uExpr, setUExpr] = useState('-y');
+    const [vExpr, setVExpr] = useState('x');
+    const [xMin, setXMin] = useState('-5');
+    const [xMax, setXMax] = useState('5');
+    const [yMin, setYMin] = useState('-5');
+    const [yMax, setYMax] = useState('5');
+    const [gridRes, setGridRes] = useState('20');
+
+    const { data, error } = useMemo(() => {
+        try {
+            const xMinVal = parseFloat(xMin), xMaxVal = parseFloat(xMax), yMinVal = parseFloat(yMin), yMaxVal = parseFloat(yMax), res = parseInt(gridRes);
+            const uCompiled = math.parse(uExpr).compile();
+            const vCompiled = math.parse(vExpr).compile();
+            
+            const xStep = (xMaxVal - xMinVal) / res;
+            const yStep = (yMaxVal - yMinVal) / res;
+
+            const x: number[] = [];
+            const y: number[] = [];
+            const u: number[] = [];
+            const v: number[] = [];
+
+            for (let i = 0; i <= res; i++) {
+                for (let j = 0; j <= res; j++) {
+                    const currX = xMinVal + i * xStep;
+                    const currY = yMinVal + j * yStep;
+                    const currU = uCompiled.evaluate({ x: currX, y: currY });
+                    const currV = vCompiled.evaluate({ x: currX, y: currY });
+                    
+                    x.push(currX);
+                    y.push(currY);
+                    u.push(currU);
+                    v.push(currV);
+                }
+            }
+
+            return {
+                data: [{
+                    type: 'cone',
+                    x: x, y: y, z: x.map(() => 0),
+                    u: u, v: v, w: u.map(() => 0),
+                    sizemode: 'scaled',
+                    sizeref: 0.5,
+                    anchor: 'tail',
+                    colorscale: 'Viridis',
+                    showscale: false
+                }],
+                error: null
+            };
+        } catch (e) {
+            return { data: null, error: "Invalid vector expressions or grid parameters." };
+        }
+    }, [uExpr, vExpr, xMin, xMax, yMin, yMax, gridRes]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1 space-y-4">
+                    <Input id="v_uexpr" label="U (x-component)" value={uExpr} onChange={e => setUExpr(e.target.value)} />
+                    <Input id="v_vexpr" label="V (y-component)" value={vExpr} onChange={e => setVExpr(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-2">
+                        <Input id="v_xmin" label="X Min" value={xMin} onChange={e => setXMin(e.target.value)} />
+                        <Input id="v_xmax" label="X Max" value={xMax} onChange={e => setXMax(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <Input id="v_ymin" label="Y Min" value={yMin} onChange={e => setYMin(e.target.value)} />
+                        <Input id="v_ymax" label="Y Max" value={yMax} onChange={e => setYMax(e.target.value)} />
+                    </div>
+                    <Input id="v_res" label="Grid Density" type="number" value={gridRes} onChange={e => setGridRes(e.target.value)} />
+                    <ErrorDisplay error={error} />
+                </div>
+                <div className="lg:col-span-2 h-[500px] bg-brand-bg/30 p-4 rounded-xl border border-brand-border">
+                    {data && (
+                        <Plot 
+                            data={data as any} 
+                            layout={{ 
+                                title: '2D Vector Field',
+                                autosize: true, 
+                                margin: { l: 0, r: 0, b: 0, t: 30 }, 
+                                paper_bgcolor: 'rgba(0,0,0,0)', 
+                                font: { color: '#ffffff' },
+                                scene: {
+                                    camera: { eye: { x: 0, y: 0, z: 2.5 } }, // Looking top-down
+                                    xaxis: { title: 'X', gridcolor: '#444' },
+                                    yaxis: { title: 'Y', gridcolor: '#444' },
+                                    zaxis: { visible: false }
+                                }
+                            }} 
+                            style={{ width: '100%', height: '100%' }} 
+                            useResizeHandler={true} 
+                        />
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const Graph = () => {
+    const { user, signInWithGoogle } = useAuth();
+    type ChartType = 'function' | 'scatter' | 'bar' | 'histogram' | 'pie' | 'surface3d' | 'polar' | 'contour' | 'vector';
+    const [chartType, setChartType] = useState<ChartType>(() => {
+        try { return (localStorage.getItem('graphing_activeChartType') as ChartType) || 'function'; } catch { return 'function'; }
+    });
+    useEffect(() => { localStorage.setItem('graphing_activeChartType', chartType); }, [chartType]);
     const renderChart = () => {
         switch(chartType) {
             case 'function': return <FunctionPlotter />;
@@ -591,21 +805,81 @@ const Graph = () => {
             case 'bar': return <BarChartCreator />;
             case 'histogram': return <HistogramCreator />;
             case 'pie': return <PieChartCreator />;
+            case 'surface3d': return <Surface3DPlotter />;
+            case 'polar': return <PolarPlotter />;
+            case 'contour': return <ContourPlotter />;
+            case 'vector': return <VectorFieldPlotter />;
             default: return null;
         }
-    }
+    };
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary">Graphing & Charting Suite</h2>
-             <div className="flex justify-center flex-wrap gap-2 mb-6">
-                <SubNavButton label="Function Plot" isActive={chartType === 'function'} onClick={() => setChartType('function')} />
-                <SubNavButton label="Scatter Plot" isActive={chartType === 'scatter'} onClick={() => setChartType('scatter')} />
-                <SubNavButton label="Bar Chart" isActive={chartType === 'bar'} onClick={() => setChartType('bar')} />
-                <SubNavButton label="Histogram" isActive={chartType === 'histogram'} onClick={() => setChartType('histogram')} />
-                <SubNavButton label="Pie Chart" isActive={chartType === 'pie'} onClick={() => setChartType('pie')} />
+        <div className="max-w-7xl mx-auto py-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 className="text-3xl md:text-5xl font-black text-brand-primary tracking-tighter">Visualization Lab</h2>
+                    <p className="text-brand-text-secondary">Transform complex data into breathtaking interactive visuals.</p>
+                </div>
+                {!user && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        onClick={signInWithGoogle}
+                        className="flex items-center gap-3 p-3 bg-brand-primary/5 border border-brand-primary/20 rounded-2xl group cursor-pointer hover:bg-brand-primary/10 transition-all"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                            <ShieldCheck size={20} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest leading-none mb-1">Cloud Sync Disabled</p>
+                            <p className="text-xs text-brand-text-secondary group-hover:text-brand-text transition-colors">Sign in to save your plots.</p>
+                        </div>
+                    </motion.div>
+                )}
             </div>
-            {renderChart()}
+
+             <div className="flex justify-start overflow-x-auto gap-2 mb-10 pb-4 no-scrollbar">
+                <SubNavButton label="Function Plot" isActive={chartType === 'function'} onClick={() => setChartType('function')} />
+                <SubNavButton label="3D Surface" isActive={chartType === 'surface3d'} onClick={() => setChartType('surface3d')} />
+                <SubNavButton label="Vector Field" isActive={chartType === 'vector'} onClick={() => setChartType('vector')} />
+                <SubNavButton label="Heatmap/Contour" isActive={chartType === 'contour'} onClick={() => setChartType('contour')} />
+                <SubNavButton label="Polar" isActive={chartType === 'polar'} onClick={() => setChartType('polar')} />
+                <SubNavButton label="Scatter" isActive={chartType === 'scatter'} onClick={() => setChartType('scatter')} />
+                <SubNavButton label="Comparison" isActive={chartType === 'bar'} onClick={() => setChartType('bar')} />
+                <SubNavButton label="Stats/Hist" isActive={chartType === 'histogram'} onClick={() => setChartType('histogram')} />
+                <SubNavButton label="Proportions" isActive={chartType === 'pie'} onClick={() => setChartType('pie')} />
+            </div>
+            
+            <motion.div 
+                key={chartType} 
+                initial={{ opacity: 0, y: 15 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.4 }}
+                className="relative"
+            >
+                {renderChart()}
+
+                {!user && (
+                    <div className="mt-12 p-8 md:p-12 rounded-[3.5rem] bg-brand-surface border border-brand-border flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-accent/10 rounded-full blur-[80px] group-hover:scale-110 transition-transform" />
+                        <div className="relative z-10 flex items-center gap-6">
+                             <div className="w-16 h-16 rounded-3xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                                <Activity size={32} />
+                             </div>
+                             <div>
+                                <h4 className="font-black text-brand-text text-2xl tracking-tight mb-2">Preserve your insights.</h4>
+                                <p className="text-brand-text-secondary max-w-md font-light">Authenticated users can save interactive plots to their library and share them with the research community.</p>
+                             </div>
+                        </div>
+                        <button 
+                            onClick={signInWithGoogle}
+                            className="relative z-10 w-full md:w-auto px-10 py-5 bg-brand-text text-brand-bg rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.03] active:scale-[0.97] transition-all shadow-xl"
+                        >
+                            Connect Gallery
+                        </button>
+                    </div>
+                )}
+            </motion.div>
         </div>
     );
 };

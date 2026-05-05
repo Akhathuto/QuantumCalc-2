@@ -18,6 +18,7 @@ import Settings from './components/Settings';
 import Help from './components/Help';
 import { AppTab, HistoryEntry } from './types';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import AuthModal from './components/common/AuthModal';
 
 // Lazy-load components with heavy dependencies (like charting libraries) to prevent startup crashes
 import Graph from './components/Graph';
@@ -37,6 +38,7 @@ import ProfileOnboarding from './components/ProfileOnboarding';
 const App = () => {
   const { user, userData, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<AppTab>('landing');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
     try {
       const savedHistory = localStorage.getItem('calcHistory');
@@ -166,7 +168,7 @@ const App = () => {
 
     switch (activeTab) {
       case 'landing':
-        TabComponent = <LandingPage onTabClick={setActiveTab} history={history} />;
+        TabComponent = <LandingPage onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} history={history} />;
         break;
       case 'calculator':
         TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} />;
@@ -251,13 +253,14 @@ const App = () => {
   return (
     <div className="bg-brand-bg text-brand-text min-h-screen font-sans flex flex-col">
       {user && userData && !userData.onboarded && <ProfileOnboarding />}
-      <Header activeTab={activeTab} onTabClick={setActiveTab} />
+      <Header activeTab={activeTab} onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} />
       <main className="container mx-auto px-4 pb-8 flex-1">
         {renderActiveTab()}
       </main>
       <FloatingAssistant activeTab={activeTab} setActiveTab={setActiveTab} />
       <Scratchpad />
       <CommandPalette onTabClick={setActiveTab} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <footer className="py-6 text-center text-brand-text-secondary text-sm border-t border-brand-border/30 mt-auto">
         Powered by Edgtec 2025
       </footer>

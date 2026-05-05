@@ -10,7 +10,7 @@ interface FloatingAssistantProps {
   onQuickSolve?: (expression: string) => void;
 }
 
-const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ setActiveTab }) => {
+const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setActiveTab }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -82,10 +82,10 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ setActiveTab }) =
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: query,
         config: {
-          systemInstruction: "You are the QuantumCalc Floating Assistant. Keep answers extremely brief (max 2 sentences). If the user wants to solve a math problem, provide the answer directly and explain how to get more details in the 'Student Tools' tab. You help with navigation and quick math.",
+          systemInstruction: `You are the QuantumCalc AI Research Assistant. You are currently helping the user in the "${activeTab}" section of the app. Keep answers extremely brief (max 2 sentences). If the user wants to solve a complex math problem, provide the answer directly and explain how to get more details in the 'Student Tools' tab. You help with navigation, quick math, and tool explanations.`,
         }
       });
       

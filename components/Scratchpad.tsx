@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Save, Trash2, X, Plus, ChevronRight, StickyNote } from 'lucide-react';
+import { FileText, Save, Trash2, X, Plus, ChevronRight, StickyNote, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { GoogleGenAI } from "@google/genai";
 
 interface Note {
   id: string;
@@ -18,6 +19,33 @@ const Scratchpad: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAiThinking, setIsAiThinking] = useState(false);
+
+  const askAiForNote = async () => {
+    if (!activeNoteId) return;
+    const note = notes.find(n => n.id === activeNoteId);
+    if (!note || !note.content.trim()) return;
+
+    setIsAiThinking(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `Please analyze, refine, or explain the following mathematical/scientific note content. Make it professional and clear: \n\n${note.content}`,
+        config: {
+          systemInstruction: "You are the QuantumCalc AI Research Assistant. Your goal is to help students and engineers refine their notes, explain complex formulas, and provide insights. Be concise but insightful.",
+        }
+      });
+
+      const refinedText = response.text || "AI could not process this note.";
+      const newContent = `${note.content}\n\n--- AI INSIGHT ---\n${refinedText}`;
+      updateNote(newContent);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAiThinking(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -166,9 +194,19 @@ const Scratchpad: React.FC = () => {
                             }}
                             className="bg-transparent border-none outline-none font-bold text-brand-text w-full"
                          />
-                         <button onClick={() => deleteNote(activeNote.id)} className="text-red-400 hover:bg-red-400/10 p-1.5 rounded">
-                           <Trash2 size={16} />
-                         </button>
+                         <div className="flex items-center gap-1">
+                           <button 
+                             onClick={askAiForNote} 
+                             disabled={isAiThinking}
+                             className="text-brand-primary hover:bg-brand-primary/10 p-1.5 rounded transition-colors disabled:opacity-50"
+                             title="AI Research Assistant"
+                           >
+                             {isAiThinking ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                           </button>
+                           <button onClick={() => deleteNote(activeNote.id)} className="text-red-400 hover:bg-red-400/10 p-1.5 rounded">
+                             <Trash2 size={16} />
+                           </button>
+                         </div>
                       </div>
                       <textarea 
                         className="flex-1 p-4 bg-transparent outline-none resize-none text-brand-text font-mono text-sm leading-relaxed"

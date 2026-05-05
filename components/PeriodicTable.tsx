@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Atom, Search, TrendingUp, Thermometer, Layers, BarChart3 } from 'lucide-react';
+import { Atom, Search, TrendingUp, Thermometer, Layers, BarChart3, Sparkles, Loader2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { GoogleGenAI } from "@google/genai";
+import ReactMarkdown from 'react-markdown';
 
 interface Element {
     number: number;
@@ -486,6 +488,30 @@ const PeriodicTable = () => {
     const [showTrends, setShowTrends] = useState(false);
     const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
+    const [isAiThinking, setIsAiThinking] = useState(false);
+    const [aiInsight, setAiInsight] = useState<string | null>(null);
+
+    const askAiForElement = async () => {
+        if (!selected) return;
+        setIsAiThinking(true);
+        setAiInsight(null);
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const response = await ai.models.generateContent({
+                model: "gemini-3-flash-preview",
+                contents: `Provide a deep scientific insight about the element ${selected.name} (${selected.symbol}). Include its historical significance, modern industrial applications, and one fun fact. Format with markdown.`,
+                config: {
+                    systemInstruction: "You are the QuantumCalc Chemical Intelligence System. Provide expert, high-level but accessible briefings on chemical elements.",
+                }
+            });
+            setAiInsight(response.text || "Could not generate insight.");
+        } catch (err) {
+            setAiInsight("Deep research unavailable at this time.");
+        } finally {
+            setIsAiThinking(false);
+        }
+    };
+
     const isAnyMatch = useMemo(() => {
         if (!search) return true;
         return ELEMENTS.some(e => 
@@ -809,6 +835,41 @@ const PeriodicTable = () => {
                                     <DetailStat label="Melting Point" value={selected.melting_point || 'N/A'} unit="K" max={3800} icon={Thermometer} />
                                     <DetailStat label="Boiling Point" value={selected.boiling_point || 'N/A'} unit="K" max={6000} icon={Thermometer} />
                                     <DetailStat label="Electronegativity" value={selected.electronegativity || 'N/A'} max={4} icon={TrendingUp} />
+                                </div>
+
+                                {/* AI Research section */}
+                                <div className="mt-8 pt-8 border-t border-brand-border">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <Sparkles className="text-brand-primary" size={20} />
+                                            <h5 className="text-sm font-black uppercase tracking-widest text-brand-text">AI RESEARCH BRIEF</h5>
+                                        </div>
+                                        <button 
+                                            onClick={askAiForElement}
+                                            disabled={isAiThinking}
+                                            className="px-4 py-1.5 rounded-full bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[10px] font-black uppercase tracking-widest transition-all border border-brand-primary/20 flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            {isAiThinking ? (
+                                                <><Loader2 size={12} className="animate-spin" /> Analyzing...</>
+                                            ) : (
+                                                <><Sparkles size={12} /> Deep Dive</>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    {aiInsight ? (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-6 bg-brand-primary/5 rounded-2xl border border-brand-primary/10 prose prose-invert prose-sm max-w-none markdown-body"
+                                        >
+                                            <ReactMarkdown>{aiInsight}</ReactMarkdown>
+                                        </motion.div>
+                                    ) : (
+                                        <div className="p-6 bg-brand-bg/30 rounded-2xl border border-dashed border-brand-border text-center">
+                                            <p className="text-xs text-brand-text-secondary">Click "Deep Dive" for an AI-powered scientific briefing on this element.</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="p-4 bg-brand-bg/50 border border-brand-border rounded-xl backdrop-blur-sm">

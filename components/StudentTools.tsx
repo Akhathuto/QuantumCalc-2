@@ -21,7 +21,9 @@ import {
   FlaskConical,
   Copy,
   Download,
-  StickyNote
+  StickyNote,
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import PeriodicTable from './PeriodicTable';
@@ -692,8 +694,72 @@ const FormulaReference = () => {
         }
     ];
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const [aiFormula, setAiFormula] = useState<{name: string, eq: string, explanation: string} | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const searchAiFormula = async () => {
+        if (!searchTerm.trim() || isSearching) return;
+        setIsSearching(true);
+        setAiFormula(null);
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+            const result = await ai.models.generateContent({
+                model: "gemini-3-flash-preview",
+                contents: `Explain the formula for "${searchTerm}". Provide the name, the equation in clean text, and a 2-sentence explanation. Return as JSON: {"name": "...", "eq": "...", "explanation": "..."}`,
+                config: {
+                    responseMimeType: "application/json"
+                }
+            });
+            const data = JSON.parse(result.text || '{}');
+            setAiFormula(data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-8">
+            <div className="bg-brand-surface/50 p-6 rounded-lg border border-brand-primary/20">
+                <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2">
+                    <Sparkles size={20} /> AI Formula Explainer
+                </h3>
+                <div className="flex gap-2">
+                    <input 
+                        type="text" 
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        placeholder="Search any formula (e.g., Einstein Field Equations, Taylor Series)..."
+                        className="flex-1 bg-gray-900/70 p-3 rounded-xl border border-brand-border focus:border-brand-primary outline-none text-sm"
+                    />
+                    <button 
+                        onClick={searchAiFormula}
+                        disabled={isSearching || !searchTerm.trim()}
+                        className="px-6 py-3 bg-brand-primary text-white font-bold rounded-xl hover:bg-brand-secondary transition-all disabled:opacity-50"
+                    >
+                        {isSearching ? <Loader2 size={20} className="animate-spin" /> : "Explain"}
+                    </button>
+                </div>
+                {aiFormula && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-6 p-6 bg-brand-bg/50 rounded-xl border border-brand-border"
+                    >
+                        <h4 className="text-lg font-bold text-brand-text mb-2">{aiFormula.name}</h4>
+                        <div className="font-mono bg-brand-bg p-4 rounded-lg mb-4 text-brand-accent border border-brand-border">
+                            {aiFormula.eq}
+                        </div>
+                        <p className="text-sm text-brand-text-secondary leading-relaxed italic">
+                            {aiFormula.explanation}
+                        </p>
+                    </motion.div>
+                )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {categories.map(cat => (
                 <div key={cat.name} className="bg-brand-surface/50 p-6 rounded-lg">
                     <h3 className="text-lg font-bold mb-4 text-brand-primary border-b border-brand-border pb-2">{cat.name}</h3>
@@ -709,6 +775,7 @@ const FormulaReference = () => {
                     </div>
                 </div>
             ))}
+            </div>
         </div>
     );
 };
@@ -1080,7 +1147,7 @@ const AITutor = () => {
             }
 
             const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
+                model: "gemini-3-flash-preview",
                 contents: userText,
                 config: {
                     systemInstruction: systemPrompt,

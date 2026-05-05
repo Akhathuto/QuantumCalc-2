@@ -33,10 +33,11 @@ import { useAuth } from '../AuthProvider';
 interface HeaderProps {
   activeTab: AppTab;
   onTabClick: (tabId: AppTab) => void;
+  onLoginClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
-  const { user, userData, signInWithGoogle, logout } = useAuth();
+const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick }) => {
+  const { user, userData, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -173,7 +174,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
               </div>
             ) : (
               <button
-                onClick={signInWithGoogle}
+                onClick={onLoginClick}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-primary text-brand-bg font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-brand-primary/20"
               >
                 <LogIn size={18} />
@@ -289,7 +290,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick }) => {
                     </button>
                   ) : (
                     <button
-                      onClick={signInWithGoogle}
+                      onClick={onLoginClick}
                       className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-brand-primary text-brand-bg font-bold"
                     >
                       <LogIn size={20} /> Connect Account
