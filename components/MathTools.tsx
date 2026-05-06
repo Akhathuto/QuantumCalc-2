@@ -999,10 +999,10 @@ const MathTools: React.FC = () => {
                              </div>
                         </div>
                         <button 
-                            onClick={signInWithGoogle}
+                            onClick={() => signInWithGoogle().catch(console.error)}
                             className="relative z-10 w-full md:w-auto px-10 py-5 bg-brand-text text-brand-bg rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.03] active:scale-[0.97] transition-all shadow-xl"
                         >
-                            Get Started Free
+                            Sign In to Sync
                         </button>
                     </div>
                 )}

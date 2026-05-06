@@ -27,7 +27,6 @@ import { GoogleGenAI } from "@google/genai";
 
 interface LandingPageProps {
   onTabClick: (tabId: AppTab) => void;
-  onLoginClick: () => void;
   history: HistoryEntry[];
 }
 
@@ -64,7 +63,7 @@ const toolCategories = [
   }
 ];
 
-const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
   const { user, userData } = useAuth();
   const [mathFact, setMathFact] = useState<string>('Loading a brain-teasing fact...');
   const [isLoadingFact, setIsLoadingFact] = useState(true);
@@ -165,18 +164,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="relative w-full max-w-md mx-auto mt-8 group"
+          className="relative w-full max-w-md mx-auto mt-8 flex flex-col items-center gap-6"
         >
-          <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="relative flex items-center bg-brand-surface border border-brand-border rounded-full p-2 shadow-2xl">
-            <Search size={20} className="text-brand-text-secondary ml-3" />
-            <input 
-              type="text" 
-              placeholder="Search workspaces... (Ctrl+K)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm w-full py-2 px-3 text-brand-text placeholder-brand-text-secondary/50 font-medium"
-            />
+          <button
+            onClick={() => onTabClick('calculator')}
+            className="inline-flex items-center gap-3 px-10 py-4 bg-brand-primary text-brand-bg rounded-full font-bold text-base hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-brand-primary/30 outline-none focus:ring-4 focus:ring-brand-primary/50"
+          >
+            Get Started <ArrowRight size={20} />
+          </button>
+          <div className="relative w-full group">
+            <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative flex items-center bg-brand-surface border border-brand-border rounded-full p-2 shadow-2xl">
+              <Search size={20} className="text-brand-text-secondary ml-3" />
+              <input 
+                type="text" 
+                placeholder="Search workspaces... (Ctrl+K)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none outline-none text-sm w-full py-2 px-3 text-brand-text placeholder-brand-text-secondary/50 font-medium"
+              />
+            </div>
           </div>
         </motion.div>
       </section>
@@ -317,7 +324,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
               Connect your account to sync your history across devices, access advanced AI workspaces, and personalize your experience. No credit card required.
             </p>
             <button 
-              onClick={onLoginClick}
+              onClick={() => onTabClick('student')}
               className="inline-flex items-center gap-3 px-12 py-5 bg-brand-primary text-brand-bg rounded-full font-bold text-sm uppercase tracking-[0.1em] hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-brand-primary/30 relative z-10 outline-none focus:ring-4 focus:ring-brand-primary/50"
             >
               Get Started for Free <ArrowRight size={20} />

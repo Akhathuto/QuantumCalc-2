@@ -172,7 +172,7 @@ const App = () => {
 
     switch (activeTab) {
       case 'landing':
-        TabComponent = <LandingPage onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} history={history} />;
+        TabComponent = <LandingPage onTabClick={setActiveTab} history={history} />;
         break;
       case 'calculator':
         TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} />;
