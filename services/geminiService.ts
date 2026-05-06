@@ -49,8 +49,8 @@ export const getApiKey = (): string => {
   } catch(e) {
     // Ignore storage errors
   }
-  return (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
-      || (import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) 
+  return (import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) 
+      || (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
       || '';
 };
 
@@ -106,7 +106,7 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
 
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash-latest",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -158,7 +158,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash-latest",
         contents: prompt,
     });
     
@@ -201,7 +201,7 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash-latest",
         contents: prompt,
     });
     

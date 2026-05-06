@@ -33,6 +33,7 @@ const ProfileOnboarding: React.FC = () => {
   const [role, setRole] = useState('');
   const [grade, setGrade] = useState('');
   const [school, setSchool] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRoleSelect = (roleId: string) => {
@@ -40,7 +41,7 @@ const ProfileOnboarding: React.FC = () => {
     if (['student', 'teacher'].includes(roleId)) {
       setStep(2);
     } else {
-      setStep(3); // Skip to school/org for other roles if relevant, or just finish
+      setStep(4); // Skip to AI step
     }
   };
 
@@ -56,6 +57,10 @@ const ProfileOnboarding: React.FC = () => {
         role,
         onboarded: true,
       };
+
+      if (apiKey.trim()) {
+        import('../services/geminiService').then(m => m.secureStorage.setItem('CUSTOM_GEMINI_API_KEY', apiKey.trim()));
+      }
       
       if (['student', 'teacher'].includes(role)) {
         profileData.grade = grade || null;
@@ -173,6 +178,61 @@ const ProfileOnboarding: React.FC = () => {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-3">
+              <div className="inline-block p-3 rounded-2xl bg-purple-500/10 text-purple-500 mb-2">
+                <Braces size={32} />
+              </div>
+              <h2 className="text-4xl font-black tracking-tight text-brand-text italic">AI Activation</h2>
+              <p className="text-brand-text-secondary font-light">Supercharge QuantumCalc with your own Gemini Vision engine.</p>
+            </div>
+            
+            <div className="bg-brand-surface/40 backdrop-blur-md border border-brand-border/60 rounded-[2rem] p-6 space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs text-brand-text-secondary leading-relaxed">
+                  To provide you with unlimited high-resolution explanations and analysis, we recommend using your own <span className="text-brand-primary font-bold">free API key</span> from Google.
+                </p>
+                <a 
+                  href="https://aistudio.google.com/app/apikey" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-brand-primary font-bold text-xs hover:underline decoration-2 underline-offset-4"
+                >
+                  Get your free key here <ChevronRight size={14} />
+                </a>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em] ml-1">Gemini API Key (Optional)</label>
+                <input
+                  type="password"
+                  placeholder="AIzaSy..."
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  className="w-full bg-brand-bg/50 border border-brand-border/60 rounded-2xl p-5 text-brand-text font-mono text-sm focus:border-brand-primary/60 outline-none transition-all"
+                />
+                <p className="text-[9px] text-brand-text-secondary italic">Your key is stored locally and never leaves your device.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button 
+                onClick={handleBack}
+                className="flex-1 flex items-center justify-center gap-2 px-8 py-5 rounded-2xl bg-brand-surface/50 border border-brand-border/60 text-brand-text font-black uppercase tracking-widest text-[10px] hover:bg-brand-surface transition-all"
+              >
+                <ArrowLeft size={18} /> BACK
+              </button>
+              <button 
+                onClick={() => setStep(4)}
+                className="flex-1 flex items-center justify-center gap-2 px-8 py-5 rounded-2xl bg-brand-primary text-brand-bg font-black uppercase tracking-widest text-[10px] hover:shadow-lg hover:shadow-brand-primary/20 active:scale-[0.98] transition-all"
+              >
+                SKIP OR PROCEED <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-8">
+            <div className="text-center space-y-3">
               <div className="inline-block p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 mb-2">
                 <CheckCircle2 size={32} />
               </div>
@@ -263,7 +323,7 @@ const ProfileOnboarding: React.FC = () => {
         </AnimatePresence>
 
         <div className="mt-12 flex justify-center gap-2">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div 
               key={s} 
               className={`h-1.5 rounded-full transition-all duration-300 ${
