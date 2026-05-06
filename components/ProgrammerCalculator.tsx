@@ -29,7 +29,7 @@ const ProgrammerCalculator: React.FC = () => {
         return BigInt.asIntN(size, val).toString(10);
     };
 
-    const handleInputChange = (base: Base, strValue: string) => {
+    const handleInputChange = React.useCallback((base: Base, strValue: string) => {
         setError(null);
         setInputBase(base);
         
@@ -61,7 +61,7 @@ const ProgrammerCalculator: React.FC = () => {
         } catch (e) {
             setError(`Invalid ${base} input`);
         }
-    };
+    }, [wordSize]);
 
     const performBitwise = (op: 'AND' | 'OR' | 'XOR' | 'NOT' | 'LSH' | 'RSH') => {
         // For a real calculator we'd need a second operand for AND/OR/XOR/LSH/RSH.
@@ -92,6 +92,50 @@ const ProgrammerCalculator: React.FC = () => {
             case 'dec': return BigInt.asIntN(wordSize, value).toString(10);
         }
     }, [value, inputBase, wordSize]);
+
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const isInputFocused = document.activeElement?.tagName === 'INPUT';
+            
+            // Clear All: Ctrl + Shift + C
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                setValue(0n);
+                setError(null);
+                return;
+            }
+
+            // If not focused in input, handle backspace and enter
+            if (!isInputFocused) {
+                if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    let currentStr = currentInputString.replace(/\s/g, '');
+                    if (currentStr.length > 0) {
+                        currentStr = currentStr.slice(0, -1);
+                        handleInputChange(inputBase, currentStr);
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Just flash or commit the input (since it auto-computes, we just ensure no error)
+                    const tempBase = inputBase;
+                    handleInputChange(tempBase, currentInputString);
+                } else if (e.key.match(/^[0-9a-fA-F]$/)) {
+                    // Global typing support if not focused 
+                    if (inputBase === 'bin' && !/^[01]$/.test(e.key)) return;
+                    if (inputBase === 'oct' && !/^[0-7]$/.test(e.key)) return;
+                    if (inputBase === 'dec' && !/^[0-9]$/.test(e.key)) return;
+                    if (inputBase === 'hex' && !/^[0-9a-fA-F]$/.test(e.key)) return;
+                    
+                    e.preventDefault();
+                    const newStr = currentInputString.replace(/\s/g, '') + e.key;
+                    handleInputChange(inputBase, newStr);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [inputBase, currentInputString, wordSize, handleInputChange]); // Rebind when input context changes
 
     return (
         <div className="max-w-4xl mx-auto">
