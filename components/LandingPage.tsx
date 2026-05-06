@@ -22,6 +22,7 @@ import {
 import { AppTab, HistoryEntry } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
+import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 
 interface LandingPageProps {
@@ -90,7 +91,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
   useEffect(() => {
     const fetchFact = async () => {
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenAI({ apiKey: getApiKey() });
         const response = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
           contents: "Provide a one-sentence fun and surprising fact about mathematics, physics, or productivity. Keep it engaging and concise.",
@@ -124,34 +125,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
       {/* Hero Section */}
-      <section className="flex flex-col items-center text-center space-y-6 pt-10 pb-8 relative">
+      <section className="flex flex-col items-center text-center space-y-8 pt-16 pb-12 relative">
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest mb-4"
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-bold uppercase tracking-[0.2em] mb-4 shadow-sm"
         >
+          <span className="relative flex h-2 w-2 mr-1">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-primary"></span>
+          </span>
           <GraduationCap size={14} /> QuantumCalc Workspace
         </motion.div>
         
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-6xl font-extrabold tracking-tight text-brand-text leading-tight"
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          className="text-5xl md:text-7xl font-extrabold tracking-tight text-brand-text leading-[1.1] max-w-4xl"
         >
-          Solve complex problems <br className="md:hidden" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">
+          Solve complex problems <br className="hidden md:block" />
+          <span className="text-transparent bg-clip-text bg-gradient-to-br from-brand-primary to-brand-secondary inline-block transform hover:scale-105 transition-transform duration-300">
             step-by-step.
           </span>
         </motion.h1>
 
         <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="text-brand-text-secondary text-lg md:text-xl font-light max-w-2xl"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-brand-text-secondary text-lg md:text-2xl font-light max-w-2xl leading-relaxed"
         >
           {getGreeting()} <br className="hidden md:block" />
-          Your unified workspace for mathematics, science, and development is ready.
+          Your unified workspace for mathematics, science, and development.
         </motion.p>
 
         <motion.div 
@@ -179,24 +186,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-12 gap-8"
+        className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-20"
       >
         {/* Main AI Teaser */}
         <motion.div 
           variants={itemVariants}
           onClick={() => onTabClick('student')}
-          className="md:col-span-8 bg-gradient-to-br from-brand-surface to-brand-bg rounded-[2rem] p-8 md:p-12 border border-brand-border relative overflow-hidden group cursor-pointer shadow-lg hover:shadow-brand-primary/10 transition-all duration-500"
+          className="md:col-span-8 bg-gradient-to-br from-brand-surface to-brand-bg rounded-[32px] p-8 md:p-12 border border-brand-border/50 relative overflow-hidden group cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 transition-all duration-500 hover:-translate-y-1"
         >
-          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 group-hover:bg-brand-primary/10 transition-colors duration-700 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand-primary/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 group-hover:bg-brand-primary/20 transition-colors duration-700 pointer-events-none" />
           
           <div className="relative z-10 flex flex-col h-full justify-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest w-max mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest w-max mb-6 border border-brand-primary/10">
               <GraduationCap size={14} /> AI Problem Solver
             </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-brand-text mb-4 tracking-tight leading-tight">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-brand-text mb-4 tracking-tight leading-[1.1]">
               {userData?.school ? `Solve anything at ${userData.school}.` : 'Access the AI Math Workspace.'}
             </h2>
-            <p className="text-brand-text-secondary text-base md:text-lg max-w-md mb-8">
+            <p className="text-brand-text-secondary text-lg md:text-xl max-w-md mb-8 leading-relaxed font-light">
               {userData?.grade ? `Optimized for ${userData.grade}. ` : ''}Type equations, ask questions, and let the QuantumCalc Engine guide you step-by-step.
             </p>
             <div className="flex items-center gap-4">
@@ -205,7 +212,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
                   e.stopPropagation();
                   onTabClick('student');
                 }}
-                className="bg-brand-text text-brand-bg px-6 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2 outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-brand-surface"
+                className="bg-brand-text text-brand-bg px-8 py-4 rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-transform flex items-center gap-3 outline-none focus:ring-2 focus:ring-brand-primary shadow-lg shadow-brand-text/10"
               >
                 Open Workspace <ArrowRight size={16} />
               </button>
@@ -216,67 +223,70 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
         {/* Fact of the day */}
         <motion.div 
           variants={itemVariants}
-          className="md:col-span-4 bg-brand-surface rounded-[2rem] p-8 border border-brand-border flex flex-col relative overflow-hidden group"
+          className="md:col-span-4 bg-brand-surface/80 backdrop-blur-sm rounded-[32px] p-8 border border-brand-border/50 flex flex-col relative overflow-hidden group shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-1"
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2 text-brand-secondary">
-              <Lightbulb size={20} />
+              <div className="p-2 bg-brand-secondary/10 rounded-full text-brand-secondary">
+                <Lightbulb size={20} />
+              </div>
               <h3 className="font-bold text-xs tracking-widest uppercase">Insight</h3>
             </div>
           </div>
           
-          <div className="flex-grow flex items-center">
+          <div className="flex-grow flex items-center relative z-10">
             <AnimatePresence mode="wait">
               {isLoadingFact ? (
-                <motion.div key="loader" className="space-y-3 w-full">
-                  <div className="h-4 bg-brand-border rounded w-full animate-pulse" />
-                  <div className="h-4 bg-brand-border rounded w-5/6 animate-pulse" />
-                  <div className="h-4 bg-brand-border rounded w-4/6 animate-pulse" />
+                <motion.div key="loader" className="space-y-4 w-full">
+                  <div className="h-4 bg-brand-border/50 rounded-full w-full animate-pulse" />
+                  <div className="h-4 bg-brand-border/50 rounded-full w-5/6 animate-pulse" />
+                  <div className="h-4 bg-brand-border/50 rounded-full w-4/6 animate-pulse" />
                 </motion.div>
               ) : (
                 <motion.p 
                   key="fact"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-brand-text text-lg font-serif italic leading-relaxed"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-brand-text text-xl font-serif italic leading-relaxed font-medium"
                 >
                   "{mathFact}"
                 </motion.p>
               )}
             </AnimatePresence>
           </div>
-          <div className="mt-4 pt-4 border-t border-brand-border/50">
-             <p className="text-[10px] text-brand-text-secondary uppercase tracking-widest">Fact of the moment</p>
+          <div className="mt-8 pt-6 border-t border-brand-border/30">
+             <p className="text-[10px] text-brand-text-secondary uppercase tracking-widest font-semibold">Fact of the moment</p>
           </div>
         </motion.div>
 
         {/* Categories / Modules */}
-        <motion.div variants={itemVariants} className="md:col-span-12 mt-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-4 border-b border-brand-border">
+        <motion.div variants={itemVariants} className="md:col-span-12 mt-12 bg-brand-surface border border-brand-border/50 rounded-[32px] p-8 md:p-12 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-brand-border/50">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-brand-text">
+              <h2 className="text-3xl font-extrabold tracking-tight text-brand-text mb-2">
                 {searchQuery ? 'Search Results' : 'Comprehensive Modules'}
               </h2>
+              <p className="text-brand-text-secondary">Everything you need, in one place.</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-10">
             {filteredCategories.map((category, idx) => (
-              <div key={idx} className="space-y-4">
-                <h3 className="text-xs font-semibold text-brand-text-secondary uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-2 h-2 bg-brand-primary rounded-full" />
+              <div key={idx} className="space-y-6">
+                <h3 className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-[0.15em] flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-brand-primary rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
                   {category.name}
                 </h3>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   {category.tools.map(tool => {
                     const Icon = tool.icon;
                     return (
                       <button
                         key={tool.id}
                         onClick={() => onTabClick(tool.id as AppTab)}
-                        className="flex items-center gap-4 p-3 rounded-2xl bg-brand-surface/50 hover:bg-brand-surface border border-transparent hover:border-brand-border group transition-all duration-300 text-left"
+                        className="flex items-center gap-4 p-4 rounded-2xl bg-brand-bg hover:bg-brand-primary/5 hover:border-brand-primary/20 border border-brand-border/50 group transition-all duration-300 text-left shadow-sm hover:shadow-md"
                       >
-                        <div className={`p-2.5 rounded-xl ${tool.bg} ${tool.color} group-hover:scale-110 transition-transform duration-300`}>
+                        <div className={`p-3 rounded-xl ${tool.bg} ${tool.color} group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm`}>
                           <Icon size={20} />
                         </div>
                         <div className="flex-1">
@@ -284,7 +294,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
                             {tool.name}
                           </span>
                         </div>
-                        <ArrowRight size={16} className="ml-auto text-brand-border group-hover:text-brand-primary opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0" />
+                        <ArrowRight size={18} className="ml-auto text-brand-border group-hover:text-brand-primary opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-3 group-hover:translate-x-0" />
                       </button>
                     );
                   })}
@@ -297,18 +307,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
         {!user && (
           <motion.div 
             variants={itemVariants}
-            className="md:col-span-12 mt-16 p-12 rounded-[3rem] bg-brand-primary/5 border border-brand-primary/20 text-center relative overflow-hidden"
+            className="md:col-span-12 mt-16 p-12 md:p-20 rounded-[3rem] bg-gradient-to-br from-brand-primary/10 to-transparent border border-brand-primary/20 text-center relative overflow-hidden group hover:border-brand-primary/40 transition-colors duration-500 shadow-sm"
           >
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.1),transparent)]" />
-            <h2 className="text-3xl md:text-5xl font-black text-brand-text mb-6 tracking-tighter">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)] pointer-events-none" />
+            <h2 className="text-4xl md:text-6xl font-black text-brand-text mb-6 tracking-tighter leading-[1.1] relative z-10">
               Unlock the full potential.
             </h2>
-            <p className="text-brand-text-secondary text-lg max-w-xl mx-auto mb-10 leading-relaxed font-light">
-              Connect your account to sync your history across devices, access advanced AI workspaces, and personalize your experience.
+            <p className="text-brand-text-secondary text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-light relative z-10">
+              Connect your account to sync your history across devices, access advanced AI workspaces, and personalize your experience. No credit card required.
             </p>
             <button 
               onClick={onLoginClick}
-              className="inline-flex items-center gap-3 px-10 py-5 bg-brand-primary text-brand-bg rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-primary/40"
+              className="inline-flex items-center gap-3 px-12 py-5 bg-brand-primary text-brand-bg rounded-full font-bold text-sm uppercase tracking-[0.1em] hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-brand-primary/30 relative z-10 outline-none focus:ring-4 focus:ring-brand-primary/50"
             >
               Get Started for Free <ArrowRight size={20} />
             </button>

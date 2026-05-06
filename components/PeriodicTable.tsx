@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Atom, Search, TrendingUp, Thermometer, Layers, BarChart3, Sparkles, Loader2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 
@@ -496,7 +497,7 @@ const PeriodicTable = () => {
         setIsAiThinking(true);
         setAiInsight(null);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const ai = new GoogleGenAI({ apiKey: getApiKey() });
             const response = await ai.models.generateContent({
                 model: "gemini-3-flash-preview",
                 contents: `Provide a deep scientific insight about the element ${selected.name} (${selected.symbol}). Include its historical significance, modern industrial applications, and one fun fact. Format with markdown.`,

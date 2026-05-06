@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'motion/react';
+import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import { 
   GraduationCap, 
@@ -703,7 +704,7 @@ const FormulaReference = () => {
         setIsSearching(true);
         setAiFormula(null);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+            const ai = new GoogleGenAI({ apiKey: getApiKey() });
             const result = await ai.models.generateContent({
                 model: "gemini-3-flash-preview",
                 contents: `Explain the formula for "${searchTerm}". Provide the name, the equation in clean text, and a 2-sentence explanation. Return as JSON: {"name": "...", "eq": "...", "explanation": "..."}`,
@@ -1133,7 +1134,7 @@ const AITutor = () => {
         setIsLoading(true);
 
         try {
-            const apiKey = process.env.GEMINI_API_KEY;
+            const apiKey = getApiKey();
             if (!apiKey) throw new Error("Gemini API key is not configured.");
             
             const ai = new GoogleGenAI({ apiKey });

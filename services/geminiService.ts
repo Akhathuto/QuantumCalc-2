@@ -1,17 +1,67 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Explanation } from '../types';
 
+export const secureStorage = {
+    setItem: (key: string, value: string) => {
+        try {
+            // Basic obfuscation to prevent casual plaintext scraping
+            const obfuscated = btoa(encodeURIComponent(value)).split('').reverse().join('');
+            localStorage.setItem(key, obfuscated);
+        } catch (e) {
+            console.error("Storage error");
+        }
+    },
+    getItem: (key: string): string | null => {
+        try {
+            const obfuscated = localStorage.getItem(key);
+            if (!obfuscated) return null;
+            // Attempt to de-obfuscate
+            const deobfuscated = decodeURIComponent(atob(obfuscated.split('').reverse().join('')));
+            return deobfuscated;
+        } catch (e) {
+            // Fallback for older plaintext keys if they exist
+            try {
+                const plaintext = localStorage.getItem(key);
+                if (plaintext && plaintext.startsWith('AIzaSy')) {
+                    // Re-save as obfuscated
+                    secureStorage.setItem(key, plaintext);
+                    return plaintext;
+                }
+            } catch (fallbackErr) {
+                console.error("Fallback storage error", fallbackErr);
+            }
+            return null;
+        }
+    },
+    removeItem: (key: string) => {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.error("Storage error");
+        }
+    }
+};
+
+export const getApiKey = (): string => {
+  try {
+    const customKey = secureStorage.getItem('CUSTOM_GEMINI_API_KEY');
+    if (customKey) return customKey;
+  } catch(e) {
+    // Ignore storage errors
+  }
+  return (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
+      || (import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) 
+      || '';
+};
+
 let aiClient: GoogleGenAI | null = null;
 
 const getAiClient = (): GoogleGenAI => {
   if (!aiClient) {
-    // In Vite, process.env might not be defined if not polyfilled, so we safely check it.
-    // We also fallback to import.meta.env for Vercel deployments if users set it as VITE_GEMINI_API_KEY
-    const apiKey = (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
-      || (import.meta.env && import.meta.env.VITE_GEMINI_API_KEY);
+    const apiKey = getApiKey();
       
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is missing. Please set it in your environment variables.");
+      throw new Error("GEMINI_API_KEY is missing. Please set it in your environment variables or in Settings.");
     }
     aiClient = new GoogleGenAI({ apiKey });
   }

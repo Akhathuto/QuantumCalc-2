@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 
 interface Note {
@@ -28,7 +29,7 @@ const Scratchpad: React.FC = () => {
 
     setIsAiThinking(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Please analyze, refine, or explain the following mathematical/scientific note content. Make it professional and clear: \n\n${note.content}`,

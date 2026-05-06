@@ -35,6 +35,10 @@ import CommandPalette from './components/CommandPalette';
 import PeriodicTable from './components/PeriodicTable';
 import ProfileOnboarding from './components/ProfileOnboarding';
 
+import PrivacyProtocol from './components/PrivacyProtocol';
+import CoreLicense from './components/CoreLicense';
+import SupportHub from './components/SupportHub';
+
 const App = () => {
   const { user, userData, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<AppTab>('landing');
@@ -230,6 +234,15 @@ const App = () => {
       case 'terms':
         TabComponent = <TermsAndLicense />;
         break;
+      case 'privacy':
+        TabComponent = <PrivacyProtocol />;
+        break;
+      case 'core-license':
+        TabComponent = <CoreLicense />;
+        break;
+      case 'support':
+        TabComponent = <SupportHub />;
+        break;
       default:
         TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} />;
     }
@@ -261,8 +274,16 @@ const App = () => {
       <Scratchpad />
       <CommandPalette onTabClick={setActiveTab} />
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
-      <footer className="py-6 text-center text-brand-text-secondary text-sm border-t border-brand-border/30 mt-auto">
-        Powered by Edgtec 2025
+      <footer className="py-6 border-t border-brand-border/30 mt-auto">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-brand-text-secondary">
+          <div className="flex gap-6">
+            <button onClick={() => setActiveTab('privacy')} className="hover:text-brand-text transition-colors">Privacy Protocol</button>
+            <button onClick={() => setActiveTab('core-license')} className="hover:text-brand-text transition-colors">Core License</button>
+            <button onClick={() => setActiveTab('support')} className="hover:text-brand-text transition-colors">Support Hub</button>
+            <button onClick={() => setActiveTab('terms')} className="hover:text-brand-text transition-colors">Terms of Service</button>
+          </div>
+          <div>Powered by Edgtec 2025</div>
+        </div>
       </footer>
     </div>
   );

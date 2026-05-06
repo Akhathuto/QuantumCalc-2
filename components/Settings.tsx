@@ -3,6 +3,7 @@ import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, Use
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { secureStorage } from '../services/geminiService';
 
 const roles = [
     { id: 'student', title: 'Student', icon: GraduationCap, color: 'text-blue-500', bg: 'bg-blue-500/10' },
@@ -126,6 +127,28 @@ const Settings: React.FC = () => {
     const [editRole, setEditRole] = useState(userData?.role || '');
     const [editGrade, setEditGrade] = useState(userData?.grade || '');
     const [editSchool, setEditSchool] = useState(userData?.school || '');
+    const [customApiKey, setCustomApiKey] = useState('');
+    const [isKeySaved, setIsKeySaved] = useState(() => {
+        try { return !!secureStorage.getItem('CUSTOM_GEMINI_API_KEY'); } 
+        catch(e) { return false; }
+    });
+
+    const handleSaveApiKey = () => {
+        try {
+            if (customApiKey.trim() === '') {
+                secureStorage.removeItem('CUSTOM_GEMINI_API_KEY');
+                setIsKeySaved(false);
+                showToast("API Key removed.");
+            } else {
+                secureStorage.setItem('CUSTOM_GEMINI_API_KEY', customApiKey.trim());
+                setIsKeySaved(true);
+                setCustomApiKey('');
+                showToast("API Key saved securely.");
+            }
+        } catch (e) {
+            showToast("Failed to save API Key.");
+        }
+    };
 
     useEffect(() => {
         if (userData) {
@@ -312,6 +335,77 @@ const Settings: React.FC = () => {
                                     {isRestoring ? <RefreshCw className="animate-spin" size={18} /> : <Download size={18} />}
                                     Restore Data
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {user && (
+                    <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
+                        <h3 className="text-2xl font-bold mb-6 text-brand-text flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
+                                <Cloud size={24} />
+                            </div>
+                            AI Integration
+                        </h3>
+                        <div className="bg-brand-bg/40 backdrop-blur-sm border border-brand-border/40 rounded-[1.5rem] p-6 space-y-6">
+                            <div className="flex items-center gap-5">
+                                <div className="p-4 rounded-full bg-purple-500/10 text-purple-500">
+                                    <AlertCircle size={28} />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-black text-brand-text tracking-tight italic">Gemini API Key</h4>
+                                    <p className="text-brand-text-secondary text-sm font-light">
+                                        Set your own Gemini API key to unlock advanced high-quality features, or if you encounter quota limits.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {isKeySaved && (
+                                <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mb-4">
+                                    <Check className="text-emerald-500" size={20} />
+                                    <span className="text-emerald-500 font-medium text-sm flex-1">Your custom API key is configured and securely stored.</span>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-4">
+                                <input
+                                    type="password"
+                                    value={customApiKey}
+                                    onChange={(e) => setCustomApiKey(e.target.value)}
+                                    placeholder={isKeySaved ? "Enter new key to replace existing..." : "Enter your Gemini API key (AIzaSy...)"}
+                                    className="w-full bg-brand-surface border border-brand-border/60 text-brand-text rounded-xl p-4 focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:text-brand-text-secondary/50 font-mono text-sm"
+                                />
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <button
+                                        onClick={handleSaveApiKey}
+                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 font-black transition-all text-sm border border-purple-500/20 uppercase tracking-widest"
+                                    >
+                                        <Save size={18} />
+                                        {isKeySaved ? (customApiKey.trim() === '' ? 'Remove Key' : 'Replace Key') : 'Save Key'}
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                if ((window as any).aistudio?.openSelectKey) {
+                                                    await (window as any).aistudio.openSelectKey();
+                                                    showToast("API Key selection completed.");
+                                                } else {
+                                                    // Try the old method if available
+                                                    showToast("Platform API Key selection is not available.");
+                                                }
+                                            } catch (err) {
+                                                showToast("Failed to open API key selection.");
+                                            }
+                                        }}
+                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-brand-border/60 text-brand-text hover:bg-brand-surface/50 transition-all font-bold text-sm"
+                                    >
+                                        Use Platform Dialog
+                                    </button>
+                                </div>
+                                <p className="text-xs text-brand-text-secondary font-light">
+                                    Your key is stored purely locally in your browser and never sent to our servers.
+                                </p>
                             </div>
                         </div>
                     </div>

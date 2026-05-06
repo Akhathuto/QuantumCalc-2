@@ -1,6 +1,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { ArrowRightLeft, Sparkles, Loader2, Info } from 'lucide-react';
+import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -125,7 +126,7 @@ export const UnitConverter = () => {
     setSmartResult(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenAI({ apiKey: getApiKey() });
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: `Convert this and return ONLY JSON: {"value": "numerical_result_as_string", "unit": "unit_name", "note": "brief_explanation_or_fact", "comparison": "an interesting real-world comparison for this value"}. Input: ${smartQuery}`,

@@ -39,4 +39,7 @@ export type AppTab =
   | 'contact'
   | 'terms'
   | 'settings'
-  | 'help';
+  | 'help'
+  | 'privacy'
+  | 'core-license'
+  | 'support';

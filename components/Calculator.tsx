@@ -555,43 +555,49 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
           </div>
         </div>
         
-        <div className="lg:col-span-2 space-y-6">
-            <div className="bg-brand-surface/50 p-6 rounded-lg min-h-[400px] flex flex-col">
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 text-brand-primary">
-                <Brain /> Formula Explorer
+        <div className="lg:col-span-2 space-y-8">
+            <div className="bg-brand-surface/30 backdrop-blur-sm p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl min-h-[440px] flex flex-col relative overflow-hidden group hover:border-brand-primary/30 transition-colors duration-500">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-[60px] -mr-10 -mt-10 pointer-events-none group-hover:bg-brand-primary/20 transition-colors duration-700" />
+              <h3 className="text-2xl font-extrabold mb-6 flex items-center gap-3 text-brand-text tracking-tight relative z-10">
+                <div className="p-2 bg-brand-primary/10 text-brand-primary rounded-xl">
+                    <Brain size={24} />
+                </div>
+                Formula Explorer
               </h3>
-              <div className="flex-grow relative">
+              <div className="flex-grow relative z-10">
                 {isLoading && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-surface/50 rounded-lg transition-opacity duration-300">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-transparent rounded-lg transition-opacity duration-300">
                     <Loader className="animate-spin text-brand-primary" size={48} />
-                    <p className="mt-4 text-brand-text-secondary">Gemini is exploring...</p>
+                    <p className="mt-4 text-brand-text-secondary font-medium tracking-wide">Gemini is exploring...</p>
                   </div>
                 )}
 
                 {!isLoading && !explanation && (
                   <div className="flex flex-col items-center justify-center h-full text-center text-brand-text-secondary">
-                      <FlaskConical size={48} className="mb-4 opacity-50" />
-                      <p className="font-semibold">Unlock knowledge with every calculation.</p>
-                      <p className="text-sm">Perform a calculation using a scientific function (like sqrt, sin, log) to see a detailed explanation here.</p>
+                      <div className="p-4 bg-brand-surface/50 rounded-full mb-6">
+                          <FlaskConical size={48} className="opacity-50 text-brand-secondary" />
+                      </div>
+                      <p className="font-bold text-lg text-brand-text mb-2">Unlock knowledge.</p>
+                      <p className="text-sm font-light max-w-[200px] leading-relaxed">Perform a calculation using a scientific function (like sqrt, sin, log) to see a detailed explanation here.</p>
                   </div>
                 )}
 
                 {!isLoading && explanation && (
-                  <div className="space-y-4 animate-fade-in-down">
-                    <h4 className="text-xl font-semibold text-brand-accent">{explanation.functionName}</h4>
+                  <div className="space-y-6 animate-fade-in-down">
+                    <h4 className="text-xl font-bold text-brand-text tracking-tight">{explanation.functionName}</h4>
                     
-                    <div className="font-mono bg-brand-bg p-4 rounded-md text-2xl text-center text-brand-secondary break-words">
+                    <div className="font-mono bg-brand-bg/50 border border-brand-border/40 p-6 rounded-2xl text-2xl text-center text-brand-primary break-words shadow-inner">
                       <LatexRenderer latex={explanation.latexFormula || explanation.formula} />
                     </div>
 
                     {explanation.parameters && explanation.parameters.length > 0 && (
-                      <div>
-                        <h5 className="font-semibold mb-2">Parameters:</h5>
-                        <div className="space-y-2 text-sm">
+                      <div className="bg-brand-bg/30 p-4 rounded-2xl border border-brand-border/30">
+                        <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-3 text-brand-text-secondary">Parameters</h5>
+                        <div className="space-y-3 text-sm">
                           {explanation.parameters.map(p => (
-                            <div key={p.param} className="flex">
-                              <code className="font-bold text-brand-secondary w-12 flex-shrink-0">{p.param}</code>
-                              <span className="text-brand-text-secondary">{p.description}</span>
+                            <div key={p.param} className="flex gap-3">
+                              <code className="font-bold text-brand-secondary bg-brand-secondary/10 px-2 py-0.5 rounded text-[11px] h-fit mt-0.5">{p.param}</code>
+                              <span className="text-brand-text-secondary leading-relaxed font-light">{p.description}</span>
                             </div>
                           ))}
                         </div>
@@ -599,28 +605,35 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
                     )}
 
                     <div>
-                      <h5 className="font-semibold mb-2">Description:</h5>
-                      <p className="text-brand-text-secondary text-sm">{explanation.description}</p>
+                      <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-2 text-brand-text-secondary">Description</h5>
+                      <p className="text-brand-text-secondary text-sm leading-relaxed font-light">{explanation.description}</p>
                     </div>
 
                     <div>
-                      <h5 className="font-semibold mb-2">Example:</h5>
-                      <p className="font-mono text-brand-text-secondary italic bg-brand-bg p-2 rounded-md text-sm">{explanation.example}</p>
+                      <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-2 text-brand-text-secondary">Example</h5>
+                      <p className="font-mono text-brand-text-secondary italic bg-brand-bg/50 border border-brand-border/30 p-3 rounded-xl text-sm">{explanation.example}</p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
-            <div className="bg-brand-surface/50 p-6 rounded-lg">
-                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 text-brand-primary"><FlaskConical /> Scientific Constants</h3>
-                <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+            
+            <div className="bg-brand-surface/30 backdrop-blur-sm p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl overflow-hidden relative group hover:border-brand-secondary/30 transition-colors duration-500">
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-brand-secondary/5 rounded-full blur-[60px] -mr-10 -mb-10 pointer-events-none group-hover:bg-brand-secondary/10 transition-colors duration-700" />
+                <h3 className="text-2xl font-extrabold mb-6 flex items-center gap-3 text-brand-text tracking-tight relative z-10">
+                    <div className="p-2 bg-brand-secondary/10 text-brand-secondary rounded-xl">
+                        <FlaskConical size={24} />
+                    </div>
+                    Scientific Constants
+                </h3>
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-3 scrollbar-thin scrollbar-thumb-brand-border scrollbar-track-transparent relative z-10">
                     {SCIENTIFIC_CONSTANTS.map(c => (
-                        <div key={c.symbol} onClick={() => handleInput(c.value)} title={`Value: ${c.value} ${c.unit}`} className="flex justify-between items-center p-2 rounded-md hover:bg-brand-surface cursor-pointer">
-                            <div>
-                                <span className="font-semibold">{c.name}</span>
-                                <span className="text-sm text-brand-text-secondary ml-2">{`(${c.symbol})`}</span>
+                        <div key={c.symbol} onClick={() => handleInput(c.value)} title={`Value: ${c.value} ${c.unit}`} className="flex justify-between items-center p-3 rounded-2xl hover:bg-brand-bg/80 border border-transparent hover:border-brand-border/50 transition-all cursor-pointer group/item">
+                            <div className="flex flex-col">
+                                <span className="font-bold text-sm text-brand-text group-hover/item:text-brand-secondary transition-colors">{c.name}</span>
+                                <span className="text-[10px] text-brand-text-secondary font-black uppercase tracking-widest mt-0.5">{c.symbol}</span>
                             </div>
-                            <span className="font-mono text-brand-accent text-sm">{c.value}</span>
+                            <span className="font-mono text-brand-text-secondary text-xs bg-brand-bg px-2 py-1 rounded-lg border border-brand-border/30">{c.value}</span>
                         </div>
                     ))}
                 </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, BrainCircuit, X, Bot, Sparkles, Command } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppTab } from '../types';
+import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 
 interface FloatingAssistantProps {
@@ -80,7 +81,7 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
     setMessages(prev => [...prev, { role: 'user', text: query }]);
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: query,
