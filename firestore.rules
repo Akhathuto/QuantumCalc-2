@@ -83,7 +83,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && (request.auth.token.email == "akhathuto@gmail.com" || request.auth.token.email == "info@edgtec.co.za" || request.auth.token.email == "akha.thuto@gmail.com") && request.auth.token.email_verified == true;
+      return isAuthenticated() && (request.auth.token.email == "akhathuto@gmail.com" || request.auth.token.email == "akha.thuto@gmail.com") && request.auth.token.email_verified == true;
     }
 
     // ===============================================================
