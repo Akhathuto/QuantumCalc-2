@@ -22,7 +22,6 @@ export const googleDriveService = {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Drive Search Error:', error);
       throw new Error(`Failed to search Google Drive: ${error.error?.message || response.statusText}`);
     }
 
@@ -31,61 +30,56 @@ export const googleDriveService = {
   },
 
   async saveProfile(accessToken: string, data: UserProfileData): Promise<void> {
-    try {
-      const fileId = await this.findProfileFile(accessToken);
-      const syncedData = { ...data, lastSynced: new Date().toISOString() };
-      
-      if (fileId) {
-        // Update existing file
-        const response = await fetch(`${UPLOAD_API_URL}/${fileId}?uploadType=media`, {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(syncedData),
-        });
+    const fileId = await this.findProfileFile(accessToken);
+    const syncedData = { ...data, lastSynced: new Date().toISOString() };
+    
+    if (fileId) {
+      // Update existing file
+      const response = await fetch(`${UPLOAD_API_URL}/${fileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(syncedData),
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to update profile on Google Drive');
-        }
-      } else {
-        // Create new file using multipart upload
-        const metadata = {
-          name: FILE_NAME,
-          mimeType: 'application/json',
-        };
-
-        const boundary = 'quantum_calc_boundary';
-        const delimiter = `\r\n--${boundary}\r\n`;
-        const closeDelimiter = `\r\n--${boundary}--`;
-
-        const body =
-          delimiter +
-          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-          JSON.stringify(metadata) +
-          delimiter +
-          'Content-Type: application/json\r\n\r\n' +
-          JSON.stringify(syncedData) +
-          closeDelimiter;
-
-        const response = await fetch(`${UPLOAD_API_URL}?uploadType=multipart`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': `multipart/related; boundary=${boundary}`,
-          },
-          body: body,
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(`Failed to create profile on Google Drive: ${error.error?.message || response.statusText}`);
-        }
+      if (!response.ok) {
+        throw new Error('Failed to update profile on Google Drive');
       }
-    } catch (error) {
-      console.error('Google Drive Sync Error:', error);
-      throw error;
+    } else {
+      // Create new file using multipart upload
+      const metadata = {
+        name: FILE_NAME,
+        mimeType: 'application/json',
+      };
+
+      const boundary = 'quantum_calc_boundary';
+      const delimiter = `\r\n--${boundary}\r\n`;
+      const closeDelimiter = `\r\n--${boundary}--`;
+
+      const body =
+        delimiter +
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        JSON.stringify(syncedData) +
+        closeDelimiter;
+
+      const response = await fetch(`${UPLOAD_API_URL}?uploadType=multipart`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`,
+        },
+        body: body,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Failed to create profile on Google Drive: ${error.error?.message || response.statusText}`);
+      }
     }
   },
 
@@ -106,7 +100,6 @@ export const googleDriveService = {
 
       return await response.json();
     } catch (error) {
-      console.error('Google Drive Read Error:', error);
       return null;
     }
   }

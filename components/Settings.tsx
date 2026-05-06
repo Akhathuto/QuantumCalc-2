@@ -160,8 +160,7 @@ const Settings: React.FC = () => {
                     await googleDriveService.saveProfile(accessToken, profileData);
                     showToast("Profile updated and synced to Google Drive!");
                 } catch (driveError) {
-                    console.error("Failed to sync to Google Drive:", driveError);
-                    showToast("Profile updated locally, but Drive sync failed.");
+                    showToast("Profile updated locally. Google Drive is not enabled.");
                 }
             } else {
                 showToast("Profile updated successfully!");
@@ -192,8 +191,7 @@ const Settings: React.FC = () => {
                 showToast("No profile found on your Google Drive.");
             }
         } catch (error) {
-            console.error("Restore failed", error);
-            showToast("Failed to restore from Google Drive.");
+            showToast("Restore failed. Google Drive may not be enabled.");
         } finally {
             setIsRestoring(false);
         }

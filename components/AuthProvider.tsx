@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { doc, setDoc, onSnapshot, DocumentSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, DocumentSnapshot, serverTimestamp } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -45,14 +45,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserData(docSnap.data());
           } else {
             // Initial profile creation
-            const initialData = {
+            const initialData: any = {
               uid: currentUser.uid,
               email: currentUser.email,
-              displayName: currentUser.displayName,
-              photoURL: currentUser.photoURL,
               onboarded: false,
-              createdAt: new Date()
+              createdAt: serverTimestamp()
             };
+            if (currentUser.displayName) initialData.displayName = currentUser.displayName;
+            if (currentUser.photoURL) initialData.photoURL = currentUser.photoURL;
             try {
               await setDoc(userRef, initialData);
               setUserData(initialData);

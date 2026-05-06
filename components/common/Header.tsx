@@ -53,6 +53,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick }) 
     { id: 'landing', label: 'Home', Icon: Home },
     { id: 'calculator', label: 'Calculator', Icon: CalculatorIcon },
     { id: 'graphing', label: 'Graphing', Icon: LineChart },
+    { id: 'history', label: 'History', Icon: History },
   ];
 
   const toolCategories = [
@@ -62,6 +63,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick }) 
       items: [
         { id: 'math-tools', label: 'Math Tools', Icon: Beaker },
         { id: 'programmer', label: 'Programmer', Icon: Binary },
+        { id: 'periodic', label: 'Periodic Table', Icon: TestTube },
         { id: 'financial', label: 'Financial', Icon: Landmark },
         { id: 'date', label: 'Date & Time', Icon: Calendar },
         { id: 'health', label: 'Health', Icon: HeartPulse },
@@ -147,6 +149,17 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick }) 
               </div>
             ))}
 
+            {/* Help/About Section */}
+            <div className="flex items-center gap-1 mr-2">
+                <button
+                    onClick={() => handleTabClick('help')}
+                    className={`p-2 rounded-xl text-brand-text-secondary hover:bg-brand-surface hover:text-brand-text transition-all ${activeTab === 'help' ? 'bg-brand-primary/10 text-brand-primary' : ''}`}
+                    title="Help"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+                </button>
+            </div>
+
             <div className="w-[1px] h-6 bg-brand-border/50 mx-2" />
 
             {/* Auth/Profile Section */}
@@ -229,17 +242,6 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick }) 
                     <span className="text-xs uppercase tracking-widest">{item.label}</span>
                   </button>
                 ))}
-                <button
-                    onClick={() => handleTabClick('history')}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all ${
-                      activeTab === 'history' 
-                        ? 'bg-brand-primary text-brand-bg border-brand-primary font-bold' 
-                        : 'bg-brand-surface border-brand-border text-brand-text-secondary'
-                    }`}
-                  >
-                    <History size={24} />
-                    <span className="text-xs uppercase tracking-widest">History</span>
-                </button>
               </div>
 
               {/* Categories */}
@@ -270,6 +272,17 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick }) 
               {/* Account/Settings Info */}
               <div className="pt-4 border-t border-brand-border/50">
                 <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => handleTabClick('help')}
+                    className={`flex items-center gap-3 p-4 rounded-2xl border transition-all ${
+                      activeTab === 'help' 
+                        ? 'bg-brand-primary/10 border-brand-primary text-brand-primary' 
+                        : 'bg-brand-surface border-brand-border text-brand-text'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+                    <span className="font-bold">Help & Support</span>
+                  </button>
                   <button
                     onClick={() => handleTabClick('settings')}
                     className={`flex items-center gap-3 p-4 rounded-2xl border transition-all ${

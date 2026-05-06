@@ -73,8 +73,7 @@ const ProfileOnboarding: React.FC = () => {
           await googleDriveService.saveProfile(accessToken, profileData);
           console.log("Profile synced to Google Drive successfully.");
         } catch (driveError) {
-          console.error("Failed to sync to Google Drive:", driveError);
-          // We don't block the UI if Drive sync fails, but we log it
+          // Drive sync failed, silently catch to prevent blocking
         }
       }
     } catch (error) {
