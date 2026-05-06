@@ -200,9 +200,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
               {userData?.grade ? `Optimized for ${userData.grade}. ` : ''}Type equations, ask questions, and let the QuantumCalc Engine guide you step-by-step.
             </p>
             <div className="flex items-center gap-4">
-              <span className="bg-brand-text text-brand-bg px-6 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTabClick('student');
+                }}
+                className="bg-brand-text text-brand-bg px-6 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2 outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-brand-surface"
+              >
                 Open Workspace <ArrowRight size={16} />
-              </span>
+              </button>
             </div>
           </div>
         </motion.div>

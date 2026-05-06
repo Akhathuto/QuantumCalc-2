@@ -5,11 +5,8 @@ import {
     HelpCircle,
     ChevronDown,
     Beaker,
-    TestTube,
-    Landmark,
     GraduationCap,
-    Code,
-    Type
+    Code
 } from 'lucide-react';
 
 interface AccordionItemProps {
@@ -57,126 +54,99 @@ const Help: React.FC = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-xs font-mono uppercase tracking-widest mb-2">
                     <HelpCircle size={14} /> Knowledge Base
                 </div>
-                <h2 className="text-4xl md:text-5xl font-black text-brand-text tracking-tight">Help & FAQ</h2>
+                <h2 className="text-4xl md:text-5xl font-black text-brand-text tracking-tight">Help & Documentation</h2>
                 <p className="max-w-xl mx-auto text-lg text-brand-text-secondary font-light">
-                    Everything you need to master QuantumCalc and unlock its full potential.
+                    Everything you need to master QuantumCalc and unlock its full potential for mathematics, science, and development.
                 </p>
             </div>
             
             <div className="space-y-4">
-                <AccordionItem title="Frequently Asked Questions" icon={HelpCircle} startOpen={true}>
-                    <h4>How do the AI features like Formula Explorer work?</h4>
+                <AccordionItem title="Getting Started & Cloud Sync" icon={HelpCircle} startOpen={true}>
+                    <h4>How do I save my preferences across devices?</h4>
                     <p>
-                        The AI features are powered by Google's Gemini API. They are enabled by default if the application is configured correctly by the administrator. There's no need for you to provide an API key. Simply perform a calculation using a scientific function (like sqrt, sin, log) to see a detailed explanation in the "Formula Explorer" panel on the calculator page.
+                        QuantumCalc supports <strong>Google Drive integration</strong> for cloud sync! By logging in and opening <strong>Settings</strong>, you can securely sync your profile, active tools, and preferences to your personal Google Drive account. When you use QuantumCalc on another device, just click "Restore from Google Drive" in Settings.
                     </p>
-                    <h4>Is my data private?</h4>
+                    <h4>How does History work?</h4>
                     <p>
-                        Yes. All your data, including calculation history, is stored locally in your browser. It is not uploaded to any server, ensuring your privacy.
+                        Every calculation you perform is automatically saved to your History. You can access it by clicking the <strong>History</strong> button in the left sidebar. If you are signed in, your History is securely backed up and synced to the cloud. You can click any past calculation to load it back into the calculator, or use the "Star" icon to favorite a calculation for easy access later.
                     </p>
-                    <h4>How do I see my past calculations?</h4>
+                    <h4>How do the AI features like the Tutor and Formula Explorer work?</h4>
                     <p>
-                        Navigate to <strong>More &gt; History</strong> to see a list of your recent calculations. You can click on any entry to load it back into the calculator or mark it as a "favorite" to pin it to the top.
-                    </p>
-                </AccordionItem>
-                 <AccordionItem title="Scientific Calculator" icon={Calculator}>
-                    <p>
-                        The main calculator is a powerful tool with many functions.
+                        QuantumCalc's AI capabilities are powered by advanced language models that interpret your equations and provide step-by-step guidance.
                     </p>
                     <ul>
-                        <li><strong>Basic Operations:</strong> Use the number pad and operator keys for standard arithmetic.</li>
-                        <li><strong>2nd Key:</strong> Press the "2nd" key to access alternate functions shown above the main buttons (e.g., x³ instead of x², asin instead of sin).</li>
-                        <li><strong>Memory:</strong> Use the "M" keys to store and recall numbers:
+                      <li>The <strong>Formula Explorer</strong> automatically analyzes scientific functions (like `sin`, `log`, `sqrt`) as you use them in the calculator.</li>
+                      <li>The <strong>Nolo AI Tutor</strong> (found in Student Tools) is designed to help you think through problems, rather than just giving you the answer.</li>
+                    </ul>
+                </AccordionItem>
+                
+                 <AccordionItem title="Core Engineering Calculator" icon={Calculator}>
+                    <p>
+                        The primary calculator is an advanced engineering tool designed for both simple and complex expressions.
+                    </p>
+                    <ul>
+                        <li><strong>Basic Operations:</strong> Use the standard numpad and operator keys. It respects standard order of operations (PEMDAS).</li>
+                        <li><strong>Alternate Functions (2nd Key):</strong> Press the "2nd" key at the top left to reveal inverse trigonometric functions (asin, acos), hyperbolic functions, and higher-order roots/powers.</li>
+                        <li><strong>Memory Register:</strong> Store temporary values using the "M" keys.
                             <ul>
-                                <li><strong>MC:</strong> Memory Clear - sets memory to zero.</li>
-                                <li><strong>MR:</strong> Memory Recall - inserts the stored number.</li>
-                                <li><strong>M+:</strong> Memory Add - adds the current number to memory.</li>
-                                <li><strong>M-:</strong> Memory Subtract - subtracts the current number from memory.</li>
+                                <li><strong>MC:</strong> Clear Memory to 0.</li>
+                                <li><strong>MR:</strong> Recall Memory into the current expression.</li>
+                                <li><strong>M+:</strong> Add the current screen value to the stored memory.</li>
+                                <li><strong>M-:</strong> Subtract the current screen value from stored memory.</li>
                             </ul>
                         </li>
-                        <li><strong>Formula Explorer:</strong> After performing a calculation with a function (like <code>sqrt(16)</code>), the panel on the right will show an AI-generated explanation of the function, its formula, and an example.</li>
+                        <li><strong>Expression Engine:</strong> You can type complex inline expressions using the keyboard, such as `2 * (sin(45) + 3)`.</li>
                     </ul>
                 </AccordionItem>
-                <AccordionItem title="Graphing Suite" icon={LineChart}>
+
+                <AccordionItem title="Graphing & Data Visualization" icon={LineChart}>
                      <p>
-                        Visualize data with four different chart types.
+                        Visualize data comprehensively using our built-in graphing suite.
                     </p>
                     <ul>
-                        <li><strong>Function Plot:</strong> Enter a mathematical expression using "x" as the variable (e.g., <code>sin(x)</code> or <code>x^3 - 2x</code>). Adjust the X-axis range as needed.</li>
-                        <li><strong>Scatter Plot:</strong> Input data points with one X,Y pair per line. You can separate values with a comma, space, or semicolon (e.g., <code>1, 5</code> or <code>2; 8</code>).</li>
-                        <li><strong>Bar & Pie Charts:</strong> Input categorical data with one label-value pair per line, separated by a comma (e.g., <code>Apples, 50</code>).</li>
-                        <li><strong>Exporting:</strong> All charts can be exported as a PNG image using the "Export as PNG" button.</li>
+                        <li><strong>Function Plotting:</strong> Type a mathematical expression using "x" (e.g., <code>sin(x)</code> or <code>x^2 - 4</code>). You can define a custom domain (X-axis start and end points) and update the graph in real time.</li>
+                        <li><strong>Scatter Plots:</strong> Paste or type raw data points (one coordinate pair per line). E.g., <code>1, 5</code> and <code>2, 10</code>. Use a comma, space, or semicolon to separate the X and Y values.</li>
+                        <li><strong>Bar & Pie Charts:</strong> Perfect for categorical data. Input a label and a value per line, separated by a comma (e.g., <code>Revenue, 50000</code>).</li>
+                        <li><strong>Export:</strong> Click "Export as PNG" to instantly download a high-resolution image of your rendered chart.</li>
                     </ul>
                 </AccordionItem>
-                 <AccordionItem title="Math Tools" icon={Beaker}>
+
+                 <AccordionItem title="Math Toolset & Equations" icon={Beaker}>
                      <p>
-                        A comprehensive toolkit for advanced and everyday mathematical calculations.
+                        A specialized suite for algebra, geometry, statistics, and discrete mathematics.
                      </p>
                      <ul>
-                        <li><strong>Matrix Calculator:</strong> Select a size (2x2 or 3x3), input your values for Matrix A and B, and select an operation to perform.</li>
-                        <li><strong>Statistics Calculator:</strong> Enter a list of numbers separated by spaces or commas to get a full statistical analysis. Also includes Confidence Intervals.</li>
-                        <li><strong>Equation Solver:</strong> Enter a linear (e.g., <code>2x-10=0</code>) or quadratic equation to find the value(s) of 'x'. A step-by-step breakdown is provided.</li>
-                        <li><strong>Fractions & Ratios:</strong> Perform arithmetic directly on fractions or solve ratio problems (A/B = C/D).</li>
-                        <li><strong>Factors & Primes:</strong> Prime factorization, GCF/LCM, and primality testing.</li>
-                        <li><strong>Constants & Powers:</strong> Advanced Exponent, Root, and Logarithm tools.</li>
-                        <li><strong>Geometry Tools:</strong> Specialized calculators for Triangle properties (sides, angles, area) and Circle measurements.</li>
+                        <li><strong>Matrix Calculator:</strong> Add, multiply, and subtract 2x2 or 3x3 matrices.</li>
+                        <li><strong>Statistics:</strong> Enter a space or comma-separated list of numbers to instantly generate Mean, Median, Mode, Standard Deviation, Variance, and Confidence Intervals.</li>
+                        <li><strong>Equation Solver:</strong> Type any linear (<code>3x - 12 = 0</code>) or quadratic equation (<code>x^2 + 5x + 6 = 0</code>) to get step-by-step solutions for 'x'.</li>
+                        <li><strong>Fractions & Ratios:</strong> Simplifies complex fractions and solves ratio proportions (A/B = C/D).</li>
+                        <li><strong>Factors & Primes:</strong> Quickly determine prime factorization, GCF/LCM for up to three numbers, and test specific numbers for primality.</li>
                     </ul>
                 </AccordionItem>
-                <AccordionItem title="Converters" icon={TestTube}>
+
+                <AccordionItem title="Student & Academic Tools" icon={GraduationCap}>
                     <p>
-                        The app includes a variety of converters for different needs.
-                    </p>
-                     <ul>
-                        <li><strong>Unit/Currency/Base:</strong> Select the 'From' and 'To' fields. As you type in one field, the other will update in real-time.</li>
-                        <li><strong>Percentage:</strong> Includes three common percentage calculation types. Simply fill in the blanks in the sentences to get your result.</li>
-                    </ul>
-                </AccordionItem>
-                 <AccordionItem title="Financial, Date & Health" icon={Landmark}>
-                    <p>
-                        These sections contain specialized calculators for everyday life.
-                    </p>
-                     <ul>
-                        <li><strong>Financial:</strong> Select a calculator type from the dropdown (e.g., Loan, Compound Interest). Fill in the required fields to get a detailed breakdown and, where applicable, a chart visualizing the results over time.</li>
-                        <li><strong>Date:</strong> Calculate the duration between two dates or add/subtract a period of time from a specific date.</li>
-                        <li><strong>Health:</strong> Calculate your BMI, BMR, and recommended daily calorie intake. You can switch between Metric and Imperial units.</li>
-                    </ul>
-                </AccordionItem>
-                <AccordionItem title="Student Tools" icon={GraduationCap}>
-                    <p>
-                        A comprehensive suite of tools designed specifically for high school and college students. Includes a globally accessible <strong>Scratchpad</strong> for taking notes anywhere in the app!
+                        Tools designed strictly for the academic workflow, helping you focus and organize your study materials.
                     </p>
                     <ul>
-                        <li><strong>Nolo AI Tutor:</strong> An interactive, step-by-step AI tutor that helps you understand concepts in Math, Science, History, and more without just giving you the answer.</li>
-                        <li><strong>GPA Calculator:</strong> Track your current GPA and calculate what you need on your final exam to achieve your target grade.</li>
-                        <li><strong>Pomodoro Timer:</strong> Boost your productivity with a customizable study timer using the Pomodoro technique.</li>
-                        <li><strong>Geometry Solver:</strong> Quickly calculate the area, perimeter, and volume of various 2D and 3D shapes.</li>
-                        <li><strong>Periodic Table (Chemistry):</strong> A full interactive periodic table, searchable element lookup, and detailed properties for every element (accessed from main menu).</li>
-                        <li><strong>Science Tools:</strong> Includes a Molar Mass Calculator and Ideal Gas Law Calculator (inside Student Tools).</li>
-                        <li><strong>Formula Reference:</strong> A quick reference guide for essential Algebra, Calculus, and Physics formulas.</li>
-                        <li><strong>Citation Generator:</strong> Easily generate citations in MLA 9th Edition or APA 7th Edition formats.</li>
-                        <li><strong>Flashcards:</strong> Create, manage, and study custom flashcard decks to memorize important information.</li>
-                        <li><strong>Assignment Tracker:</strong> Keep track of your schoolwork, due dates, and completion status in one place.</li>
+                        <li><strong>Scratchpad:</strong> A globally accessible notepad! Need to write down a partial answer before solving the rest? Click the <strong>Scratchpad</strong> button anywhere in the app to take quick notes.</li>
+                        <li><strong>Periodic Table:</strong> An interactive chemistry reference. Search for elements by name, atomic number, or symbol to view their comprehensive properties (Molar Mass, Electronegativity, etc.).</li>
+                        <li><strong>GPA & Grades:</strong> A robust GPA calculator that helps you determine what score you need on your final exam to maintain or hit your target GPA.</li>
+                        <li><strong>Pomodoro Timer:</strong> Study effectively using timed intervals (e.g., 25 minutes of work followed by a 5-minute break).</li>
+                        <li><strong>Citation Generator:</strong> Generates flawless APA 7th and MLA 9th citations for your research papers.</li>
+                        <li><strong>Flashcards:</strong> Create study decks directly in QuantumCalc to review formulas and concepts before an exam.</li>
                     </ul>
                 </AccordionItem>
-                <AccordionItem title="Developer Tools" icon={Code}>
+
+                <AccordionItem title="Developer & Programmer Tools" icon={Code}>
                     <p>
-                        Handy utilities for software developers and programmers.
+                        Utilities crafted for software engineers, saving you from switching between browser tabs.
                     </p>
                     <ul>
-                        <li><strong>Programmer Calculator:</strong> A specialized calculator for Base-N mathematics (Dec, Hex, Oct, Bin) that supports bitwise operations (AND, OR, XOR, Shifts) and varying word sizes up to 64-bit.</li>
-                        <li><strong>JSON Formatter:</strong> Format, validate, and minify JSON data.</li>
-                        <li><strong>JWT Decoder:</strong> Decode JSON Web Tokens to view their header and payload information.</li>
-                        <li><strong>Regex Tester:</strong> Test regular expressions against text to see matches and groups.</li>
-                    </ul>
-                </AccordionItem>
-                <AccordionItem title="Text Tools" icon={Type}>
-                    <p>
-                        Utilities for analyzing and manipulating text.
-                    </p>
-                    <ul>
-                        <li><strong>Word Counter:</strong> Get real-time statistics on your text, including character, word, sentence, and paragraph counts.</li>
-                        <li><strong>Case Converter:</strong> Easily convert text between UPPERCASE, lowercase, Title Case, and sentence case.</li>
-                        <li><strong>Find and Replace:</strong> Search for specific text and replace it, with options for case sensitivity.</li>
-                        <li><strong>Hash Generator:</strong> Generate MD5, SHA-1, and SHA-256 hashes from your text.</li>
+                        <li><strong>Programmer Calculator:</strong> Calculate directly in Hexadecimal, Decimal, Octal, or Binary modes. It fully supports Word Size toggling (8-bit to 64-bit) and Bitwise operations (AND, OR, XOR, shifts).</li>
+                        <li><strong>JSON Formatter:</strong> Paste messy JSON to easily minify, beautify, and validate its structure.</li>
+                        <li><strong>JWT Decoder:</strong> Paste a JSON Web Token to decode the Header and Payload instantly without sending it over the network.</li>
+                        <li><strong>Text & Hash Tools:</strong> Convert text cases (camelCase, snake_case) and generate secure hashes (MD5, SHA-256) locally.</li>
                     </ul>
                 </AccordionItem>
             </div>
