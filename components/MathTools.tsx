@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
 import { motion } from 'motion/react';
 import { useAuth } from './AuthProvider';
-import { BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, Shuffle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Book, Landmark, Activity } from 'lucide-react';
+import { BarChart, FunctionSquare, Table, Percent, Sigma, ShieldCheck, Superscript, DivideCircle, Triangle, Ruler, Shuffle, BarChartHorizontal, Scaling, Eraser, GitCompareArrows, Atom, ArrowRightLeft, Book, Landmark, Activity, Compass } from 'lucide-react';
 
 // Import standalone components
 import MatrixCalculator from './Matrix';
@@ -882,6 +882,103 @@ const BaseNCalculator = () => {
     );
 };
 
+const TrigonometryCalculator = () => {
+    const [angle, setAngle] = useState('45');
+    const [unit, setUnit] = useState<'deg' | 'rad'>('deg');
+    const [functionType, setFunctionType] = useState('sin');
+
+    const result = useMemo(() => {
+        const val = parseFloat(angle);
+        if (isNaN(val)) return 'Invalid input';
+
+        try {
+            const valInRads = unit === 'deg' ? (val * Math.PI) / 180 : val;
+            let res;
+
+            switch (functionType) {
+                case 'sin': res = Math.sin(valInRads); break;
+                case 'cos': res = Math.cos(valInRads); break;
+                case 'tan': res = Math.tan(valInRads); break;
+                case 'asin': res = unit === 'deg' ? Math.asin(val) * 180 / Math.PI : Math.asin(val); break;
+                case 'acos': res = unit === 'deg' ? Math.acos(val) * 180 / Math.PI : Math.acos(val); break;
+                case 'atan': res = unit === 'deg' ? Math.atan(val) * 180 / Math.PI : Math.atan(val); break;
+                default: return 'Error';
+            }
+            
+            return Number(res).toFixed(6);
+        } catch {
+            return 'Error';
+        }
+    }, [angle, unit, functionType]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
+             <div className="grid md:grid-cols-2 gap-4">
+                <Input label={functionType.startsWith('a') ? "Value" : "Angle"} type="number" value={angle} onChange={e => setAngle(e.target.value)} />
+                <div className="flex gap-2">
+                    <div className="flex-1 space-y-1">
+                        <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest pl-1">{functionType.startsWith('a') ? 'Output Unit' : 'Input Unit'}</label>
+                        <select value={unit} onChange={e => setUnit(e.target.value as 'deg' | 'rad')} className="w-full bg-brand-bg border border-brand-border rounded-md p-2.5 text-sm focus:ring-2 focus:ring-brand-primary outline-none h-[42px] mt-1">
+                            <option value="deg">Degrees</option>
+                            <option value="rad">Radians</option>
+                        </select>
+                    </div>
+                    <div className="flex-1 space-y-1">
+                         <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest pl-1">Function</label>
+                         <select value={functionType} onChange={e => setFunctionType(e.target.value)} className="w-full bg-brand-bg border border-brand-border rounded-md p-2.5 text-sm focus:ring-2 focus:ring-brand-primary outline-none h-[42px] mt-1">
+                            <option value="sin">sin(x)</option>
+                            <option value="cos">cos(x)</option>
+                            <option value="tan">tan(x)</option>
+                            <option value="asin">arcsin(x)</option>
+                            <option value="acos">arccos(x)</option>
+                            <option value="atan">arctan(x)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <ResultCard title="Result" value={String(result)} />
+        </div>
+    );
+};
+
+const LogarithmsCalculator = () => {
+    const [value, setValue] = useState('100');
+    const [base, setBase] = useState('10');
+
+    const result = useMemo(() => {
+        const x = parseFloat(value);
+        const b = parseFloat(base);
+
+        if (isNaN(x) || x <= 0) return { "log10": 'x must be > 0', "ln": 'x must be > 0', "logB": 'x must be > 0' };
+        
+        const res: any = {
+            log10: Math.log10(x).toFixed(6),
+            ln: Math.log(x).toFixed(6),
+            logB: 'Invalid base'
+        };
+
+        if (!isNaN(b) && b > 0 && b !== 1) {
+            res.logB = (Math.log(x) / Math.log(b)).toFixed(6);
+        }
+
+        return res;
+    }, [value, base]);
+
+    return (
+        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
+             <div className="grid md:grid-cols-2 gap-4">
+                <Input label="Value (x)" type="number" value={value} onChange={e => setValue(e.target.value)} />
+                <Input label="Custom Base (b)" type="number" value={base} onChange={e => setBase(e.target.value)} />
+            </div>
+            <div className="grid sm:grid-cols-3 gap-4 mt-4">
+                <ResultCard title="Common Log (base 10)" value={result.log10} />
+                <ResultCard title="Natural Log (ln)" value={result.ln} />
+                <ResultCard title={`Log base ${base || 'b'}`} value={result.logB} />
+            </div>
+        </div>
+    );
+};
+
 // --- Main Component ---
 const MathTools: React.FC = () => {
     const { user, signInWithGoogle } = useAuth();
@@ -902,6 +999,8 @@ const MathTools: React.FC = () => {
         { id: 'gcf-lcm', label: 'GCD/LCM', Icon: Sigma },
         { id: 'prime', label: 'Primes', Icon: ShieldCheck },
         { id: 'powers', label: 'Powers', Icon: Superscript },
+        { id: 'logarithms', label: 'Logarithms', Icon: Activity },
+        { id: 'trigonometry', label: 'Trigonometry', Icon: Compass },
         { id: 'pythagorean', label: 'Triangle', Icon: Triangle },
         { id: 'distance', label: 'Distance', Icon: Ruler },
         { id: 'random', label: 'Random', Icon: Shuffle },
@@ -924,6 +1023,8 @@ const MathTools: React.FC = () => {
             case 'prime': return <PrimeNumberCalculator />;
             case 'fractions': return <FractionCalculator />;
             case 'powers': return <PowersCalculator />;
+            case 'logarithms': return <LogarithmsCalculator />;
+            case 'trigonometry': return <TrigonometryCalculator />;
             case 'pythagorean': return <PythagoreanCalculator />;
             case 'distance': return <DistanceCalculator />;
             case 'area': return <AreaCalculator />;

@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot, setDoc, doc, writeBatch } from 'f
 import { db } from './firebase';
 import { useAuth } from './components/AuthProvider';
 import Header from './components/common/Header';
+import Sidebar from './components/common/Sidebar';
 import LandingPage from './components/LandingPage';
 import Calculator from './components/Calculator';
 import History from './components/History';
@@ -42,6 +43,7 @@ const SupportHub = lazy(() => import('./components/SupportHub'));
 const App = () => {
   const { user, userData, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<AppTab>('landing');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
     try {
@@ -264,31 +266,36 @@ const App = () => {
   }
 
   return (
-    <div className="bg-brand-bg text-brand-text min-h-screen font-sans flex flex-col">
+    <div className="bg-brand-bg text-brand-text min-h-[100dvh] font-sans flex overflow-hidden">
       <Suspense fallback={null}>
         {user && userData && !userData.onboarded && <ProfileOnboarding />}
       </Suspense>
-      <Header activeTab={activeTab} onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} />
-      <main className="container mx-auto px-4 pb-8 flex-1">
-        {renderActiveTab()}
-      </main>
+      <Sidebar activeTab={activeTab} onTabClick={setActiveTab} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <div className="flex-1 flex flex-col min-w-0 max-h-[100dvh] overflow-hidden relative">
+        <Header activeTab={activeTab} onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} onMenuClick={() => setIsSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto px-4 pb-8 pt-4 custom-scrollbar">
+          <div className="container mx-auto max-w-7xl">
+            {renderActiveTab()}
+          </div>
+        </main>
+        <footer className="py-6 border-t border-brand-border/30 shrink-0">
+          <div className="container mx-auto max-w-7xl px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-brand-text-secondary">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+              <button onClick={() => setActiveTab('privacy')} className="hover:text-brand-text transition-colors">Privacy Protocol</button>
+              <button onClick={() => setActiveTab('core-license')} className="hover:text-brand-text transition-colors">Core License</button>
+              <button onClick={() => setActiveTab('support')} className="hover:text-brand-text transition-colors">Support Hub</button>
+              <button onClick={() => setActiveTab('terms')} className="hover:text-brand-text transition-colors">Terms of Service</button>
+            </div>
+            <div>Powered by Edgtec 2025</div>
+          </div>
+        </footer>
+      </div>
       <Suspense fallback={null}>
         <FloatingAssistant activeTab={activeTab} setActiveTab={setActiveTab} />
         <Scratchpad />
         <CommandPalette onTabClick={setActiveTab} />
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       </Suspense>
-      <footer className="py-6 border-t border-brand-border/30 mt-auto">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-brand-text-secondary">
-          <div className="flex gap-6">
-            <button onClick={() => setActiveTab('privacy')} className="hover:text-brand-text transition-colors">Privacy Protocol</button>
-            <button onClick={() => setActiveTab('core-license')} className="hover:text-brand-text transition-colors">Core License</button>
-            <button onClick={() => setActiveTab('support')} className="hover:text-brand-text transition-colors">Support Hub</button>
-            <button onClick={() => setActiveTab('terms')} className="hover:text-brand-text transition-colors">Terms of Service</button>
-          </div>
-          <div>Powered by Edgtec 2025</div>
-        </div>
-      </footer>
     </div>
   );
 };
