@@ -174,6 +174,7 @@ const FindAndReplace = () => {
 const HashGenerator = () => {
     const [text, setText] = useState('');
     const [hashType, setHashType] = useState('base64');
+    const [copied, setCopied] = useState(false);
     
     const result = useMemo(() => {
         if (!text) return '';
@@ -192,6 +193,14 @@ const HashGenerator = () => {
             return 'Error: Invalid input for decoding';
         }
     }, [text, hashType]);
+
+    const handleCopy = () => {
+        if (result && !result.startsWith('Error')) {
+            navigator.clipboard.writeText(result);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
 
     return (
         <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
@@ -212,9 +221,20 @@ const HashGenerator = () => {
                 </select>
             </div>
 
-            <div className="bg-brand-bg p-4 rounded-lg">
+            <div className="bg-brand-bg p-4 rounded-lg relative group">
                 <p className="text-sm text-brand-text-secondary mb-2">Result</p>
-                <p className="font-mono break-all text-brand-accent">{result || 'Waiting for input...'}</p>
+                <div className="flex items-start justify-between gap-4">
+                    <p className="font-mono break-all text-brand-accent">{result || 'Waiting for input...'}</p>
+                    {result && !result.startsWith('Error') && (
+                        <button
+                            onClick={handleCopy}
+                            className="p-2 bg-brand-surface hover:bg-brand-primary rounded-md transition-colors text-white mt-1 shrink-0"
+                            title="Copy to clipboard"
+                        >
+                            {copied ? "Copied!" : "Copy"}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

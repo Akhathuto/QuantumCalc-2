@@ -1,5 +1,5 @@
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { collection, query, where, onSnapshot, setDoc, doc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 import { useAuth } from './components/AuthProvider';
@@ -21,23 +21,23 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 import AuthModal from './components/common/AuthModal';
 
 // Lazy-load components with heavy dependencies (like charting libraries) to prevent startup crashes
-import Graph from './components/Graph';
-import MathTools from './components/MathTools';
-import CurrencyConverter from './components/CurrencyConverter';
-import FinancialCalculator from './components/FinancialCalculator';
-import HealthCalculator from './components/HealthCalculator';
-import TextTools from './components/TextTools';
-import DeveloperTools from './components/DeveloperTools';
-import StudentTools from './components/StudentTools';
-import FloatingAssistant from './components/FloatingAssistant';
-import Scratchpad from './components/Scratchpad';
-import CommandPalette from './components/CommandPalette';
-import PeriodicTable from './components/PeriodicTable';
-import ProfileOnboarding from './components/ProfileOnboarding';
+const Graph = lazy(() => import('./components/Graph'));
+const MathTools = lazy(() => import('./components/MathTools'));
+const CurrencyConverter = lazy(() => import('./components/CurrencyConverter'));
+const FinancialCalculator = lazy(() => import('./components/FinancialCalculator'));
+const HealthCalculator = lazy(() => import('./components/HealthCalculator'));
+const TextTools = lazy(() => import('./components/TextTools'));
+const DeveloperTools = lazy(() => import('./components/DeveloperTools'));
+const StudentTools = lazy(() => import('./components/StudentTools'));
+const FloatingAssistant = lazy(() => import('./components/FloatingAssistant'));
+const Scratchpad = lazy(() => import('./components/Scratchpad'));
+const CommandPalette = lazy(() => import('./components/CommandPalette'));
+const PeriodicTable = lazy(() => import('./components/PeriodicTable'));
+const ProfileOnboarding = lazy(() => import('./components/ProfileOnboarding'));
 
-import PrivacyProtocol from './components/PrivacyProtocol';
-import CoreLicense from './components/CoreLicense';
-import SupportHub from './components/SupportHub';
+const PrivacyProtocol = lazy(() => import('./components/PrivacyProtocol'));
+const CoreLicense = lazy(() => import('./components/CoreLicense'));
+const SupportHub = lazy(() => import('./components/SupportHub'));
 
 const App = () => {
   const { user, userData, loading } = useAuth();
@@ -175,7 +175,7 @@ const App = () => {
         TabComponent = <LandingPage onTabClick={setActiveTab} history={history} />;
         break;
       case 'calculator':
-        TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} />;
+        TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} setActiveTab={setActiveTab} />;
         break;
       case 'graphing':
         TabComponent = <Graph />;
@@ -193,13 +193,13 @@ const App = () => {
         TabComponent = <UnitConverter />;
         break;
       case 'currency':
-        TabComponent = <CurrencyConverter />;
+        TabComponent = <CurrencyConverter setActiveTab={setActiveTab} />;
         break;
       case 'base':
         TabComponent = <BaseConverter />;
         break;
       case 'financial':
-        TabComponent = <FinancialCalculator />;
+        TabComponent = <FinancialCalculator setActiveTab={setActiveTab} />;
         break;
       case 'date':
         TabComponent = <DateCalculator />;
@@ -244,7 +244,7 @@ const App = () => {
         TabComponent = <SupportHub />;
         break;
       default:
-        TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} />;
+        TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} setActiveTab={setActiveTab} />;
     }
     
     // Wrap all tab content in a Suspense boundary to handle lazy-loading
@@ -265,15 +265,19 @@ const App = () => {
 
   return (
     <div className="bg-brand-bg text-brand-text min-h-screen font-sans flex flex-col">
-      {user && userData && !userData.onboarded && <ProfileOnboarding />}
+      <Suspense fallback={null}>
+        {user && userData && !userData.onboarded && <ProfileOnboarding />}
+      </Suspense>
       <Header activeTab={activeTab} onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} />
       <main className="container mx-auto px-4 pb-8 flex-1">
         {renderActiveTab()}
       </main>
-      <FloatingAssistant activeTab={activeTab} setActiveTab={setActiveTab} />
-      <Scratchpad />
-      <CommandPalette onTabClick={setActiveTab} />
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <Suspense fallback={null}>
+        <FloatingAssistant activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Scratchpad />
+        <CommandPalette onTabClick={setActiveTab} />
+        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      </Suspense>
       <footer className="py-6 border-t border-brand-border/30 mt-auto">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-brand-text-secondary">
           <div className="flex gap-6">

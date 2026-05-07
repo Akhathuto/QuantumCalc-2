@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import type { ReactNode } from 'react';
-import { HistoryEntry, Explanation } from '../types';
+import { HistoryEntry, Explanation, AppTab } from '../types';
 import { getFormulaExplanation } from '../services/geminiService';
 import Button from './common/Button';
 import { create, all } from 'mathjs';
-import { Loader, Brain, FlaskConical } from 'lucide-react';
+import { Copy, Check, Loader, Brain, FlaskConical, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const math = create(all);
@@ -31,6 +31,7 @@ interface CalculatorProps {
   addToHistory: (entry: HistoryEntry) => void;
   expressionToLoad: HistoryEntry | null;
   onExpressionLoaded: () => void;
+  setActiveTab: (tab: AppTab) => void;
 }
 
 type AngleMode = 'deg' | 'rad' | 'grad';
@@ -143,7 +144,7 @@ const LatexRenderer = memo(({ latex }: { latex: string }) => {
 });
 
 
-const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: CalculatorProps) => {
+const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setActiveTab }: CalculatorProps) => {
   const [expression, setExpression] = useState(''); // The top, ongoing expression line
   const [currentInput, setCurrentInput] = useState('0'); // The bottom, current input line
   const [isResultState, setIsResultState] = useState(false); // Are we showing a final result?
@@ -167,6 +168,15 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
   const [isSecond, setIsSecond] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [tickerHistory, setTickerHistory] = useState<HistoryEntry[]>([]);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    if (currentInput) {
+      navigator.clipboard.writeText(currentInput);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [currentInput]);
 
   const parser = useMemo(() => {
     const p = math.parser();
@@ -520,8 +530,19 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
                     {/* Expression Line */}
                     <div className="text-brand-text-secondary text-lg break-words h-7 overflow-x-auto text-right font-mono tracking-tighter opacity-70" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
                     {/* Input/Result Line */}
-                    <div className="text-5xl font-black text-brand-text break-words min-h-[60px] overflow-x-auto text-right font-mono tracking-tighter leading-none">
-                        {currentInput}
+                    <div className="relative group">
+                        <div className="text-5xl font-black text-brand-text break-words min-h-[60px] overflow-x-auto text-right font-mono tracking-tighter leading-none pr-8">
+                            {currentInput}
+                        </div>
+                        {currentInput !== '0' && (
+                            <button
+                                onClick={handleCopy}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-brand-surface/40 transition-all text-brand-text-secondary hover:text-brand-primary"
+                                title="Copy to clipboard"
+                            >
+                                {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                            </button>
+                         )}
                     </div>
                      {/* Error Line */}
                     <div className="text-red-400 text-xs font-bold h-4 text-right">
@@ -584,35 +605,58 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded }: Calc
 
                 {!isLoading && explanation && (
                   <div className="space-y-6 animate-fade-in-down">
-                    <h4 className="text-xl font-bold text-brand-text tracking-tight">{explanation.functionName}</h4>
-                    
-                    <div className="font-mono bg-brand-bg/50 border border-brand-border/40 p-6 rounded-2xl text-2xl text-center text-brand-primary break-words shadow-inner">
-                      <LatexRenderer latex={explanation.latexFormula || explanation.formula} />
+                    <div className="flex items-center justify-between gap-4">
+                      <h4 className={`text-xl font-bold tracking-tight ${explanation.functionName === 'Error' ? 'text-red-500' : 'text-brand-text'}`}>
+                        {explanation.functionName}
+                      </h4>
+                      {explanation.functionName === 'Error' && (
+                        <AlertCircle className="text-red-500" size={20} />
+                      )}
                     </div>
-
-                    {explanation.parameters && explanation.parameters.length > 0 && (
-                      <div className="bg-brand-bg/30 p-4 rounded-2xl border border-brand-border/30">
-                        <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-3 text-brand-text-secondary">Parameters</h5>
-                        <div className="space-y-3 text-sm">
-                          {explanation.parameters.map(p => (
-                            <div key={p.param} className="flex gap-3">
-                              <code className="font-bold text-brand-secondary bg-brand-secondary/10 px-2 py-0.5 rounded text-[11px] h-fit mt-0.5">{p.param}</code>
-                              <span className="text-brand-text-secondary leading-relaxed font-light">{p.description}</span>
-                            </div>
-                          ))}
+                    
+                    {explanation.functionName !== 'Error' ? (
+                      <>
+                        <div className="font-mono bg-brand-bg/50 border border-brand-border/40 p-6 rounded-2xl text-2xl text-center text-brand-primary break-words shadow-inner">
+                          <LatexRenderer latex={explanation.latexFormula || explanation.formula} />
                         </div>
+
+                        {explanation.parameters && explanation.parameters.length > 0 && (
+                          <div className="bg-brand-bg/30 p-4 rounded-2xl border border-brand-border/30">
+                            <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-3 text-brand-text-secondary">Parameters</h5>
+                            <div className="space-y-3 text-sm">
+                              {explanation.parameters.map(p => (
+                                <div key={p.param} className="flex gap-3">
+                                  <code className="font-bold text-brand-secondary bg-brand-secondary/10 px-2 py-0.5 rounded text-[11px] h-fit mt-0.5">{p.param}</code>
+                                  <span className="text-brand-text-secondary leading-relaxed font-light">{p.description}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div>
+                          <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-2 text-brand-text-secondary">Description</h5>
+                          <p className="text-brand-text-secondary text-sm leading-relaxed font-light">{explanation.description}</p>
+                        </div>
+
+                        <div>
+                          <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-2 text-brand-text-secondary">Example</h5>
+                          <p className="font-mono text-brand-text-secondary italic bg-brand-bg/50 border border-brand-border/30 p-3 rounded-xl text-sm">{explanation.example}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-3xl space-y-4">
+                        <p className="text-brand-text-secondary text-sm leading-relaxed">
+                          {explanation.description}
+                        </p>
+                        <button 
+                          onClick={() => setActiveTab('settings')}
+                          className="w-full py-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-red-500/20"
+                        >
+                          OPEN SETTINGS
+                        </button>
                       </div>
                     )}
-
-                    <div>
-                      <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-2 text-brand-text-secondary">Description</h5>
-                      <p className="text-brand-text-secondary text-sm leading-relaxed font-light">{explanation.description}</p>
-                    </div>
-
-                    <div>
-                      <h5 className="font-black text-xs uppercase tracking-[0.2em] mb-2 text-brand-text-secondary">Example</h5>
-                      <p className="font-mono text-brand-text-secondary italic bg-brand-bg/50 border border-brand-border/30 p-3 rounded-xl text-sm">{explanation.example}</p>
-                    </div>
                   </div>
                 )}
               </div>

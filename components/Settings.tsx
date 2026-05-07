@@ -140,7 +140,11 @@ const Settings: React.FC = () => {
                 setIsKeySaved(false);
                 showToast("API Key removed.");
             } else {
-                secureStorage.setItem('CUSTOM_GEMINI_API_KEY', customApiKey.trim());
+                const trimmedKey = customApiKey.trim();
+                if (!trimmedKey.startsWith('AIzaSy')) {
+                    showToast("Warning: This may not be a valid Gemini API key. They usually start with 'AIzaSy'.", );
+                }
+                secureStorage.setItem('CUSTOM_GEMINI_API_KEY', trimmedKey);
                 setIsKeySaved(true);
                 setCustomApiKey('');
                 showToast("API Key saved securely.");
@@ -361,10 +365,15 @@ const Settings: React.FC = () => {
                                 </div>
                             </div>
                             
-                            {isKeySaved && (
+                            {isKeySaved ? (
                                 <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mb-4">
-                                    <Check className="text-emerald-500" size={20} />
-                                    <span className="text-emerald-500 font-medium text-sm flex-1">Your custom API key is configured and securely stored.</span>
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-emerald-500 font-medium text-sm flex-1">Custom API key is active.</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-4">
+                                    <AlertCircle className="text-amber-500" size={20} />
+                                    <span className="text-amber-500 font-medium text-sm flex-1">No custom key configured. System default will be used.</span>
                                 </div>
                             )}
 

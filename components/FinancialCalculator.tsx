@@ -7,10 +7,11 @@ import {
 } from 'recharts';
 import {
     Home, Car, Landmark, TrendingUp, PiggyBank, Table, HandCoins, Percent, Receipt, Wind,
-    Calculator, Briefcase, Banknote, Info, Bot, Loader
+    Calculator, Briefcase, Banknote, Info, Bot, Loader, AlertCircle
 } from 'lucide-react';
 import CustomDropdown from './common/CustomDropdown';
 import { getAutoLoanAnalysis, AutoLoanDetails } from '../services/geminiService';
+import { AppTab } from '../types';
 
 
 // --- Reusable UI ---
@@ -45,6 +46,7 @@ const formatCurrency = (value: number | undefined | null, currencyCode: string =
 
 interface CalculatorProps {
   currency: string;
+  setActiveTab: (tab: AppTab) => void;
 }
 
 interface ChartPayloadItem {
@@ -601,7 +603,7 @@ const MortgageCalculator = ({ currency }: CalculatorProps) => {
 };
 
 
-const AutoLoanCalculator = ({ currency }: CalculatorProps) => {
+const AutoLoanCalculator = ({ currency, setActiveTab }: CalculatorProps) => {
     const [vehiclePrice, setVehiclePrice] = useState('30000');
     const [downPayment, setDownPayment] = useState('5000');
     const [tradeInValue, setTradeInValue] = useState('2000');
@@ -762,10 +764,22 @@ const AutoLoanCalculator = ({ currency }: CalculatorProps) => {
                             {isAnalysisLoading ? <><Loader size={18} className="animate-spin" /> Analyzing...</> : <><Bot size={18} /> Get Analysis</>}
                         </button>
                         {analysis && !isAnalysisLoading && (
-                            <div className="p-4 bg-brand-bg text-brand-text-secondary text-sm rounded-lg animate-fade-in-down text-left">
+                            <div className={`p-4 text-sm rounded-lg animate-fade-in-down text-left border ${analysis.includes('Gemini API key is missing') ? 'bg-red-500/5 border-red-500/20' : 'bg-brand-bg text-brand-text-secondary border-brand-border/40'}`}>
+                                <p className={`font-semibold mb-2 flex items-center gap-2 ${analysis.includes('Gemini API key is missing') ? 'text-red-500' : 'text-brand-text'}`}>
+                                    {analysis.includes('Gemini API key is missing') && <AlertCircle size={16} />}
+                                    {analysis.includes('Gemini API key is missing') ? 'Configuration Required' : 'General Analysis:'}
+                                </p>
                                 {analysis.split('\n').map((line, i) => (
                                     <p key={i} className="mb-1">{line.replace(/-\s*/, '• ')}</p>
                                 ))}
+                                {analysis.includes('Gemini API key is missing') && (
+                                    <button 
+                                        onClick={() => setActiveTab('settings')}
+                                        className="mt-4 w-full py-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-red-500/20"
+                                    >
+                                        Configure API Key in Settings
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1380,7 +1394,7 @@ const SalesTaxCalculator: FC<CalculatorProps> = ({ currency }) => {
 };
 
 // --- Main Component ---
-const FinancialCalculator = () => {
+const FinancialCalculator = ({ setActiveTab }: { setActiveTab: (tab: AppTab) => void }) => {
     const [activeCalc, setActiveCalc] = useState('mortgage');
     const [currency, setCurrency] = useState('USD');
 
@@ -1446,7 +1460,7 @@ const FinancialCalculator = () => {
                 </div>
             </div>
             <div className="bg-brand-surface/50 p-6 rounded-lg">
-                <ActiveCalculator currency={currency} />
+                <ActiveCalculator currency={currency} setActiveTab={setActiveTab} />
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { ArrowRightLeft, Loader, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ArrowRightLeft, Loader, AlertTriangle, TrendingUp, AlertCircle } from 'lucide-react';
 import { getCurrencyForecast } from '../services/geminiService';
+import { AppTab } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const API_URL = 'https://open.exchangerate-api.com/v6/latest';
@@ -173,9 +174,9 @@ interface RatesData {
   time_last_update_utc: string;
 }
 
-const CurrencyConverter: React.FC = () => {
-  const [amountFrom, setAmountFrom] = useState('100');
-  const [amountTo, setAmountTo] = useState('');
+const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ setActiveTab }) => {
+  const [baseAmount, setBaseAmount] = useState('100');
+  const [baseType, setBaseType] = useState<'from' | 'to'>('from');
   
   const [fromCurrency, setFromCurrency] = useState(() => {
     try {
@@ -261,25 +262,25 @@ const CurrencyConverter: React.FC = () => {
       }
 
       return result.toFixed(2);
-
   }, [ratesData]);
 
-  useEffect(() => {
-      const result = calculateConversion(amountFrom, fromCurrency, toCurrency, 'from');
-      setAmountTo(result);
-  }, [amountFrom, fromCurrency, toCurrency, calculateConversion]);
-
+  const amountFrom = baseType === 'from' ? baseAmount : calculateConversion(baseAmount, fromCurrency, toCurrency, 'to');
+  const amountTo = baseType === 'to' ? baseAmount : calculateConversion(baseAmount, fromCurrency, toCurrency, 'from');
 
   const handleAmountFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setAmountFrom(value);
+      let val = e.target.value.replace(/[^0-9.]/g, '');
+      const parts = val.split('.');
+      if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+      setBaseAmount(val);
+      setBaseType('from');
   };
 
   const handleAmountToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setAmountTo(value);
-      const result = calculateConversion(value, fromCurrency, toCurrency, 'to');
-      setAmountFrom(result);
+      let val = e.target.value.replace(/[^0-9.]/g, '');
+      const parts = val.split('.');
+      if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+      setBaseAmount(val);
+      setBaseType('to');
   };
   
   const swapCurrencies = () => {
@@ -390,7 +391,8 @@ const CurrencyConverter: React.FC = () => {
             <label htmlFor="amount-from" className="block text-sm font-medium text-brand-text-secondary mb-1">From</label>
             <input
               id="amount-from"
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={amountFrom}
               onChange={handleAmountFromChange}
               className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
@@ -418,7 +420,8 @@ const CurrencyConverter: React.FC = () => {
             <label htmlFor="amount-to" className="block text-sm font-medium text-brand-text-secondary mb-1">To</label>
             <input
                 id="amount-to"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={amountTo}
                 onChange={handleAmountToChange}
                 className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
@@ -458,9 +461,20 @@ const CurrencyConverter: React.FC = () => {
             )}
           </button>
           {forecast && !isForecastLoading && (
-            <div className="mt-4 p-4 bg-brand-bg text-brand-text-secondary text-sm rounded-lg animate-fade-in-down text-left max-w-2xl mx-auto">
-              <p className="font-semibold text-brand-text mb-2">General Analysis:</p>
-              <p>{forecast}</p>
+            <div className={`mt-4 p-4 text-sm rounded-lg animate-fade-in-down text-left max-w-2xl mx-auto border ${forecast.includes('Gemini API key is missing') ? 'bg-red-500/5 border-red-500/20' : 'bg-brand-bg text-brand-text-secondary border-brand-border/40'}`}>
+              <p className={`font-semibold mb-2 flex items-center gap-2 ${forecast.includes('Gemini API key is missing') ? 'text-red-500' : 'text-brand-text'}`}>
+                {forecast.includes('Gemini API key is missing') && <AlertCircle size={16} />}
+                {forecast.includes('Gemini API key is missing') ? 'Configuration Required' : 'General Analysis:'}
+              </p>
+              <p className={forecast.includes('Gemini API key is missing') ? 'text-brand-text-secondary' : ''}>{forecast}</p>
+              {forecast.includes('Gemini API key is missing') && (
+                <button 
+                  onClick={() => setActiveTab('settings')}
+                  className="mt-4 w-full py-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-red-500/20"
+                >
+                  Configure API Key in Settings
+                </button>
+              )}
             </div>
           )}
         </div>

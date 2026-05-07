@@ -42,6 +42,13 @@ export const secureStorage = {
     }
 };
 
+export class AiServiceError extends Error {
+    constructor(public reason: 'MISSING_KEY' | 'INVALID_KEY' | 'QUOTA_EXCEEDED' | 'UNKNOWN', message: string) {
+        super(message);
+        this.name = 'AiServiceError';
+    }
+}
+
 export const getApiKey = (): string => {
   try {
     const customKey = secureStorage.getItem('CUSTOM_GEMINI_API_KEY');
@@ -61,21 +68,29 @@ const getAiClient = (): GoogleGenAI => {
     const apiKey = getApiKey();
       
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is missing. Please set it in your environment variables or in Settings.");
+      throw new AiServiceError('MISSING_KEY', "Gemini API key is missing. Please configure it in your profile settings.");
     }
     aiClient = new GoogleGenAI({ apiKey });
   }
   return aiClient;
 };
 
+const getErrorMessage = (error: any): string => {
+    if (error instanceof AiServiceError) {
+        return error.message;
+    }
+    const message = error?.message || String(error);
+    if (message.includes('API_KEY_INVALID')) return "Your API key is invalid. Please check your settings.";
+    if (message.includes('quota')) return "API quota exceeded. Please try again later or use your own API key.";
+    return "The AI service is temporarily unavailable. Please try again later.";
+};
+
 const genericErrorExplanation: Explanation = {
     functionName: "Error",
     formula: "N/A",
-    description: "Could not fetch an explanation at this time. The AI service might be temporarily unavailable or the request could not be processed.",
+    description: "Could not fetch an explanation at this time.",
     example: "Please try again later."
 };
-
-const genericErrorForecast: string = "Could not retrieve analysis at this time. Please try again later.";
 
 
 export const getFormulaExplanation = async (expression: string): Promise<Explanation | null> => {
@@ -142,7 +157,10 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
 
   } catch (error) {
     console.error("Error fetching formula explanation from Gemini:", error);
-    return genericErrorExplanation;
+    return {
+        ...genericErrorExplanation,
+        description: getErrorMessage(error)
+    };
   }
 };
 
@@ -166,7 +184,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
 
   } catch (error) {
     console.error("Error fetching currency forecast from Gemini:", error);
-    return genericErrorForecast;
+    return getErrorMessage(error);
   }
 };
 
@@ -209,6 +227,6 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
 
   } catch (error) {
     console.error("Error fetching auto loan analysis from Gemini:", error);
-    return genericErrorForecast;
+    return getErrorMessage(error);
   }
 };
