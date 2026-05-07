@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { ArrowRightLeft, Loader, AlertTriangle, TrendingUp, AlertCircle } from 'lucide-react';
 import { getCurrencyForecast } from '../services/geminiService';
 import { AppTab } from '../types';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const API_URL = 'https://open.exchangerate-api.com/v6/latest';
 
@@ -200,10 +199,6 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
   const [isForecastLoading, setIsForecastLoading] = useState(false);
   const [forecast, setForecast] = useState<string | null>(null);
 
-  const [historicalData, setHistoricalData] = useState<{date: string, rate: number}[] | null>(null);
-  const [isChartLoading, setIsChartLoading] = useState(false);
-  const [chartError, setChartError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchRates = async () => {
       setIsLoading(true);
@@ -306,60 +301,6 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
       setForecast(analysis);
       setIsForecastLoading(false);
   };
-
-  const fetchHistoricalData = useCallback(async () => {
-    if (fromCurrency === toCurrency) {
-        setHistoricalData(null);
-        setChartError(null);
-        return;
-    }
-
-    setIsChartLoading(true);
-    setChartError(null);
-
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 30);
-
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
-    const startStr = formatDate(startDate);
-    const endStr = formatDate(endDate);
-
-    try {
-        const response = await fetch(`https://api.frankfurter.app/${startStr}..${endStr}?from=${fromCurrency}&to=${toCurrency}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch historical data.');
-        }
-        const data = await response.json();
-
-        if (!data.rates) {
-            throw new Error('Historical data not available for the selected currency pair.');
-        }
-
-        const formattedData = Object.entries(data.rates)
-            .map(([date, ratesObj]) => ({
-                date,
-                rate: (ratesObj as Record<string, number>)[toCurrency]
-            }))
-            .filter(item => item.rate !== undefined)
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        if (formattedData.length < 2) {
-             throw new Error('Not enough historical data to draw a chart.');
-        }
-
-        setHistoricalData(formattedData);
-    } catch (e) {
-        setChartError(e instanceof Error ? e.message : 'Could not load chart data.');
-        setHistoricalData(null);
-    } finally {
-        setIsChartLoading(false);
-    }
-  }, [fromCurrency, toCurrency]);
-
-  useEffect(() => {
-      fetchHistoricalData();
-  }, [fetchHistoricalData]);
 
   if (isLoading) {
     return (
@@ -479,58 +420,6 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
           )}
         </div>
       </div>
-
-      <div className="mt-8">
-        <h3 className="text-xl font-bold mb-4 text-center">30-Day Trend: {fromCurrency} to {toCurrency}</h3>
-        
-        {isChartLoading && (
-            <div className="flex items-center justify-center h-80 bg-brand-bg/30 rounded-lg">
-                <Loader className="animate-spin text-brand-primary" size={32} />
-            </div>
-        )}
-
-        {chartError && !isChartLoading && (
-            <div className="flex flex-col items-center justify-center h-80 bg-red-900/30 text-red-300 p-4 rounded-lg">
-                <AlertTriangle size={32} />
-                <p className="mt-2 font-semibold">{chartError}</p>
-            </div>
-        )}
-
-        {!isChartLoading && !chartError && historicalData && (
-            <div className="h-80 w-full bg-brand-surface/50 p-4 rounded-lg">
-                <ResponsiveContainer>
-                    <LineChart data={historicalData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                        <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="var(--color-text-secondary)" />
-                        <YAxis
-                            domain={['dataMin', 'dataMax']}
-                            tickFormatter={(tick) => typeof tick === 'number' ? tick.toPrecision(4) : tick}
-                            tick={{ fontSize: 12 }}
-                            stroke="var(--color-text-secondary)"
-                        />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'var(--color-surface)',
-                                borderColor: 'var(--color-border)'
-                            }}
-                            formatter={(value: number) => [`1 ${fromCurrency} = ${value.toFixed(5)} ${toCurrency}`, 'Rate']}
-                            labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                        />
-                        <Legend />
-                        <Line
-                            type="monotone"
-                            dataKey="rate"
-                            stroke="var(--color-accent)"
-                            strokeWidth={2}
-                            dot={false}
-                            name={`Exchange Rate`}
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
-            </div>
-        )}
-      </div>
-
     </div>
   );
 };

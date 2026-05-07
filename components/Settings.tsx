@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save } from 'lucide-react';
+import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { secureStorage } from '../services/geminiService';
+import { googleDriveService } from '../services/googleDriveService';
+import { motion } from 'motion/react';
 
 const roles = [
     { id: 'student', title: 'Student', icon: GraduationCap, color: 'text-blue-500', bg: 'bg-blue-500/10' },
@@ -21,9 +23,6 @@ const themes = [
     { id: 'terminal', name: 'Matrix Green', color: 'bg-black border border-green-500' },
     { id: 'cyberpunk', name: 'Cyberpunk', color: 'bg-[#130019]' },
 ];
-
-import { googleDriveService } from '../services/googleDriveService';
-import { Cloud, RefreshCw, AlertCircle } from 'lucide-react';
 
 const Settings: React.FC = () => {
     const { user, userData, accessToken } = useAuth();
@@ -90,10 +89,10 @@ const Settings: React.FC = () => {
     };
 
     const handleClearAllData = () => {
-        if (window.confirm("Are you sure you want to clear all application data? This includes your calculation history, theme preferences, and calculator settings. This action cannot be undone.")) {
+        if (window.confirm("Are you sure you want to clear all application data? This action cannot be undone.")) {
             try {
                 localStorage.clear();
-                showToast("All data cleared successfully. The page will reload.");
+                showToast("All data cleared successfully. Reloading...");
                 setTimeout(() => window.location.reload(), 2000);
             } catch (error) {
                 console.error("Failed to clear localStorage:", error);
@@ -185,9 +184,9 @@ const Settings: React.FC = () => {
             if (accessToken) {
                 try {
                     await googleDriveService.saveProfile(accessToken, profileData);
-                    showToast("Profile updated and synced to Google Drive!");
+                    showToast("Profile updated and synced to Drive!");
                 } catch (driveError) {
-                    showToast("Profile updated locally. Google Drive is not enabled.");
+                    showToast("Profile updated locally. Drive sync failed.");
                 }
             } else {
                 showToast("Profile updated successfully!");
@@ -224,97 +223,104 @@ const Settings: React.FC = () => {
         }
     };
 
+    const sectionVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
+
     return (
-        <div>
-            <div className="mb-10 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest mb-4">
+        <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } }}} className="max-w-4xl mx-auto space-y-8 pb-20">
+            <motion.div variants={sectionVariants} className="mb-10 text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold uppercase tracking-widest mb-4 border border-brand-primary/20">
                     <UserIcon size={14} /> Personalization
                 </div>
-                <h2 className="text-4xl font-extrabold text-brand-text mb-2 tracking-tight flex items-center justify-center gap-3">
-                    <Palette size={36} className="text-brand-primary" /> App Settings
+                <h2 className="text-4xl md:text-5xl font-extrabold text-brand-text mb-4 tracking-tight flex items-center justify-center gap-4">
+                    <Palette size={40} className="text-brand-primary" /> Settings
                 </h2>
                 <p className="text-brand-text-secondary max-w-2xl mx-auto font-light text-lg">
                     Manage your identity, sync preferences, and customize the interface to match your workflow.
                 </p>
-            </div>
+            </motion.div>
             
-             <div className="max-w-3xl mx-auto space-y-8 pb-20">
-                {user && (
-                    <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
-                        <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary">
-                                <UserIcon size={24} />
+            {user && (
+                <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm">
+                    <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-brand-primary/10 text-brand-primary">
+                            <UserIcon size={24} />
+                        </div>
+                        User Profile
+                    </h3>
+                    <div className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-wider ml-1">Identity Role</label>
+                                <select 
+                                    value={editRole}
+                                    onChange={(e) => setEditRole(e.target.value)}
+                                    className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all cursor-pointer appearance-none shadow-inner"
+                                >
+                                    <option value="">Select Role...</option>
+                                    {roles.map(r => (
+                                        <option key={r.id} value={r.id}>{r.title}</option>
+                                    ))}
+                                </select>
                             </div>
-                            User Profile
-                        </h3>
-                        <div className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-3">
-                                    <label className="text-xs font-black text-brand-primary uppercase tracking-[0.2em] ml-1">Identity Role</label>
-                                    <select 
-                                        value={editRole}
-                                        onChange={(e) => setEditRole(e.target.value)}
-                                        className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all cursor-pointer appearance-none"
-                                    >
-                                        <option value="">Select Role...</option>
-                                        {roles.map(r => (
-                                            <option key={r.id} value={r.id}>{r.title}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                {['student', 'teacher'].includes(editRole) && (
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-black text-brand-primary uppercase tracking-[0.2em] ml-1">Grade / Level</label>
-                                        <input
-                                            type="text"
-                                            value={editGrade}
-                                            onChange={(e) => setEditGrade(e.target.value)}
-                                            placeholder="e.g. 10th Grade"
-                                            className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all"
-                                        />
-                                    </div>
-                                )}
-                                <div className="space-y-3 md:col-span-2">
-                                    <label className="text-xs font-black text-brand-primary uppercase tracking-[0.2em] ml-1">
-                                        {['student', 'teacher'].includes(editRole) ? 'School / Institution' : 'Company / Organization'}
-                                    </label>
+                            {['student', 'teacher'].includes(editRole) && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-wider ml-1">Grade / Level</label>
                                     <input
                                         type="text"
-                                        value={editSchool}
-                                        onChange={(e) => setEditSchool(e.target.value)}
-                                        placeholder="Name of your institution"
-                                        className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                                        value={editGrade}
+                                        onChange={(e) => setEditGrade(e.target.value)}
+                                        placeholder="e.g. 10th Grade"
+                                        className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-inner"
                                     />
                                 </div>
+                            )}
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-wider ml-1">
+                                    {['student', 'teacher'].includes(editRole) ? 'School / Institution' : 'Company / Organization'}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editSchool}
+                                    onChange={(e) => setEditSchool(e.target.value)}
+                                    placeholder="Name of your institution"
+                                    className="w-full bg-brand-bg/50 backdrop-blur-sm border border-brand-border/60 rounded-2xl p-4 text-brand-text outline-none focus:border-brand-primary/60 focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-inner"
+                                />
                             </div>
+                        </div>
+                        <div className="flex justify-end">
                             <button
                                 onClick={handleUpdateProfile}
                                 disabled={isSavingProfile}
-                                className="w-full group flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-brand-primary text-brand-bg font-black text-lg hover:shadow-xl hover:shadow-brand-primary/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                                className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-brand-primary text-brand-bg font-bold hover:shadow-lg hover:shadow-brand-primary/20 active:scale-95 transition-all disabled:opacity-50"
                             >
-                                {isSavingProfile ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} className="group-hover:scale-110 transition-transform" />}
-                                {isSavingProfile ? 'UPDATING...' : 'SAVE ALL CHANGES'}
+                                {isSavingProfile ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
+                                {isSavingProfile ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
                     </div>
-                )}
+                </motion.div>
+            )}
 
-                {user && (
-                    <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
-                        <h3 className="text-2xl font-bold mb-6 text-brand-text flex items-center gap-3">
+            {user && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm flex flex-col">
+                        <h3 className="text-xl font-bold mb-6 text-brand-text flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
-                                <Cloud size={24} />
+                                <Cloud size={20} />
                             </div>
                             Cloud Sync
                         </h3>
-                        <div className="bg-brand-bg/40 backdrop-blur-sm border border-brand-border/40 rounded-[1.5rem] p-6 space-y-6">
-                            <div className="flex items-center gap-5">
-                                <div className={`p-4 rounded-full ${accessToken ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                                    {accessToken ? <Check size={28} /> : <AlertCircle size={28} />}
+                        <div className="flex-1 space-y-6">
+                            <div className="flex items-start gap-4">
+                                <div className={`p-3 rounded-xl mt-1 ${accessToken ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                    {accessToken ? <Check size={20} /> : <AlertCircle size={20} />}
                                 </div>
-                                <div className="flex-1">
-                                    <h4 className="font-black text-brand-text tracking-tight italic">Google Drive Integration</h4>
-                                    <p className="text-brand-text-secondary text-sm font-light">
+                                <div>
+                                    <h4 className="font-bold text-brand-text mb-1">Google Drive Integration</h4>
+                                    <p className="text-brand-text-secondary text-sm font-light leading-relaxed">
                                         {accessToken 
                                             ? "Connected and ready to sync. Your data is encrypted on your personal drive." 
                                             : "Connect your Google account to enable secure cloud backups."}
@@ -322,76 +328,66 @@ const Settings: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex gap-3">
                                 <button
                                     onClick={handleUpdateProfile}
                                     disabled={!accessToken || isSavingProfile}
-                                    className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary font-black transition-all text-sm disabled:opacity-30 border border-brand-primary/20 uppercase tracking-widest"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-surface border border-brand-border hover:border-brand-primary/50 hover:bg-brand-primary/5 text-brand-text transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-50 truncate"
                                 >
-                                    <RefreshCw size={18} className={isSavingProfile ? 'animate-spin' : ''} />
+                                    <RefreshCw size={14} className={isSavingProfile ? 'animate-spin' : ''} />
                                     Manual Sync
                                 </button>
                                 <button
                                     onClick={handleRestoreFromDrive}
                                     disabled={!accessToken || isRestoring}
-                                    className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-brand-border/60 text-brand-text hover:bg-brand-surface/50 transition-all text-sm disabled:opacity-30 font-black uppercase tracking-widest"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-surface border border-brand-border hover:border-brand-primary/50 hover:bg-brand-primary/5 text-brand-text transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-50 truncate"
                                 >
-                                    {isRestoring ? <RefreshCw className="animate-spin" size={18} /> : <Download size={18} />}
-                                    Restore Data
+                                    {isRestoring ? <RefreshCw className="animate-spin" size={14} /> : <Download size={14} />}
+                                    Restore
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )}
+                    </motion.div>
 
-                {user && (
-                    <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
-                        <h3 className="text-2xl font-bold mb-6 text-brand-text flex items-center gap-3">
+                    <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm flex flex-col">
+                        <h3 className="text-xl font-bold mb-6 text-brand-text flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
-                                <Cloud size={24} />
+                                <AlertCircle size={20} />
                             </div>
-                            AI Integration
+                            API Keys
                         </h3>
-                        <div className="bg-brand-bg/40 backdrop-blur-sm border border-brand-border/40 rounded-[1.5rem] p-6 space-y-6">
-                            <div className="flex items-center gap-5">
-                                <div className="p-4 rounded-full bg-purple-500/10 text-purple-500">
-                                    <AlertCircle size={28} />
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="font-black text-brand-text tracking-tight italic">Gemini API Key</h4>
-                                    <p className="text-brand-text-secondary text-sm font-light">
-                                        Set your own Gemini API key to unlock advanced high-quality features, or if you encounter quota limits.
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="flex-1 space-y-4">
+                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed mb-4">
+                                Set your own Gemini API key to unlock advanced features or if you encounter quota limits.
+                            </p>
                             
                             {isKeySaved ? (
-                                <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mb-4">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-emerald-500 font-medium text-sm flex-1">Custom API key is active.</span>
+                                <div className="flex items-center gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                    <span className="text-emerald-500 font-medium text-xs">Custom API key is active.</span>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-4">
-                                    <AlertCircle className="text-amber-500" size={20} />
-                                    <span className="text-amber-500 font-medium text-sm flex-1">No custom key configured. System default will be used.</span>
+                                <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                                    <AlertCircle className="text-amber-500 shrink-0" size={16} />
+                                    <span className="text-amber-500 font-medium text-xs">System default key used.</span>
                                 </div>
                             )}
 
-                            <div className="flex flex-col gap-4">
+                            <div className="space-y-3">
                                 <input
                                     type="password"
                                     value={customApiKey}
                                     onChange={(e) => setCustomApiKey(e.target.value)}
-                                    placeholder={isKeySaved ? "Enter new key to replace existing..." : "Enter your Gemini API key (AIzaSy...)"}
-                                    className="w-full bg-brand-surface border border-brand-border/60 text-brand-text rounded-xl p-4 focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:text-brand-text-secondary/50 font-mono text-sm"
+                                    placeholder={isKeySaved ? "Enter new key to replace..." : "Gemini API key (AIzaSy...)"}
+                                    className="w-full bg-brand-bg border border-brand-border/60 text-brand-text rounded-xl p-3 focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:text-brand-text-secondary/50 font-mono text-sm"
                                 />
-                                <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex gap-3">
                                     <button
                                         onClick={handleSaveApiKey}
-                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 font-black transition-all text-sm border border-purple-500/20 uppercase tracking-widest"
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 transition-all font-bold text-xs uppercase tracking-wider border border-purple-500/20"
                                     >
-                                        <Save size={18} />
-                                        {isKeySaved ? (customApiKey.trim() === '' ? 'Remove Key' : 'Replace Key') : 'Save Key'}
+                                        <Save size={14} />
+                                        {isKeySaved ? (customApiKey.trim() === '' ? 'Remove' : 'Replace') : 'Save'}
                                     </button>
                                     <button
                                         onClick={async () => {
@@ -400,125 +396,116 @@ const Settings: React.FC = () => {
                                                     await (window as any).aistudio.openSelectKey();
                                                     showToast("API Key selection completed.");
                                                 } else {
-                                                    // Try the old method if available
-                                                    showToast("Platform API Key selection is not available.");
+                                                    showToast("Platform Dialog unavailable.");
                                                 }
                                             } catch (err) {
-                                                showToast("Failed to open API key selection.");
+                                                showToast("Failed to open selector.");
                                             }
                                         }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-brand-border/60 text-brand-text hover:bg-brand-surface/50 transition-all font-bold text-sm"
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-surface border border-brand-border hover:bg-brand-surface/80 text-brand-text transition-all font-bold text-xs uppercase tracking-wider"
                                     >
-                                        Use Platform Dialog
+                                        Use Dialog
                                     </button>
                                 </div>
-                                <p className="text-xs text-brand-text-secondary font-light">
-                                    Your key is stored purely locally in your browser and never sent to our servers.
-                                </p>
                             </div>
                         </div>
-                    </div>
-                )}
+                    </motion.div>
+                </div>
+            )}
 
-                <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl">
-                    <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-brand-accent/10 text-brand-accent">
-                            <Sun size={24} />
-                        </div>
-                        Interface Core
-                    </h3>
-                    
-                    <div className="flex justify-between items-center bg-brand-bg/40 p-6 rounded-2xl border border-brand-border/40 mb-10">
-                        <div>
-                            <h4 className="font-bold text-brand-text mb-1">Advanced Theme Toggle</h4>
-                            <p className="text-brand-text-secondary text-xs font-light">Force app-wide luminosity mode</p>
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm">
+                <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
+                        <Sun size={24} />
+                    </div>
+                    Interface
+                </h3>
+                
+                <div className="bg-brand-bg/60 p-6 rounded-2xl border border-brand-border/40 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner">
+                    <div>
+                        <h4 className="font-bold text-brand-text text-lg">App Luminosity</h4>
+                        <p className="text-brand-text-secondary text-sm font-light mt-1">Force light or dark mode globally.</p>
+                    </div>
+                    <button
+                        onClick={handleThemeToggle}
+                        className={`relative inline-flex items-center h-10 w-20 rounded-full transition-colors duration-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-brand-bg shrink-0 ${
+                            isDarkMode ? 'bg-brand-primary/80' : 'bg-gray-400'
+                        }`}
+                    >
+                        <span
+                            className={`inline-block h-8 w-8 transform rounded-full bg-white shadow transition-transform duration-500 ease-spring ${
+                                isDarkMode ? 'translate-x-[2.2rem]' : 'translate-x-1'
+                            }`}
+                        />
+                        <Sun className={`absolute left-2.5 h-5 w-5 text-yellow-300 transition-opacity ${!isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
+                        <Moon className={`absolute right-2.5 h-5 w-5 text-brand-bg transition-opacity ${isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
+                    </button>
+                </div>
+
+                <div>
+                    <h4 className="text-sm font-bold text-brand-text mb-4 flex items-center gap-2">
+                        Aesthetic Themes
+                    </h4>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                        {themes.map(theme => (
+                            <button
+                                key={theme.id}
+                                onClick={() => selectTheme(theme.id)}
+                                className={`group p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-left ${currentThemeId === theme.id ? 'border-brand-primary bg-brand-primary/5' : 'border-brand-border/50 bg-brand-bg/50 hover:border-brand-primary/30 hover:bg-brand-surface'}`}
+                            >
+                                <div className={`w-12 h-12 rounded-xl shadow-md ${theme.color} flex items-center justify-center shrink-0`}>
+                                    {currentThemeId === theme.id && <Check className="text-white drop-shadow" size={24} />}
+                                </div>
+                                <span className={`text-sm font-medium ${currentThemeId === theme.id ? 'text-brand-primary' : 'text-brand-text-secondary group-hover:text-brand-text'}`}>
+                                    {theme.name}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </motion.div>
+
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute -top-32 -right-32 w-64 h-64 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+                <h3 className="text-2xl font-bold mb-8 text-brand-text">Data & Security</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col p-6 bg-brand-bg/60 border border-brand-border/40 rounded-2xl">
+                        <div className="flex-1">
+                            <h4 className="font-bold text-brand-text mb-2 flex items-center gap-2"><Download size={18} className="text-blue-500" /> Export Data</h4>
+                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed mb-6">Download a complete snapshot of your calculation history and preferences.</p>
                         </div>
                         <button
-                            onClick={handleThemeToggle}
-                            className={`relative inline-flex items-center h-8 w-14 rounded-full transition-all duration-500 shadow-inner ${
-                                isDarkMode ? 'bg-brand-primary' : 'bg-gray-700'
-                            }`}
+                            onClick={handleExportData}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-surface hover:bg-brand-border border border-brand-border text-brand-text rounded-xl font-bold transition-all text-sm"
                         >
-                            <span
-                                className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-500 ease-spring ${
-                                    isDarkMode ? 'translate-x-[1.75rem]' : 'translate-x-[0.25rem]'
-                                }`}
-                            />
-                            <Sun className={`absolute left-2 h-4 w-4 text-yellow-500 transition-opacity ${!isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
-                            <Moon className={`absolute right-2 h-4 w-4 text-brand-bg transition-opacity ${isDarkMode ? 'opacity-100' : 'opacity-0'}`} />
+                            <Download size={16} /> Execute Export
                         </button>
                     </div>
 
-                    <div>
-                        <h4 className="text-[10px] font-black text-brand-primary mb-6 uppercase tracking-[0.3em] flex items-center gap-2 bg-brand-primary/5 w-fit px-3 py-1 rounded-full">
-                           <Palette size={14} /> Aesthetic Presets
-                        </h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                            {themes.map(theme => (
-                                <button
-                                    key={theme.id}
-                                    onClick={() => selectTheme(theme.id)}
-                                    className={`group relative p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 active:scale-95 ${currentThemeId === theme.id ? 'border-brand-primary bg-brand-primary/5 shadow-lg shadow-brand-primary/10' : 'border-brand-border bg-brand-bg/50 hover:border-brand-primary/40 hover:bg-brand-bg'}`}
-                                >
-                                    <div className={`w-14 h-14 rounded-2xl shadow-xl ${theme.color} flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform duration-500`}>
-                                        {currentThemeId === theme.id && <Check className="text-white drop-shadow-md" size={28} />}
-                                    </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${currentThemeId === theme.id ? 'text-brand-primary' : 'text-brand-text-secondary group-hover:text-brand-text'}`}>
-                                        {theme.name}
-                                    </span>
-                                </button>
-                            ))}
+                    <div className="flex flex-col p-6 bg-red-500/5 border border-red-500/10 rounded-2xl relative z-10">
+                        <div className="flex-1">
+                            <h4 className="font-bold text-red-500 mb-2 flex items-center gap-2"><Trash2 size={18} /> Reset Application</h4>
+                            <p className="text-red-500/80 text-sm font-light leading-relaxed mb-6">Permanently purge all local memory. This action is instantaneous and irreversible.</p>
                         </div>
+                        <button
+                            onClick={handleClearAllData}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl font-bold transition-all text-sm"
+                        >
+                            <Trash2 size={16} /> Purge Memory
+                        </button>
                     </div>
                 </div>
+            </motion.div>
 
-                <div className="bg-brand-surface/30 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -mr-16 -mt-16" />
-                    <h3 className="text-2xl font-bold mb-8 text-brand-text">Data & Security</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="group flex flex-col justify-between p-6 bg-brand-bg/40 border border-brand-border/40 rounded-3xl hover:border-brand-primary/40 transition-all">
-                            <div>
-                                <h4 className="font-black text-brand-text italic mb-2">Export Brain</h4>
-                                <p className="text-brand-text-secondary text-xs font-light leading-relaxed">Download a complete snapshot of your logic patterns and history for cold storage.</p>
-                            </div>
-                            <button
-                                onClick={handleExportData}
-                                className="mt-6 flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-brand-bg rounded-xl font-black transition-all text-[10px] uppercase tracking-widest border border-brand-primary/20"
-                            >
-                                <Download size={16} /> Execute Export
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col justify-between p-6 bg-red-500/5 border border-red-500/10 rounded-3xl hover:border-red-500/30 transition-all">
-                            <div>
-                                <h4 className="font-black text-red-500 italic mb-2">Nuclear Reset</h4>
-                                <p className="text-brand-text-secondary text-xs font-light leading-relaxed">Permanently purge all local memory. This action is instantaneous and irreversible.</p>
-                            </div>
-                            <button
-                                onClick={handleClearAllData}
-                                className="mt-6 flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl font-black transition-all text-[10px] uppercase tracking-widest border border-red-500/20"
-                            >
-                                <Trash2 size={16} /> Purge Memory
-                            </button>
-                        </div>
-                    </div>
+            {toastMessage && (
+                <div className="fixed bottom-6 right-6 md:bottom-8 md:right-8 bg-brand-text text-brand-bg px-6 py-4 rounded-xl shadow-2xl z-50 animate-fade-in-up font-bold flex items-center gap-3">
+                     <Check size={20} className="text-brand-primary" />
+                     {toastMessage}
                 </div>
-
-                <div className="pt-12 text-center">
-                    <div className="inline-block px-4 py-2 rounded-full bg-brand-surface/50 border border-brand-border/40 mb-6 font-mono text-[10px] tracking-widest text-brand-text-secondary">
-                        QUANTUM_OS VERSION_3.0.4_STABLE
-                    </div>
-                    <div className="flex justify-center gap-10">
-                         <a href="#" className="text-brand-text-secondary text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-colors">Privacy Protcol</a>
-                         <a href="#" className="text-brand-text-secondary text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-colors">Core License</a>
-                         <a href="#" className="text-brand-text-secondary text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-colors">Support Hub</a>
-                    </div>
-                </div>
-            </div>
-
-            {toastMessage && <div className="fixed bottom-6 right-6 bg-brand-accent text-white px-5 py-3 rounded-lg shadow-2xl z-50 animate-fade-in-down">{toastMessage}</div>}
-        </div>
+            )}
+        </motion.div>
     );
 };
 
 export default Settings;
+
