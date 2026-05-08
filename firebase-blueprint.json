@@ -55,6 +55,18 @@
         "status": { "type": "string", "enum": ["new", "read", "replied"] }
       },
       "required": ["name", "email", "subject", "message", "createdAt", "status"]
+    },
+    "Note": {
+      "title": "Note",
+      "description": "A personal scratchpad note",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "userId": { "type": "string" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["title", "content", "userId", "updatedAt"]
     }
   },
   "firestore": {
@@ -73,6 +85,10 @@
     "/contact_messages/{messageId}": {
       "schema": { "$ref": "#/entities/ContactMessage" },
       "description": "Contact form submissions"
+    },
+    "/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/Note" },
+      "description": "User notes"
     }
   }
 }

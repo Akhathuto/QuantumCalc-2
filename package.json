@@ -14,6 +14,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.2",
+    "@capacitor/cli": "^8.3.2",
+    "@capacitor/core": "^8.3.2",
+    "@firebase/eslint-plugin-security-rules": "^0.0.2",
     "@google/genai": "^1.20.0",
     "firebase": "^12.12.0",
     "katex": "^0.16.45",
@@ -30,8 +34,8 @@
   },
   "devDependencies": {
     "@types/plotly.js": "^3.0.10",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
     "@typescript-eslint/parser": "^8.58.0",
     "@vitejs/plugin-react": "^4.3.1",

@@ -20,7 +20,8 @@ import {
   ChevronRight,
   X,
   Search,
-  BookOpen
+  BookOpen,
+  Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Logo from './Logo';
@@ -31,9 +32,11 @@ interface SidebarProps {
   onTabClick: (tabId: AppTab) => void;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  canInstall?: boolean;
+  onInstall?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsOpen, canInstall, onInstall }) => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     'Tools': true,
     'Converters': true
@@ -201,7 +204,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
           </div>
         </div>
         
-        <div className="p-4 border-t border-brand-border/50 bg-brand-bg/50 shrink-0">
+        <div className="p-4 border-t border-brand-border/50 bg-brand-bg/50 shrink-0 space-y-3">
+           {canInstall && (
+             <button 
+                onClick={onInstall}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-brand-primary to-indigo-600 text-brand-bg font-bold shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+               >
+               <Smartphone size={18} />
+               <span>Install App</span>
+             </button>
+           )}
            <div className="grid grid-cols-2 gap-2 text-brand-text-secondary">
                <button onClick={() => handleTabClick('help')} className={`flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:text-brand-text hover:bg-brand-surface ${activeTab === 'help' ? 'bg-brand-surface text-brand-text' : ''}`}>
                    <BookOpen size={14} /> Help

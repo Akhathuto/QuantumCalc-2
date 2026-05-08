@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle } from 'lucide-react';
+import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -25,7 +25,12 @@ const themes = [
     { id: 'cyberpunk', name: 'Cyberpunk', color: 'bg-[#130019]' },
 ];
 
-const Settings: React.FC = () => {
+interface SettingsProps {
+    canInstall?: boolean;
+    onInstall?: () => void;
+}
+
+const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     const { user, userData, accessToken } = useAuth();
     const [toastMessage, setToastMessage] = useState('');
     const [currentThemeId, setCurrentThemeId] = useState(() => localStorage.getItem('theme') || 'dark');
@@ -134,6 +139,7 @@ const Settings: React.FC = () => {
 
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isRestoring, setIsRestoring] = useState(false);
+
     const [editRole, setEditRole] = useState(userData?.role || '');
     const [editGrade, setEditGrade] = useState(userData?.grade || '');
     const [editSchool, setEditSchool] = useState(userData?.school || '');
@@ -499,6 +505,62 @@ const Settings: React.FC = () => {
                                 </span>
                             </button>
                         ))}
+                    </div>
+                </div>
+            </motion.div>
+
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm">
+                <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500">
+                        <Smartphone size={24} />
+                    </div>
+                    App Installation
+                </h3>
+                <div className="space-y-6">
+                    <div className="bg-brand-bg/60 p-6 rounded-2xl border border-brand-border/40 flex flex-col md:flex-row items-center gap-6 shadow-inner">
+                        <div className="flex-1 text-center md:text-left">
+                            <h4 className="font-bold text-brand-text text-lg">Install as Desktop/Mobile App</h4>
+                            <p className="text-brand-text-secondary text-sm font-light mt-1">Get the native-like experience with offline support and a home screen icon.</p>
+                        </div>
+                        <button
+                            onClick={onInstall}
+                            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all shadow-lg ${
+                                canInstall 
+                                ? 'bg-brand-primary text-brand-bg hover:scale-105 shadow-brand-primary/20' 
+                                : 'bg-brand-surface border border-brand-border text-brand-text shadow-none cursor-help'
+                            }`}
+                        >
+                            <Download size={20} />
+                            {canInstall ? 'Install Now' : 'Check Browser Support'}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-5 bg-brand-bg/30 border border-brand-border/30 rounded-2xl">
+                            <h5 className="font-bold text-brand-text mb-3 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                                Android (Chrome)
+                            </h5>
+                            <p className="text-xs text-brand-text-secondary leading-relaxed">
+                                Click the <span className="font-bold text-brand-text px-1">Install</span> button above, or tap the three dots <span className="font-bold text-brand-text">(⋮)</span> and select <span className="italic text-brand-text">"Add to Home screen"</span>.
+                            </p>
+                        </div>
+                        <div className="p-5 bg-brand-bg/30 border border-brand-border/30 rounded-2xl">
+                            <h5 className="font-bold text-brand-text mb-3 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
+                                iOS (Safari)
+                            </h5>
+                            <p className="text-xs text-brand-text-secondary leading-relaxed">
+                                Tap the <span className="font-bold text-brand-text">Share</span> icon (box with up arrow) and select <span className="italic text-brand-text">"Add to Home Screen"</span>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl">
+                        <Info size={16} className="text-indigo-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-indigo-500/80 leading-relaxed italic">
+                            <b>Note:</b> Your app is optimized as a PWA (Progressive Web App). It provides the same benefits as an APK but requires less storage and stays updated automatically.
+                        </p>
                     </div>
                 </div>
             </motion.div>

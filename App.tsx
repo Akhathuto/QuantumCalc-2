@@ -57,6 +57,30 @@ const App = () => {
   });
 
   const [expressionToLoad, setExpressionToLoad] = useState<HistoryEntry | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const installApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    }
+    setDeferredPrompt(null);
+  };
 
   // Sync history from Firestore when user logs in
   useEffect(() => {
@@ -232,7 +256,7 @@ const App = () => {
         TabComponent = <Contact />;
         break;
       case 'settings':
-        TabComponent = <Settings />;
+        TabComponent = <Settings canInstall={!!deferredPrompt} onInstall={installApp} />;
         break;
       case 'terms':
         TabComponent = <TermsAndLicense />;
@@ -271,7 +295,7 @@ const App = () => {
       <Suspense fallback={null}>
         {user && userData && !userData.onboarded && <ProfileOnboarding />}
       </Suspense>
-      <Sidebar activeTab={activeTab} onTabClick={setActiveTab} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <Sidebar activeTab={activeTab} onTabClick={setActiveTab} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} canInstall={!!deferredPrompt} onInstall={installApp} />
       <div className="flex-1 flex flex-col min-w-0 max-h-[100dvh] overflow-hidden relative">
         <Header activeTab={activeTab} onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto px-4 pb-8 pt-4 custom-scrollbar">

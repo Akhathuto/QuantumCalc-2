@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>QuantumCalc</title>
+    <script>
+      // Immediately apply theme from localStorage to prevent FOUC
+      (function() {
+        try {
+          if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.add('light');
+          } else {
+            document.documentElement.classList.remove('light');
+          }
+        } catch (e) {
+          console.error('Could not apply theme from localStorage', e);
+          // Defaults to dark theme if localStorage is unavailable
+          document.documentElement.classList.remove('light');
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-t8FRxQP0.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CFs608Yh.css">
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+  <body class="bg-brand-bg text-brand-text transition-colors duration-300">
+    <div id="root"></div>
+  </body>
+</html>

@@ -89,7 +89,7 @@ const ExportButton: FC<{ onClick: () => void }> = ({ onClick }) => (
 );
 
 // --- Export Logic ---
-const exportToPng = (chartRef: RefObject<HTMLDivElement>, fileName: string) => {
+const exportToPng = (chartRef: RefObject<HTMLDivElement | null>, fileName: string) => {
     if (!chartRef.current) return;
 
     const svg = chartRef.current.querySelector('svg');

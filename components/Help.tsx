@@ -6,7 +6,8 @@ import {
     ChevronDown,
     Beaker,
     GraduationCap,
-    Code
+    Code,
+    Smartphone
 } from 'lucide-react';
 
 interface AccordionItemProps {
@@ -61,7 +62,22 @@ const Help: React.FC = () => {
             </div>
             
             <div className="space-y-4">
-                <AccordionItem title="Getting Started & Cloud Sync" icon={HelpCircle} startOpen={true}>
+                <AccordionItem title="Mobile & Desktop App Installation" icon={Smartphone} startOpen={true}>
+                    <h4>How do I install QuantumCalc on my phone or computer?</h4>
+                    <p>
+                        QuantumCalc is a <strong>Progressive Web App (PWA)</strong>. This means you can install it directly from your browser without visiting an App Store. It provides a native experience, including a home screen icon, faster loading, and offline support.
+                    </p>
+                    <ul>
+                      <li><strong>Android (Chrome):</strong> Click the "Install App" button in the sidebar, or tap the three dots (⋮) and select "Add to Home screen".</li>
+                      <li><strong>iOS (Safari):</strong> Tap the <strong>Share</strong> icon (box with up arrow) and select "Add to Home Screen".</li>
+                      <li><strong>Desktop (Chrome/Edge):</strong> Look for the "Install" icon in the address bar or click the button in the app's sidebar.</li>
+                    </ul>
+                    <p>
+                        <em>Note: PWA technology is more efficient than a standard APK as it stays up-to-date automatically and uses significantly less storage.</em>
+                    </p>
+                </AccordionItem>
+                
+                <AccordionItem title="Getting Started & Cloud Sync" icon={HelpCircle}>
                     <h4>How do I save my preferences across devices?</h4>
                     <p>
                         QuantumCalc supports <strong>Google Drive integration</strong> for cloud sync! By logging in and opening <strong>Settings</strong>, you can securely sync your profile, active tools, and preferences to your personal Google Drive account. When you use QuantumCalc on another device, just click "Restore from Google Drive" in Settings.

@@ -56,9 +56,7 @@ export const getApiKey = (): string => {
   } catch(e) {
     // Ignore storage errors
   }
-  return (import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) 
-      || (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
-      || '';
+  return process.env.GEMINI_API_KEY || '';
 };
 
 let aiClient: GoogleGenAI | null = null;
@@ -68,7 +66,7 @@ const getAiClient = (): GoogleGenAI => {
     const apiKey = getApiKey();
       
     if (!apiKey) {
-      throw new AiServiceError('MISSING_KEY', "Gemini API key is missing. Please configure it in your profile settings.");
+      throw new AiServiceError('MISSING_KEY', "Gemini API key is missing. It should be configured in the environment.");
     }
     aiClient = new GoogleGenAI({ apiKey });
   }
@@ -121,7 +119,7 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
 
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -176,7 +174,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-3-flash-preview",
         contents: prompt,
     });
     
@@ -219,7 +217,7 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-3-flash-preview",
         contents: prompt,
     });
     
@@ -248,7 +246,7 @@ export const getFinancialInsight = async (data: any, calculatorType: string): Pr
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash-latest",
+        model: "gemini-3-flash-preview",
         contents: prompt,
     });
     
