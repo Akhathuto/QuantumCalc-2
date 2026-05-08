@@ -247,7 +247,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
       const evalResult = parser.evaluate(sanitizedExpression);
       const resultStr = math.format(evalResult, { precision: 10 });
       
-      const newHistoryEntry = { expression: fullExpression, result: resultStr, timestamp: new Date().toISOString() };
+      const newHistoryEntry = { expression: fullExpression, result: resultStr, timestamp: Date.now() };
       addToHistory(newHistoryEntry);
       setTickerHistory(prev => [newHistoryEntry, ...prev].slice(0, 5));
       
