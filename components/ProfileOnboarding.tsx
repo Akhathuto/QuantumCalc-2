@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   GraduationCap, 
@@ -78,11 +79,11 @@ const ProfileOnboarding: React.FC = () => {
           await googleDriveService.saveProfile(accessToken, profileData);
           console.log("Profile synced to Google Drive successfully.");
         } catch (driveError) {
-          // Drive sync failed, silently catch to prevent blocking
+          // Drive sync failed
         }
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
     } finally {
       setIsSubmitting(false);
     }

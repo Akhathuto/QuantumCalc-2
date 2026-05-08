@@ -7,10 +7,10 @@ import {
 } from 'recharts';
 import {
     Home, Car, Landmark, TrendingUp, PiggyBank, Table, HandCoins, Percent, Receipt, Wind,
-    Calculator, Briefcase, Banknote, Info, Bot, Loader, AlertCircle
+    Calculator, Briefcase, Banknote, Info, Bot, Loader, AlertCircle, Sparkles
 } from 'lucide-react';
 import CustomDropdown from './common/CustomDropdown';
-import { getAutoLoanAnalysis, AutoLoanDetails } from '../services/geminiService';
+import { getAutoLoanAnalysis, AutoLoanDetails, getFinancialInsight } from '../services/geminiService';
 import { AppTab } from '../types';
 
 
@@ -34,11 +34,63 @@ const ResultCard: FC<{ title: string; value: string; description?: string }> = (
     </div>
 );
 
+const AIInsightSection: FC<{ data: any, type: string }> = ({ data, type }) => {
+    const [insight, setInsight] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    
+    const fetchInsight = async () => {
+        setLoading(true);
+        try {
+            const res = await getFinancialInsight(data, type);
+            setInsight(res);
+        } catch (err) {
+            console.error(err);
+            setInsight("Failed to load insight.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    return (
+        <div className="mt-4 p-4 bg-brand-primary/5 border border-brand-primary/20 rounded-lg">
+            {!insight && !loading && (
+                <button 
+                  onClick={fetchInsight}
+                  className="w-full flex items-center justify-center gap-2 py-2 text-brand-primary font-bold hover:bg-brand-primary/10 transition-colors rounded-md"
+                >
+                    <Sparkles size={18} /> Get AI Market Insight
+                </button>
+            )}
+            {loading && (
+                <div className="flex items-center justify-center gap-2 py-2 text-brand-text-secondary">
+                    <Loader size={18} className="animate-spin" /> Analyzing data...
+                </div>
+            )}
+            {insight && (
+                <div className="animate-in fade-in duration-500">
+                    <div className="flex items-center gap-2 mb-2 text-brand-primary font-bold">
+                        <Bot size={18} /> AI Insight
+                    </div>
+                    <p className="text-sm text-brand-text-secondary leading-relaxed">{insight}</p>
+                    <button 
+                      onClick={() => setInsight(null)}
+                      className="mt-2 text-xs text-brand-primary hover:underline"
+                    >
+                      Refresh
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // --- Helper Functions ---
 const formatCurrency = (value: number | undefined | null, currencyCode: string = 'USD') => {
     if (value === undefined || value === null || isNaN(value)) return '--';
+    const numberFormat = localStorage.getItem('numberFormat') || 'us';
+    const locale = numberFormat === 'eu' ? 'de-DE' : 'en-US';
     try {
-        return value.toLocaleString(undefined, { style: 'currency', currency: currencyCode, maximumFractionDigits: 2 });
+        return value.toLocaleString(locale, { style: 'currency', currency: currencyCode, maximumFractionDigits: 2 });
     } catch {
         return `$${value.toFixed(2)}`;
     }
@@ -205,6 +257,32 @@ const LoanCalculator = ({ currency }: CalculatorProps) => {
         return { monthlyPayment: M, totalInterest, totalPaid, amortizationData };
     }, [amount, rate, term]);
 
+    const handleExportCSV = () => {
+        if (!result || !result.amortizationData) return;
+        const headers = ["Year", "Remaining Balance", "Principal Paid (Year)", "Interest Paid (Year)"];
+        const rows = result.amortizationData.map(d => [
+            d.year, 
+            d['Remaining Balance'], 
+            d['Principal Paid (Year)'], 
+            d['Interest Paid (Year)']
+        ]);
+        
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(r => r.join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'loan_amortization.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const currencySymbol = useMemo(() => new Intl.NumberFormat(undefined, { style: 'currency', currency }).formatToParts(1).find(p => p.type === 'currency')?.value, [currency]);
 
     return (
@@ -223,9 +301,18 @@ const LoanCalculator = ({ currency }: CalculatorProps) => {
                 </div>
             </div>
 
+            {result && <AIInsightSection data={{ amount, rate, term }} type="Loan" />}
+
             {result && result.amortizationData.length > 0 && (
                 <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4 text-center">Loan Balance Over Time</h3>
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-center sm:text-left">Loan Balance Over Time</h3>
+                        <div className="mt-2 sm:mt-0">
+                            <button onClick={handleExportCSV} className="text-sm px-3 py-1.5 bg-brand-surface border border-brand-border rounded hover:bg-brand-primary/20 hover:text-brand-primary transition-colors flex items-center gap-2">
+                                <Table size={16} /> Export to CSV
+                            </button>
+                        </div>
+                    </div>
                     <div className="h-80 w-full bg-brand-bg/30 p-4 rounded-lg">
                         <ResponsiveContainer>
                             <LineChart data={result.amortizationData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
@@ -295,6 +382,32 @@ const InvestmentCalculator = ({ currency }: CalculatorProps) => {
         return { futureValue, totalContributions, totalInterest, growthData };
 
     }, [principal, contribution, rate, term, frequency]);
+
+    const handleExportCSV = () => {
+        if (!result || !result.growthData) return;
+        const headers = ["Year", "Initial Principal", "Total Contributions", "Interest Earned"];
+        const rows = result.growthData.map(d => [
+            d.year, 
+            d['Initial Principal'], 
+            d['Total Contributions'], 
+            d['Interest Earned']
+        ]);
+        
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(r => r.join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'investment_growth.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
     
     const currencySymbol = useMemo(() => new Intl.NumberFormat(undefined, { style: 'currency', currency }).formatToParts(1).find(p => p.type === 'currency')?.value, [currency]);
 
@@ -323,9 +436,17 @@ const InvestmentCalculator = ({ currency }: CalculatorProps) => {
                     <ResultCard title="Total Interest Earned" value={formatCurrency(result?.totalInterest, currency)} description="The profit earned from compounding." />
                 </div>
             </div>
+            {result && <AIInsightSection data={{ principal, contribution, rate, term }} type="Investment" />}
             {result && result.growthData.length > 0 && (
                 <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4 text-center">Investment Growth Over Time</h3>
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-center sm:text-left">Investment Growth Over Time</h3>
+                        <div className="mt-2 sm:mt-0">
+                            <button onClick={handleExportCSV} className="text-sm px-3 py-1.5 bg-brand-surface border border-brand-border rounded hover:bg-brand-primary/20 hover:text-brand-primary transition-colors flex items-center gap-2">
+                                <Table size={16} /> Export to CSV
+                            </button>
+                        </div>
+                    </div>
                     <div className="h-80 w-full bg-brand-bg/30 p-4 rounded-lg">
                         <ResponsiveContainer>
                             <LineChart data={result.growthData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
@@ -519,15 +640,41 @@ const MortgageCalculator = ({ currency }: CalculatorProps) => {
             totalInterestPaid += interestForYear;
             amortizationData.push({
                 year: year,
-                'Remaining Balance': balance > 0 ? balance : 0,
-                'Interest Paid (Total)': totalInterestPaid,
-                'Principal Paid (Total)': loanAmount - (balance > 0 ? balance : 0),
+                'Remaining Balance': parseFloat((balance > 0 ? balance : 0).toFixed(2)),
+                'Interest Paid (Total)': parseFloat(totalInterestPaid.toFixed(2)),
+                'Principal Paid (Total)': parseFloat((loanAmount - (balance > 0 ? balance : 0)).toFixed(2))
             });
         }
         
         return { loanAmount, totalMonthlyPayment, monthlyPI, monthlyTax, monthlyInsurance, monthlyPmi, pieData, amortizationData, totalInterestPaid };
 
     }, [homePrice, downPayment, loanTerm, interestRate, propertyTax, homeInsurance, pmi, downPaymentPercent]);
+
+    const handleExportCSV = () => {
+        if (!result || !result.amortizationData) return;
+        const headers = ["Year", "Remaining Balance", "Interest Paid (Total)", "Principal Paid (Total)"];
+        const rows = result.amortizationData.map(d => [
+            d.year, 
+            d['Remaining Balance'], 
+            d['Interest Paid (Total)'], 
+            d['Principal Paid (Total)']
+        ]);
+        
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(r => r.join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'mortgage_amortization.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const currencySymbol = useMemo(() => new Intl.NumberFormat(undefined, { style: 'currency', currency }).formatToParts(1).find(p => p.type === 'currency')?.value, [currency]);
     const PIE_COLORS = ['var(--color-primary)', 'var(--color-secondary)', 'var(--color-accent)', '#9f7aea'];
@@ -581,7 +728,14 @@ const MortgageCalculator = ({ currency }: CalculatorProps) => {
             </div>
             {result && result.amortizationData && (
                 <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4 text-center">Loan Amortization Schedule</h3>
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-center sm:text-left">Loan Amortization Schedule</h3>
+                        <div className="mt-2 sm:mt-0">
+                            <button onClick={handleExportCSV} className="text-sm px-3 py-1.5 bg-brand-surface border border-brand-border rounded hover:bg-brand-primary/20 hover:text-brand-primary transition-colors flex items-center gap-2">
+                                <Table size={16} /> Export to CSV
+                            </button>
+                        </div>
+                    </div>
                     <div className="h-80 w-full bg-brand-bg/30 p-4 rounded-lg">
                         <ResponsiveContainer>
                             <LineChart data={result.amortizationData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
@@ -713,6 +867,32 @@ const AutoLoanCalculator = ({ currency, setActiveTab }: CalculatorProps) => {
         setIsAnalysisLoading(false);
     }, [result, rate, term, vehiclePrice, downPayment]);
 
+    const handleExportCSV = () => {
+        if (!result || !result.amortizationData) return;
+        const headers = ["Year", "Remaining Balance", "Principal Paid (Year)", "Interest Paid (Year)"];
+        const rows = result.amortizationData.map(d => [
+            d.year, 
+            d['Remaining Balance'], 
+            d['Principal Paid (Year)'], 
+            d['Interest Paid (Year)']
+        ]);
+        
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(r => r.join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'auto_loan_amortization.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const currencySymbol = useMemo(() => new Intl.NumberFormat(undefined, { style: 'currency', currency }).formatToParts(1).find(p => p.type === 'currency')?.value, [currency]);
     const PIE_COLORS = ['var(--color-primary)', 'var(--color-secondary)', 'var(--color-accent)', '#9f7aea'];
 
@@ -736,6 +916,7 @@ const AutoLoanCalculator = ({ currency, setActiveTab }: CalculatorProps) => {
                     <ResultCard title="Sales Tax" value={formatCurrency(result?.taxAmount, currency)} description="Estimated sales tax amount." />
                 </div>
             </div>
+            {result && <AIInsightSection data={{ vehiclePrice, downPayment, rate, term }} type="Auto Loan" />}
              {result && (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mt-8 items-center">
                     <div className="lg:col-span-3">
@@ -787,7 +968,14 @@ const AutoLoanCalculator = ({ currency, setActiveTab }: CalculatorProps) => {
              )}
              {result && result.amortizationData.length > 0 && (
                 <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4 text-center">Loan Balance Over Time</h3>
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-center sm:text-left">Loan Balance Over Time</h3>
+                        <div className="mt-2 sm:mt-0">
+                            <button onClick={handleExportCSV} className="text-sm px-3 py-1.5 bg-brand-surface border border-brand-border rounded hover:bg-brand-primary/20 hover:text-brand-primary transition-colors flex items-center gap-2">
+                                <Table size={16} /> Export to CSV
+                            </button>
+                        </div>
+                    </div>
                     <div className="h-80 w-full bg-brand-bg/30 p-4 rounded-lg">
                         <ResponsiveContainer>
                             <LineChart data={result.amortizationData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
@@ -1062,6 +1250,7 @@ const RetirementCalculator = ({ currency }: CalculatorProps) => {
                     <ResultCard title="Total Interest Earned" value={formatCurrency(result?.totalInterest, currency)} />
                 </div>
             </div>
+            {result && <AIInsightSection data={{ currentAge, retirementAge, currentSavings, monthlyContribution, annualRate }} type="Retirement" />}
             {result && result.growthData.length > 0 && (
                 <div className="mt-8">
                     <h3 className="text-xl font-bold mb-4 text-center">Projected Growth</h3>

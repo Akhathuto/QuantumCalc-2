@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Save, Trash2, X, Plus, ChevronRight, StickyNote, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, Save, Trash2, X, Plus, ChevronRight, StickyNote, Sparkles, Loader2, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 
@@ -60,6 +61,8 @@ const Scratchpad: React.FC = () => {
       const notesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Note));
       setNotes(notesData.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)));
       if (notesData.length > 0 && !activeNoteId) setActiveNoteId(notesData[0].id);
+    }, (error: any) => {
+      handleFirestoreError(error, OperationType.GET, 'notes');
     });
 
     return () => unsubscribe();
@@ -77,8 +80,12 @@ const Scratchpad: React.FC = () => {
     };
 
     if (user) {
-      const docRef = await addDoc(collection(db, 'notes'), newNote);
-      setActiveNoteId(docRef.id);
+      try {
+        const docRef = await addDoc(collection(db, 'notes'), newNote);
+        setActiveNoteId(docRef.id);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.CREATE, 'notes');
+      }
     } else {
       const localNote = { ...newNote, id: Date.now().toString(), updatedAt: { seconds: Date.now() / 1000 } };
       const updatedNotes = [localNote, ...notes];
@@ -101,6 +108,8 @@ const Scratchpad: React.FC = () => {
           content,
           updatedAt: serverTimestamp()
         });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `notes/${activeNoteId}`);
       } finally {
         setIsSaving(false);
       }
@@ -111,7 +120,11 @@ const Scratchpad: React.FC = () => {
 
   const deleteNote = async (id: string) => {
     if (user) {
-      await deleteDoc(doc(db, 'notes', id));
+      try {
+        await deleteDoc(doc(db, 'notes', id));
+      } catch (error) {
+        handleFirestoreError(error, OperationType.DELETE, `notes/${id}`);
+      }
     } else {
       const updatedNotes = notes.filter(n => n.id !== id);
       setNotes(updatedNotes);
@@ -196,6 +209,24 @@ const Scratchpad: React.FC = () => {
                             className="bg-transparent border-none outline-none font-bold text-brand-text w-full"
                          />
                          <div className="flex items-center gap-1">
+                           <button 
+                             onClick={async () => {
+                               if (!activeNote) return;
+                               const text = `${activeNote.title}\n\n${activeNote.content}`;
+                               if (navigator.share) {
+                                 try {
+                                   await navigator.share({ title: activeNote.title, text });
+                                 } catch (err) { console.error(err); }
+                               } else {
+                                 navigator.clipboard.writeText(text);
+                                 alert('Copied to clipboard!');
+                               }
+                             }}
+                             className="text-brand-text-secondary hover:bg-brand-surface p-1.5 rounded transition-colors"
+                             title="Share note"
+                           >
+                              <Share2 size={16} />
+                           </button>
                            <button 
                              onClick={askAiForNote} 
                              disabled={isAiThinking}

@@ -230,3 +230,31 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
     return getErrorMessage(error);
   }
 };
+
+export const getFinancialInsight = async (data: any, calculatorType: string): Promise<string> => {
+  try {
+    const prompt = `
+      Provide a brief, educational, and professional analysis for the following ${calculatorType} calculation results:
+      ${JSON.stringify(data)}
+      
+      Focus on general financial principles. For example, explain why compound interest grows faster over longer terms, or the trade-off between monthly payments and total interest in a loan.
+      
+      RULES:
+      - DO NOT provide specific financial advice or recommendations.
+      - DO NOT use speculative language. Use conditional language ("could", "may").
+      - Maximum 80 words.
+      - Keep it insightful and encouraging.
+    `;
+    
+    const ai = getAiClient();
+    const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: prompt,
+    });
+    
+    return response.text || "Insight unavailable at this time.";
+  } catch (error) {
+    console.error("Error fetching financial insight from Gemini:", error);
+    return getErrorMessage(error);
+  }
+};

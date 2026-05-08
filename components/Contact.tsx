@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, MapPin, Send, CheckCircle2 } from 'lucide-react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 
 const Contact: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -31,8 +32,7 @@ const Contact: React.FC = () => {
             setFormData({ name: '', email: '', subject: '', message: '' });
             setTimeout(() => setIsSubmitted(false), 5000);
         } catch (error) {
-            console.error("Error submitting contact form:", error);
-            alert("There was an error sending your message. Please try again.");
+            handleFirestoreError(error, OperationType.WRITE, 'contact_messages');
         }
     };
 

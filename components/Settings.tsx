@@ -3,6 +3,7 @@ import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, Use
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 import { secureStorage } from '../services/geminiService';
 import { googleDriveService } from '../services/googleDriveService';
 import { motion } from 'motion/react';
@@ -27,6 +28,7 @@ const themes = [
 const Settings: React.FC = () => {
     const { user, userData, accessToken } = useAuth();
     const [toastMessage, setToastMessage] = useState('');
+    const [currentThemeId, setCurrentThemeId] = useState(() => localStorage.getItem('theme') || 'dark');
     const [isDarkMode, setIsDarkMode] = useState(() => {
         try {
             const savedTheme = localStorage.getItem('theme');
@@ -43,7 +45,15 @@ const Settings: React.FC = () => {
         }
     });
 
-    const currentThemeId = localStorage.getItem('theme') || 'dark';
+    const [numberFormat, setNumberFormat] = useState(() => {
+        return localStorage.getItem('numberFormat') || 'us';
+    });
+
+    const handleFormatChange = (format: string) => {
+        setNumberFormat(format);
+        localStorage.setItem('numberFormat', format);
+        showToast('Number formatting updated.');
+    };
 
     const selectTheme = (themeId: string) => {
         if (themeId === 'dark') {
@@ -52,6 +62,7 @@ const Settings: React.FC = () => {
              window.document.documentElement.setAttribute('class', themeId);
         }
         localStorage.setItem('theme', themeId);
+        setCurrentThemeId(themeId);
         setIsDarkMode(themeId === 'dark');
         showToast(`${themeId.charAt(0).toUpperCase() + themeId.slice(1)} theme applied!`);
     };
@@ -192,8 +203,7 @@ const Settings: React.FC = () => {
                 showToast("Profile updated successfully!");
             }
         } catch (error) {
-            console.error("Profile update failed", error);
-            showToast("Failed to update profile.");
+            handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
         } finally {
             setIsSavingProfile(false);
         }
@@ -217,7 +227,7 @@ const Settings: React.FC = () => {
                 showToast("No profile found on your Google Drive.");
             }
         } catch (error) {
-            showToast("Restore failed. Google Drive may not be enabled.");
+            handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
         } finally {
             setIsRestoring(false);
         }
@@ -443,6 +453,34 @@ const Settings: React.FC = () => {
                 </div>
 
                 <div>
+                    <h4 className="text-sm font-bold text-brand-text mb-4 flex items-center gap-2">
+                        Number Formatting
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                         <button
+                                onClick={() => handleFormatChange('us')}
+                                className={`group p-4 rounded-2xl border-2 transition-all text-left ${numberFormat === 'us' ? 'border-brand-primary bg-brand-primary/5' : 'border-brand-border/50 bg-brand-bg/50 hover:border-brand-primary/30 hover:bg-brand-surface'}`}
+                            >
+                                <span className={`text-lg font-bold block mb-1 ${numberFormat === 'us' ? 'text-brand-primary' : 'text-brand-text'}`}>
+                                    1,000.00
+                                </span>
+                                <span className={`text-xs font-medium ${numberFormat === 'us' ? 'text-brand-primary/70' : 'text-brand-text-secondary'}`}>
+                                    US Standard (1,000.00)
+                                </span>
+                         </button>
+                         <button
+                                onClick={() => handleFormatChange('eu')}
+                                className={`group p-4 rounded-2xl border-2 transition-all text-left ${numberFormat === 'eu' ? 'border-brand-primary bg-brand-primary/5' : 'border-brand-border/50 bg-brand-bg/50 hover:border-brand-primary/30 hover:bg-brand-surface'}`}
+                            >
+                                <span className={`text-lg font-bold block mb-1 ${numberFormat === 'eu' ? 'text-brand-primary' : 'text-brand-text'}`}>
+                                    1.000,00
+                                </span>
+                                <span className={`text-xs font-medium ${numberFormat === 'eu' ? 'text-brand-primary/70' : 'text-brand-text-secondary'}`}>
+                                    European Standard (1.000,00)
+                                </span>
+                         </button>
+                    </div>
+
                     <h4 className="text-sm font-bold text-brand-text mb-4 flex items-center gap-2">
                         Aesthetic Themes
                     </h4>

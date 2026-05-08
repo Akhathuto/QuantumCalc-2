@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, setDoc, onSnapshot, DocumentSnapshot, serverTimestamp } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 
 interface AuthContextType {
   user: User | null;
@@ -29,22 +30,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userData, setUserData] = useState<any | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('google_access_token'));
   const [loading, setLoading] = useState(true);
+  const unsubscribeUserDocRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    let unsubscribeUserDoc: (() => void) | null = null;
-
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      // Clear existing subscription
+      if (unsubscribeUserDocRef.current) {
+        unsubscribeUserDocRef.current();
+        unsubscribeUserDocRef.current = null;
+      }
+
       setUser(currentUser);
       
       if (currentUser) {
-        // Subscribe to user profile in Firestore
         const userRef = doc(db, 'users', currentUser.uid);
         
-        unsubscribeUserDoc = onSnapshot(userRef, async (docSnap: DocumentSnapshot) => {
+        unsubscribeUserDocRef.current = onSnapshot(userRef, async (docSnap: DocumentSnapshot) => {
           if (docSnap.exists()) {
             setUserData(docSnap.data());
           } else {
-            // Initial profile creation
             const initialData: any = {
               uid: currentUser.uid,
               email: currentUser.email,
@@ -53,16 +57,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
             if (currentUser.displayName) initialData.displayName = currentUser.displayName;
             if (currentUser.photoURL) initialData.photoURL = currentUser.photoURL;
+            
             try {
               await setDoc(userRef, initialData);
               setUserData(initialData);
             } catch (error) {
-              console.error("Error creating user profile:", error);
+              handleFirestoreError(error, OperationType.WRITE, `users/${currentUser.uid}`);
             }
           }
           setLoading(false);
-        }, (error: Error) => {
-          console.error("Error listening to user profile:", error);
+        }, (error: any) => {
+          handleFirestoreError(error, OperationType.GET, `users/${currentUser.uid}`);
           setLoading(false);
         });
       } else {
@@ -75,13 +80,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       unsubscribeAuth();
-      if (unsubscribeUserDoc) unsubscribeUserDoc();
+      if (unsubscribeUserDocRef.current) unsubscribeUserDocRef.current();
     };
   }, []);
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/drive.file');
+    // Removed specific drive scope to avoid potential API permission friction during basic login
     
     setLoading(true);
     try {

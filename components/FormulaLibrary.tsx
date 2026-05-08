@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Book, Search, Copy, Info, Atom, Zap, FunctionSquare, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
 
 interface Formula {
     id: string;
     name: string;
     formula: string;
+    latex: string;
     description: string;
     category: 'Physics' | 'Chemistry' | 'Math' | 'Constants';
     variables: string[];
@@ -13,34 +16,34 @@ interface Formula {
 
 const FORMULAS: Formula[] = [
     // Math
-    { id: 'quadratic', name: 'Quadratic Formula', formula: 'x = (-b ± √(b² - 4ac)) / 2a', description: 'Solves for the roots of a quadratic equation ax² + bx + c = 0.', category: 'Math', variables: ['a, b, c (Coefficients)', 'x (Roots)'] },
-    { id: 'pythagoras', name: 'Pythagorean Theorem', formula: 'a² + b² = c²', description: 'In a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides.', category: 'Math', variables: ['a, b (Legs)', 'c (Hypotenuse)'] },
-    { id: 'euler', name: 'Euler\'s Identity', formula: 'e^iπ + 1 = 0', description: 'Relates five fundamental mathematical constants.', category: 'Math', variables: [] },
-    { id: 'area_circle', name: 'Area of a Circle', formula: 'A = πr²', description: 'Calculates the area of a circle with a given radius.', category: 'Math', variables: ['A (Area)', 'r (Radius)', 'π (Pi)'] },
-    { id: 'volume_sphere', name: 'Volume of a Sphere', formula: 'V = ⁴/₃πr³', description: 'Calculates the volume of a sphere.', category: 'Math', variables: ['V (Volume)', 'r (Radius)'] },
+    { id: 'quadratic', name: 'Quadratic Formula', formula: 'x = (-b ± √(b² - 4ac)) / 2a', latex: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', description: 'Solves for the roots of a quadratic equation ax² + bx + c = 0.', category: 'Math', variables: ['a, b, c (Coefficients)', 'x (Roots)'] },
+    { id: 'pythagoras', name: 'Pythagorean Theorem', formula: 'a² + b² = c²', latex: 'a^2 + b^2 = c^2', description: 'In a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides.', category: 'Math', variables: ['a, b (Legs)', 'c (Hypotenuse)'] },
+    { id: 'euler', name: 'Euler\'s Identity', formula: 'e^iπ + 1 = 0', latex: 'e^{i\\pi} + 1 = 0', description: 'Relates five fundamental mathematical constants.', category: 'Math', variables: [] },
+    { id: 'area_circle', name: 'Area of a Circle', formula: 'A = πr²', latex: 'A = \\pi r^2', description: 'Calculates the area of a circle with a given radius.', category: 'Math', variables: ['A (Area)', 'r (Radius)', 'π (Pi)'] },
+    { id: 'volume_sphere', name: 'Volume of a Sphere', formula: 'V = ⁴/₃πr³', latex: 'V = \\frac{4}{3}\\pi r^3', description: 'Calculates the volume of a sphere.', category: 'Math', variables: ['V (Volume)', 'r (Radius)'] },
     
     // Physics
-    { id: 'relativity', name: 'Mass-Energy Equivalence', formula: 'E = mc²', description: 'Mass and energy are proportional and can be converted into each other.', category: 'Physics', variables: ['E (Energy)', 'm (Mass)', 'c (Speed of Light)'] },
-    { id: 'force', name: 'Newton\'s Second Law', formula: 'F = ma', description: 'The force acting on an object is equal to its mass times its acceleration.', category: 'Physics', variables: ['F (Force)', 'm (Mass)', 'a (Acceleration)'] },
-    { id: 'gravity', name: 'Universal Gravitation', formula: 'F = G(m₁m₂/r²)', description: 'Every particle attracts every other particle with a force directly proportional to the product of their masses.', category: 'Physics', variables: ['F (Force)', 'G (Gravitational Constant)', 'm (Masses)', 'r (Distance)'] },
-    { id: 'kinematics_1', name: 'Kinematics: Velocity', formula: 'v = v₀ + at', description: 'Calculates final velocity over time given constant acceleration.', category: 'Physics', variables: ['v (Final Velocity)', 'v₀ (Initial Velocity)', 'a (Acceleration)', 't (Time)'] },
-    { id: 'kinematics_2', name: 'Kinematics: Displacement', formula: 'Δx = v₀t + ½at²', description: 'Calculates displacement given initial velocity, acceleration, and time.', category: 'Physics', variables: ['Δx (Displacement)', 'v₀ (Initial)', 'a (Acceleration)', 't (Time)'] },
-    { id: 'kinetic_energy', name: 'Kinetic Energy', formula: 'KE = ½mv²', description: 'Energy that an object possesses due to its motion.', category: 'Physics', variables: ['KE (Kinetic Energy)', 'm (Mass)', 'v (Velocity)'] },
-    { id: 'hookes_law', name: 'Hooke\'s Law', formula: 'F = -kx', description: 'Force needed to extend or compress a spring by some distance.', category: 'Physics', variables: ['F (Force)', 'k (Spring Constant)', 'x (Displacement)'] },
-    { id: 'ohms_law', name: 'Ohm\'s Law', formula: 'V = IR', description: 'Voltage across a conductor is proportional to the current through it.', category: 'Physics', variables: ['V (Voltage)', 'I (Current)', 'R (Resistance)'] },
+    { id: 'relativity', name: 'Mass-Energy Equivalence', formula: 'E = mc²', latex: 'E = mc^2', description: 'Mass and energy are proportional and can be converted into each other.', category: 'Physics', variables: ['E (Energy)', 'm (Mass)', 'c (Speed of Light)'] },
+    { id: 'force', name: 'Newton\'s Second Law', formula: 'F = ma', latex: 'F = ma', description: 'The force acting on an object is equal to its mass times its acceleration.', category: 'Physics', variables: ['F (Force)', 'm (Mass)', 'a (Acceleration)'] },
+    { id: 'gravity', name: 'Universal Gravitation', formula: 'F = G(m₁m₂/r²)', latex: 'F = G\\frac{m_1 m_2}{r^2}', description: 'Every particle attracts every other particle with a force directly proportional to the product of their masses.', category: 'Physics', variables: ['F (Force)', 'G (Gravitational Constant)', 'm (Masses)', 'r (Distance)'] },
+    { id: 'kinematics_1', name: 'Kinematics: Velocity', formula: 'v = v₀ + at', latex: 'v = v_0 + at', description: 'Calculates final velocity over time given constant acceleration.', category: 'Physics', variables: ['v (Final Velocity)', 'v_0 (Initial Velocity)', 'a (Acceleration)', 't (Time)'] },
+    { id: 'kinematics_2', name: 'Kinematics: Displacement', formula: 'Δx = v₀t + ½at²', latex: '\\Delta x = v_0 t + \\frac{1}{2}at^2', description: 'Calculates displacement given initial velocity, acceleration, and time.', category: 'Physics', variables: ['Δx (Displacement)', 'v_0 (Initial)', 'a (Acceleration)', 't (Time)'] },
+    { id: 'kinetic_energy', name: 'Kinetic Energy', formula: 'KE = ½mv²', latex: 'KE = \\frac{1}{2}mv^2', description: 'Energy that an object possesses due to its motion.', category: 'Physics', variables: ['KE (Kinetic Energy)', 'm (Mass)', 'v (Velocity)'] },
+    { id: 'hookes_law', name: 'Hooke\'s Law', formula: 'F = -kx', latex: 'F = -kx', description: 'Force needed to extend or compress a spring by some distance.', category: 'Physics', variables: ['F (Force)', 'k (Spring Constant)', 'x (Displacement)'] },
+    { id: 'ohms_law', name: 'Ohm\'s Law', formula: 'V = IR', latex: 'V = IR', description: 'Voltage across a conductor is proportional to the current through it.', category: 'Physics', variables: ['V (Voltage)', 'I (Current)', 'R (Resistance)'] },
 
     // Chemistry
-    { id: 'ideal_gas', name: 'Ideal Gas Law', formula: 'PV = nRT', description: 'The state of a hypothetical ideal gas.', category: 'Chemistry', variables: ['P (Pressure)', 'V (Volume)', 'n (Moles)', 'R (Gas Constant)', 'T (Temperature)'] },
-    { id: 'combined_gas', name: 'Combined Gas Law', formula: 'P₁V₁/T₁ = P₂V₂/T₂', description: 'Ratio of the product of pressure and volume and the absolute temperature of a gas is equal to a constant.', category: 'Chemistry', variables: ['P (Pressure)', 'V (Volume)', 'T (Temperature)'] },
-    { id: 'molarity', name: 'Molarity', formula: 'M = n / V', description: 'Concentration of a chemical species, in particular of a solute in a solution.', category: 'Chemistry', variables: ['M (Molarity)', 'n (Moles of solute)', 'V (Volume of solution)'] },
-    { id: 'ph_calc', name: 'pH Calculation', formula: 'pH = -log₁₀[H⁺]', description: 'Calculates the acidity (pH) of a solution.', category: 'Chemistry', variables: ['pH', '[H⁺] (Hydrogen ion concentration)'] },
+    { id: 'ideal_gas', name: 'Ideal Gas Law', formula: 'PV = nRT', latex: 'PV = nRT', description: 'The state of a hypothetical ideal gas.', category: 'Chemistry', variables: ['P (Pressure)', 'V (Volume)', 'n (Moles)', 'R (Gas Constant)', 'T (Temperature)'] },
+    { id: 'combined_gas', name: 'Combined Gas Law', formula: 'P₁V₁/T₁ = P₂V₂/T₂', latex: '\\frac{P_1 V_1}{T_1} = \\frac{P_2 V_2}{T_2}', description: 'Ratio of the product of pressure and volume and the absolute temperature of a gas is equal to a constant.', category: 'Chemistry', variables: ['P (Pressure)', 'V (Volume)', 'T (Temperature)'] },
+    { id: 'molarity', name: 'Molarity', formula: 'M = n / V', latex: 'M = \\frac{n}{V}', description: 'Concentration of a chemical species, in particular of a solute in a solution.', category: 'Chemistry', variables: ['M (Molarity)', 'n (Moles of solute)', 'V (Volume of solution)'] },
+    { id: 'ph_calc', name: 'pH Calculation', formula: 'pH = -log₁₀[H⁺]', latex: 'pH = -\\log_{10}[H^+]', description: 'Calculates the acidity (pH) of a solution.', category: 'Chemistry', variables: ['pH', '[H⁺] (Hydrogen ion concentration)'] },
 
     // Constants
-    { id: 'light_speed', name: 'Speed of Light', formula: 'c = 299,792,458 m/s', description: 'Universal physical constant in many areas of physics.', category: 'Constants', variables: [] },
-    { id: 'planck', name: 'Planck Constant', formula: 'h = 6.62607015 × 10⁻³⁴ J·s', description: 'Relates the energy of a photon to its frequency.', category: 'Constants', variables: [] },
-    { id: 'avogadro', name: 'Avogadro\'s Number', formula: 'Nₐ = 6.02214076 × 10²³ mol⁻¹', description: 'Number of constituent particles in one mole of a substance.', category: 'Constants', variables: [] },
-    { id: 'gravitational_const', name: 'Gravitational Constant', formula: 'G = 6.67430 × 10⁻¹¹ N⋅m²/kg²', description: 'Empirical physical constant involved in the calculation of gravitational effects.', category: 'Constants', variables: [] },
-    { id: 'gas_constant', name: 'Ideal Gas Constant', formula: 'R = 8.314462618 J/(mol·K)', description: 'Constant in the equation of state of an ideal gas.', category: 'Constants', variables: [] },
+    { id: 'light_speed', name: 'Speed of Light', formula: 'c = 299,792,458 m/s', latex: 'c \\approx 3 \\times 10^8 \\text{ m/s}', description: 'Universal physical constant in many areas of physics.', category: 'Constants', variables: [] },
+    { id: 'planck', name: 'Planck Constant', formula: 'h = 6.62607015 × 10⁻³⁴ J·s', latex: 'h = 6.626 \\times 10^{-34} \\text{ J}\\cdot\\text{s}', description: 'Relates the energy of a photon to its frequency.', category: 'Constants', variables: [] },
+    { id: 'avogadro', name: 'Avogadro\'s Number', formula: 'Nₐ = 6.02214076 × 10²³ mol⁻¹', latex: 'N_A = 6.022 \\times 10^{23} \\text{ mol}^{-1}', description: 'Number of constituent particles in one mole of a substance.', category: 'Constants', variables: [] },
+    { id: 'gravitational_const', name: 'Gravitational Constant', formula: 'G = 6.67430 × 10⁻¹¹ N⋅m²/kg²', latex: 'G = 6.674 \\times 10^{-11} \\text{ N}\\cdot\\text{m}^2/\\text{kg}^2', description: 'Empirical physical constant involved in the calculation of gravitational effects.', category: 'Constants', variables: [] },
+    { id: 'gas_constant', name: 'Ideal Gas Constant', formula: 'R = 8.314462618 J/(mol·K)', latex: 'R = 8.314 \\text{ J}/(\\text{mol}\\cdot\\text{K})', description: 'Constant in the equation of state of an ideal gas.', category: 'Constants', variables: [] },
 ];
 
 const FormulaLibrary = () => {
@@ -125,8 +128,10 @@ const FormulaLibrary = () => {
                             </div>
                             
                             <h3 className="text-lg font-extrabold text-brand-text mb-1 group-hover:text-brand-primary transition-colors">{formula.name}</h3>
-                            <div className="bg-brand-bg p-4 rounded-xl my-4 text-center border border-brand-border/50 group-hover:border-brand-primary/30 transition-colors">
-                                <code className="text-xl font-mono font-bold text-brand-accent">{formula.formula}</code>
+                            <div className="bg-brand-bg p-4 rounded-xl my-4 text-center border border-brand-border/50 group-hover:border-brand-primary/30 transition-colors overflow-hidden">
+                                <div className="text-xl font-bold text-brand-accent">
+                                    <Latex>{`$${formula.latex}$`}</Latex>
+                                </div>
                             </div>
                             <p className="text-sm text-brand-text-secondary flex-1">{formula.description}</p>
                             

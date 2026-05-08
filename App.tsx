@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { collection, query, where, onSnapshot, setDoc, doc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
+import { handleFirestoreError, OperationType } from './lib/firestoreErrorHandler';
 import { useAuth } from './components/AuthProvider';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
@@ -77,8 +78,8 @@ const App = () => {
       // Sort by timestamp descending
       firestoreHistory.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
       setHistory(firestoreHistory);
-    }, (error) => {
-      console.error("Error fetching history from Firestore:", error);
+    }, (error: any) => {
+      handleFirestoreError(error, OperationType.GET, 'history');
     });
 
     return () => unsubscribe();
@@ -109,7 +110,7 @@ const App = () => {
           userId: user.uid
         });
       } catch (error) {
-        console.error("Error adding history to Firestore:", error);
+        handleFirestoreError(error, OperationType.WRITE, `history/${newEntry.id}`);
       }
     } else {
       setHistory(prev => [newEntry, ...prev].slice(0, 100)); // Keep last 100 entries locally
@@ -127,7 +128,7 @@ const App = () => {
         });
         await batch.commit();
       } catch (error) {
-        console.error("Error clearing history from Firestore:", error);
+        handleFirestoreError(error, OperationType.DELETE, 'history');
       }
     } else {
       setHistory([]);
@@ -147,7 +148,7 @@ const App = () => {
           userId: user.uid
         }, { merge: true });
       } catch (error) {
-        console.error("Error toggling favorite in Firestore:", error);
+        handleFirestoreError(error, OperationType.UPDATE, `history/${entryToToggle.id}`);
       }
     } else {
       setHistory(prev =>

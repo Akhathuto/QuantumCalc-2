@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { MouseEvent } from 'react';
 import { HistoryEntry } from '../types';
 import { Star, Search, Download, History as HistoryIcon } from 'lucide-react';
+import { formatNumber } from '../lib/formatters';
 
 interface HistoryProps {
   history: HistoryEntry[];
@@ -168,7 +169,7 @@ const History = ({ history, loadFromHistory, clearHistory, toggleFavorite }: His
                         {item.expression}
                     </p>
                     <p className="font-mono text-2xl font-black text-brand-text truncate tracking-tighter" title={item.result}>
-                        <span className="text-brand-primary opacity-50 mr-2">=</span> {item.result}
+                        <span className="text-brand-primary opacity-50 mr-2">=</span> {formatNumber(item.result)}
                     </p>
                 </div>
               </div>

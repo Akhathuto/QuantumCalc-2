@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
-import type { ReactNode } from 'react';
 import { HistoryEntry, Explanation, AppTab } from '../types';
 import { getFormulaExplanation } from '../services/geminiService';
+import { formatNumber } from '../lib/formatters';
 import Button from './common/Button';
 import { create, all } from 'mathjs';
-import { Copy, Check, Loader, Brain, FlaskConical, AlertCircle } from 'lucide-react';
+import { Copy, Check, Loader, Brain, FlaskConical, AlertCircle, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const math = create(all);
@@ -48,99 +48,15 @@ const SCIENTIFIC_CONSTANTS = [
     { name: 'Golden Ratio (φ)', value: '1.61803398875', symbol: 'φ', unit: '' },
 ];
 
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
+
 const LatexRenderer = memo(({ latex }: { latex: string }) => {
-  // A basic recursive parser for a subset of LaTeX to handle nested structures.
-  const parseLatex = (str: string, keyPrefix: string = 'l'): ReactNode[] => {
-    const result: ReactNode[] = [];
-    let i = 0;
-    let key = 0;
-
-    const parseGroup = (): string => {
-      let braceCount = 1;
-      let content = '';
-      i++; // Skip opening brace '{'
-      while (i < str.length && braceCount > 0) {
-        if (str[i] === '{') braceCount++;
-        else if (str[i] === '}') braceCount--;
-        
-        if (braceCount > 0) {
-          content += str[i];
-        }
-        i++;
-      }
-      return content;
-    };
-
-    while (i < str.length) {
-      const char = str[i];
-
-      if (char === '^' || char === '_') {
-        const Tag = char === '^' ? 'sup' : 'sub';
-        i++;
-        let content;
-        if (str[i] === '{') {
-          const groupContent = parseGroup();
-          content = parseLatex(groupContent, `${keyPrefix}-${key}-s`);
-        } else {
-          content = str[i];
-          i++;
-        }
-        result.push(<Tag key={`${keyPrefix}-${key++}`} className="text-[0.7em] mx-px">{content}</Tag>);
-      } else if (char === '\\') {
-        let command = '';
-        i++;
-        while (i < str.length && /[a-zA-Z]/.test(str[i])) {
-          command += str[i];
-          i++;
-        }
-        
-        const symbols: Record<string, string> = {
-          'theta': 'θ', 'pi': 'π', 'phi': 'φ', 'Delta': 'Δ', 'pm': '±',
-          'times': '×', 'div': '÷', 'cdot': '·'
-        };
-
-        if (command === 'sqrt') {
-          let content;
-          if (str[i] === '{') {
-            const groupContent = parseGroup();
-            content = parseLatex(groupContent, `${keyPrefix}-${key}-sqrt`);
-          } else {
-            content = str[i];
-            i++;
-          }
-          result.push(
-            <span key={`${keyPrefix}-${key++}`} className="inline-flex items-center">
-              <span className="text-2xl">&radic;</span>
-              <span className="border-t border-current -ml-1 pl-1">{content}</span>
-            </span>
-          );
-        } else if (command === 'frac') {
-          const numerator = str[i] === '{' ? parseGroup() : '';
-          const denominator = str[i] === '{' ? parseGroup() : '';
-          result.push(
-            <span key={`${keyPrefix}-${key++}`} className="inline-flex flex-col items-center text-center mx-1 leading-none align-middle">
-              <span className="border-b border-current pb-1 px-1">{parseLatex(numerator, `${keyPrefix}-${key}-n`)}</span>
-              <span className="pt-1 px-1">{parseLatex(denominator, `${keyPrefix}-${key}-d`)}</span>
-            </span>
-          );
-        } else if (symbols[command]) {
-          result.push(<span key={`${keyPrefix}-${key++}`}>{symbols[command]}</span>);
-        } else {
-          result.push(<span key={`${keyPrefix}-${key++}`}>\{command}</span>);
-        }
-      } else {
-        let text = '';
-        while (i < str.length && !'\\^_'.includes(str[i])) {
-          text += str[i];
-          i++;
-        }
-        result.push(text);
-      }
-    }
-    return result;
-  };
-  
-  return <>{parseLatex(latex)}</>;
+  return (
+    <div className="math-display">
+      <Latex>{`$$${latex}$$`}</Latex>
+    </div>
+  );
 });
 
 
@@ -177,6 +93,25 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
       setTimeout(() => setCopied(false), 2000);
     }
   }, [currentInput]);
+
+  const handleShare = useCallback(async () => {
+    if (!expression || !currentInput) return;
+    const shareText = `${expression} ${currentInput}`;
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Calculation Result',
+                text: shareText
+            });
+            showToast('Result shared!');
+        } catch (err) {
+            console.error('Error sharing:', err);
+        }
+    } else {
+        navigator.clipboard.writeText(shareText);
+        showToast('Calculation copied to clipboard!');
+    }
+  }, [expression, currentInput]);
 
   const parser = useMemo(() => {
     const p = math.parser();
@@ -514,7 +449,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                             className="flex justify-end gap-2"
                           >
                               <span className="opacity-50">{item.expression}</span>
-                              <span className="text-brand-primary font-bold">{item.result}</span>
+                              <span className="text-brand-primary font-bold">{formatNumber(item.result)}</span>
                           </motion.div>
                       ))}
                     </AnimatePresence>
@@ -531,17 +466,26 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                     <div className="text-brand-text-secondary text-lg break-words h-7 overflow-x-auto text-right font-mono tracking-tighter opacity-70" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
                     {/* Input/Result Line */}
                     <div className="relative group">
-                        <div className="text-5xl font-black text-brand-text break-words min-h-[60px] overflow-x-auto text-right font-mono tracking-tighter leading-none pr-8">
-                            {currentInput}
+                        <div className="text-5xl font-black text-brand-text break-words min-h-[60px] overflow-x-auto text-right font-mono tracking-tighter leading-none pr-16">
+                            {isResultState ? formatNumber(currentInput) : currentInput}
                         </div>
                         {currentInput !== '0' && (
-                            <button
-                                onClick={handleCopy}
-                                className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-brand-surface/40 transition-all text-brand-text-secondary hover:text-brand-primary"
-                                title="Copy to clipboard"
-                            >
-                                {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
-                            </button>
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={handleShare}
+                                    className="p-1.5 rounded-lg hover:bg-brand-surface/40 transition-all text-brand-text-secondary hover:text-brand-primary"
+                                    title="Share calculation"
+                                >
+                                    <Share2 size={18} />
+                                </button>
+                                <button
+                                    onClick={handleCopy}
+                                    className="p-1.5 rounded-lg hover:bg-brand-surface/40 transition-all text-brand-text-secondary hover:text-brand-primary"
+                                    title="Copy to clipboard"
+                                >
+                                    {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                                </button>
+                            </div>
                          )}
                     </div>
                      {/* Error Line */}

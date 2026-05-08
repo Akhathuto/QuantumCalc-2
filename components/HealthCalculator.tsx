@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { Droplets, Scale, Pizza, Target, Timer, PersonStanding, GlassWater, Baby, Wine, AlertCircle, Dumbbell, Moon, Activity } from 'lucide-react';
+import { formatNumber } from '../lib/formatters';
 
 
 type HealthCalcType = 'bmi' | 'calorie-macro' | 'bodyfat' | 'idealweight' | 'heartrate' | 'pace' | 'lbm' | 'water' | 'pregnancy' | 'bac' | 'onerepmax' | 'sleep' | 'bloodpressure';
@@ -87,7 +88,7 @@ const BMICalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) => 
             {result && (
                 <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg">
                     <p className="text-brand-text-secondary">Your BMI is</p>
-                    <p className={`text-4xl font-bold my-2 ${result.color}`}>{result.bmi}</p>
+                    <p className={`text-4xl font-bold my-2 ${result.color}`}>{formatNumber(result.bmi)}</p>
                     <p className={`font-semibold ${result.color}`}>{result.category}</p>
                 </div>
             )}
@@ -161,7 +162,7 @@ const BodyFatCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem })
             {result && (
                 <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg">
                     <p className="text-brand-text-secondary">Estimated Body Fat</p>
-                    <p className="text-4xl font-bold text-brand-accent my-2">{result.bfp}%</p>
+                    <p className="text-4xl font-bold text-brand-accent my-2">{formatNumber(result.bfp)}%</p>
                     <p className="text-xs text-brand-text-secondary">Based on the U.S. Navy method.</p>
                 </div>
             )}
@@ -608,11 +609,11 @@ const LeanBodyMassCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyst
                 <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg flex justify-around">
                     <div>
                         <p className="text-brand-text-secondary">Lean Body Mass</p>
-                        <p className="text-2xl font-bold text-brand-accent my-2">{result.lbm} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
+                        <p className="text-2xl font-bold text-brand-accent my-2">{formatNumber(result.lbm)} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
                     </div>
                     <div>
                         <p className="text-brand-text-secondary">Fat Mass</p>
-                        <p className="text-2xl font-bold text-brand-secondary my-2">{result.fatMass} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
+                        <p className="text-2xl font-bold text-brand-secondary my-2">{formatNumber(result.fatMass)} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
                     </div>
                 </div>
             )}
