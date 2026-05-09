@@ -183,20 +183,15 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
         setIsSavingProfile(true);
         try {
             const profileData: any = {
+                role: editRole,
                 onboarded: true,
             };
 
-            if (editRole) {
-                profileData.role = editRole;
-            }
-
             if (['student', 'teacher'].includes(editRole)) {
-                if (editGrade) profileData.grade = editGrade;
+                profileData.grade = editGrade || null;
             }
 
-            if (editSchool) {
-                profileData.school = editSchool;
-            }
+            profileData.school = editSchool || null;
 
             // 1. Update Firestore
             const userRef = doc(db, 'users', user.uid);

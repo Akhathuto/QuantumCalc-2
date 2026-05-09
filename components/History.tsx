@@ -8,7 +8,7 @@ interface HistoryProps {
   history: HistoryEntry[];
   loadFromHistory: (entry: HistoryEntry) => void;
   clearHistory: () => void;
-  toggleFavorite: (timestamp: number) => void;
+  toggleFavorite: (timestamp: string) => void;
 }
 
 const History = ({ history, loadFromHistory, clearHistory, toggleFavorite }: HistoryProps) => {
@@ -29,7 +29,7 @@ const History = ({ history, loadFromHistory, clearHistory, toggleFavorite }: His
     });
   }, [history, searchTerm]);
 
-  const handleFavoriteClick = (e: MouseEvent, timestamp: number) => {
+  const handleFavoriteClick = (e: MouseEvent, timestamp: string) => {
     e.stopPropagation(); // Prevent loading the history item when clicking the star
     toggleFavorite(timestamp);
   };
@@ -50,7 +50,7 @@ const History = ({ history, loadFromHistory, clearHistory, toggleFavorite }: His
         const rows = history.map(entry => {
           const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
           return [
-            escapeCsv(entry.timestamp.toString()),
+            escapeCsv(entry.timestamp),
             escapeCsv(entry.expression),
             escapeCsv(entry.result),
             entry.isFavorite ? 'true' : 'false'

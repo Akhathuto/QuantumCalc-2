@@ -2,7 +2,7 @@ export interface HistoryEntry {
   id?: string;
   expression: string;
   result: string;
-  timestamp: number;
+  timestamp: string;
   isFavorite?: boolean;
 }
 

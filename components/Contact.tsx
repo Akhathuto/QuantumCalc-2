@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, MapPin, Send, CheckCircle2 } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 
@@ -24,7 +24,7 @@ const Contact: React.FC = () => {
         try {
             await addDoc(collection(db, 'contact_messages'), {
                 ...formData,
-                createdAt: serverTimestamp(),
+                createdAt: new Date(),
                 status: 'new'
             });
             

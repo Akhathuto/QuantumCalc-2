@@ -28,7 +28,13 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<any | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('google_access_token'));
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('google_access_token');
+    } catch (e) {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const unsubscribeUserDocRef = useRef<(() => void) | null>(null);
 
@@ -48,10 +54,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unsubscribeUserDocRef.current = onSnapshot(userRef, async (docSnap: DocumentSnapshot) => {
           if (docSnap.exists()) {
             setUserData(docSnap.data());
+            setLoading(false);
           } else {
             const initialData: any = {
               uid: currentUser.uid,
-              email: currentUser.email,
+              email: currentUser.email || 'no-email@example.com',
               onboarded: false,
               createdAt: serverTimestamp()
             };
@@ -61,19 +68,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
               await setDoc(userRef, initialData);
               setUserData(initialData);
+              setLoading(false);
             } catch (error) {
+              setLoading(false);
               handleFirestoreError(error, OperationType.WRITE, `users/${currentUser.uid}`);
             }
           }
-          setLoading(false);
         }, (error: any) => {
-          handleFirestoreError(error, OperationType.GET, `users/${currentUser.uid}`);
           setLoading(false);
+          handleFirestoreError(error, OperationType.GET, `users/${currentUser.uid}`);
         });
       } else {
         setUserData(null);
         setAccessToken(null);
-        localStorage.removeItem('google_access_token');
+        try {
+          localStorage.removeItem('google_access_token');
+        } catch (e) {
+          // Ignore error
+        }
         setLoading(false);
       }
     });
@@ -94,7 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
         setAccessToken(credential.accessToken);
-        localStorage.setItem('google_access_token', credential.accessToken);
+        try {
+          localStorage.setItem('google_access_token', credential.accessToken);
+        } catch (e) {
+          // Ignore error
+        }
       }
     } catch (error: any) {
       setLoading(false);
@@ -110,7 +126,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
       setAccessToken(null);
-      localStorage.removeItem('google_access_token');
+      try {
+        localStorage.removeItem('google_access_token');
+      } catch (e) {
+        // Ignore error
+      }
     } catch (error) {
       console.error("Error signing out", error);
     }

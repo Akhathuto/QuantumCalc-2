@@ -1,6 +1,6 @@
 
 import { useState, useEffect, Suspense, lazy } from 'react';
-import { collection, query, where, onSnapshot, setDoc, doc, writeBatch, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, setDoc, doc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './lib/firestoreErrorHandler';
 import { useAuth } from './components/AuthProvider';
@@ -95,7 +95,7 @@ const App = () => {
           id: data.id,
           expression: data.expression,
           result: data.result,
-          timestamp: data.timestamp,
+          timestamp: data.timestamp.toString(), // Convert back to string for UI if needed, or keep as number
           isFavorite: data.isFavorite
         });
       });
@@ -159,22 +159,25 @@ const App = () => {
     }
   };
   
-  const toggleFavorite = async (timestamp: number) => {
-    const entryToToggle = history.find(e => Number(e.timestamp) === timestamp);
+  const toggleFavorite = async (timestamp: string) => {
+    const entryToToggle = history.find(e => e.timestamp === timestamp);
     if (!entryToToggle) return;
 
     if (user && entryToToggle.id) {
       try {
-        await updateDoc(doc(db, 'history', entryToToggle.id), {
+        await setDoc(doc(db, 'history', entryToToggle.id), {
+          ...entryToToggle,
+          timestamp: Number(entryToToggle.timestamp),
           isFavorite: !entryToToggle.isFavorite,
-        });
+          userId: user.uid
+        }, { merge: true });
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, `history/${entryToToggle.id}`);
       }
     } else {
       setHistory(prev =>
         prev.map(entry =>
-          Number(entry.timestamp) === timestamp
+          entry.timestamp === timestamp
             ? { ...entry, isFavorite: !entry.isFavorite }
             : entry
         )
