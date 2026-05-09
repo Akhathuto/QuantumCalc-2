@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Book, Search, Copy, Info, Atom, Zap, FunctionSquare, Compass } from 'lucide-react';
+import { Book, Search, Atom, Zap, FunctionSquare, Compass, ShieldCheck, GitCompareArrows } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
@@ -71,79 +71,98 @@ const FormulaLibrary = () => {
     ];
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-brand-surface/50 p-4 rounded-2xl border border-brand-border shadow-sm">
-                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+        <div className="space-y-8 pb-12">
+            {/* Control Panel */}
+            <div className="bg-brand-surface border border-brand-border p-6 rounded-[2rem] flex flex-col md:flex-row gap-6 items-center justify-between shadow-xl">
+                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
                     {categories.map(cat => (
                         <button
                             key={cat.id}
                             onClick={() => setSelectedCategory(cat.id as any)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${selectedCategory === cat.id ? 'bg-brand-primary text-white shadow-lg' : 'bg-brand-bg text-brand-text-secondary hover:bg-brand-border'}`}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap border ${
+                                selectedCategory === cat.id 
+                                ? 'bg-brand-primary border-brand-primary text-white shadow-lg' 
+                                : 'bg-brand-bg border-brand-border text-brand-text-secondary hover:border-brand-primary'
+                            }`}
                         >
-                            <cat.icon size={16} />
+                            <cat.icon size={14} />
                             {cat.id}
                         </button>
                     ))}
                 </div>
-                <div className="relative w-full md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-text-secondary" size={16} />
+                <div className="relative w-full md:w-80">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-secondary" size={16} />
                     <input 
                         type="text"
-                        placeholder="Search formulas..."
+                        placeholder="Search symbolic library..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full bg-brand-bg border border-brand-border rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-primary outline-none"
+                        className="w-full bg-brand-bg border border-brand-border rounded-xl py-3 pl-12 pr-4 text-sm font-mono focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all placeholder:opacity-30"
                     />
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Formula Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <AnimatePresence mode="popLayout">
-                    {filteredFormulas.map((formula) => (
+                    {filteredFormulas.map((formula, idx) => (
                         <motion.div
                             layout
                             key={formula.id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            transition={{ duration: 0.2 }}
-                            className="bg-brand-surface border border-brand-border rounded-2xl p-6 hover:shadow-xl hover:border-brand-primary/50 transition-all group flex flex-col h-full"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.3, delay: idx * 0.05 }}
+                            className="bg-brand-bg border border-brand-border rounded-[2rem] p-8 hover:border-brand-primary/50 transition-all group flex flex-col h-full relative overflow-hidden"
                         >
-                            <div className="flex items-start justify-between mb-4">
-                                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-lg ${
-                                    formula.category === 'Math' ? 'bg-blue-500/10 text-blue-400' :
-                                    formula.category === 'Physics' ? 'bg-yellow-500/10 text-yellow-400' :
-                                    formula.category === 'Chemistry' ? 'bg-green-500/10 text-green-400' :
-                                    'bg-purple-500/10 text-purple-400'
+                            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
+                                {formula.category === 'Math' && <FunctionSquare size={120} />}
+                                {formula.category === 'Physics' && <Zap size={120} />}
+                                {formula.category === 'Chemistry' && <Atom size={120} />}
+                                {formula.category === 'Constants' && <Compass size={120} />}
+                            </div>
+
+                            <div className="flex items-start justify-between mb-6">
+                                <span className={`text-[10px] font-black uppercase tracking-[0.25em] px-3 py-1 rounded-full border ${
+                                    formula.category === 'Math' ? 'bg-blue-400/5 border-blue-400/20 text-blue-400' :
+                                    formula.category === 'Physics' ? 'bg-yellow-400/5 border-yellow-400/20 text-yellow-400' :
+                                    formula.category === 'Chemistry' ? 'bg-green-400/5 border-green-400/20 text-green-400' :
+                                    'bg-purple-400/5 border-purple-400/20 text-purple-400'
                                 }`}>
                                     {formula.category}
                                 </span>
                                 <button 
                                     onClick={() => copyToClipboard(formula.formula, formula.id)}
-                                    className="text-brand-text-secondary hover:text-brand-primary transition-colors p-1"
-                                    title="Copy formula"
+                                    className="p-2 sm:p-2.5 bg-brand-surface border border-brand-border rounded-xl text-brand-text-secondary hover:text-brand-primary hover:border-brand-primary transition-all active:scale-90"
+                                    title="Copy raw string"
                                 >
-                                    {copiedId === formula.id ? '✅' : <Copy size={16} />}
+                                    {copiedId === formula.id ? <ShieldCheck size={16} className="text-green-500" /> : <GitCompareArrows size={16} />}
                                 </button>
                             </div>
                             
-                            <h3 className="text-lg font-extrabold text-brand-text mb-1 group-hover:text-brand-primary transition-colors">{formula.name}</h3>
-                            <div className="bg-brand-bg p-4 rounded-xl my-4 text-center border border-brand-border/50 group-hover:border-brand-primary/30 transition-colors overflow-hidden">
-                                <div className="text-xl font-bold text-brand-accent">
+                            <h3 className="text-xl font-black text-brand-text mb-2 tracking-tighter truncate group-hover:text-brand-primary transition-colors pr-8">
+                                {formula.name}
+                            </h3>
+                            
+                            <div className="bg-brand-surface p-6 rounded-2xl my-6 border border-brand-border group-hover:bg-brand-surface/80 transition-colors">
+                                <div className="text-xl font-black text-brand-text font-mono text-center overflow-x-auto scrollbar-hide py-2">
                                     <Latex>{`$${formula.latex}$`}</Latex>
                                 </div>
                             </div>
-                            <p className="text-sm text-brand-text-secondary flex-1">{formula.description}</p>
+                            
+                            <p className="text-xs font-bold text-brand-text-secondary uppercase tracking-tight leading-relaxed mb-6 flex-1">
+                                {formula.description}
+                            </p>
                             
                             {formula.variables.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-brand-border space-y-2">
-                                    <div className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary uppercase tracking-widest">
-                                        <Info size={12} />
-                                        <span>Variables</span>
+                                <div className="pt-6 border-t border-brand-border/50">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-1 h-1 rounded-full bg-brand-primary"></div>
+                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-text-secondary italic">Constituent Variables</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {formula.variables.map(v => (
-                                            <span key={v} className="text-[10px] bg-brand-bg px-2 py-1 rounded-md border border-brand-border text-brand-text-secondary">
+                                            <span key={v} className="text-[10px] font-mono bg-brand-bg px-2 py-1 rounded-lg border border-brand-border text-brand-text font-bold">
                                                 {v}
                                             </span>
                                         ))}
@@ -156,11 +175,20 @@ const FormulaLibrary = () => {
             </div>
             
             {filteredFormulas.length === 0 && (
-                <div className="py-20 text-center space-y-4">
-                    <Book className="mx-auto text-brand-text-secondary opacity-20" size={64} />
-                    <div className="text-brand-text-secondary">
-                        <p className="text-xl font-bold">No formulas found</p>
-                        <p>Try searching for common terms like "energy", "force", or "pi"</p>
+                <div className="py-24 text-center space-y-6">
+                    <div className="relative inline-block">
+                        <Book className="text-brand-text-secondary opacity-10" size={120} />
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute bottom-0 right-0 p-4 bg-brand-surface border border-brand-border rounded-full text-brand-primary"
+                        >
+                            <Search size={32} />
+                        </motion.div>
+                    </div>
+                    <div className="space-y-2">
+                        <h4 className="text-2xl font-black text-brand-text uppercase tracking-tighter">Null Search Result</h4>
+                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.3em]">No matching symbolic logic in active library</p>
                     </div>
                 </div>
             )}

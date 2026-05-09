@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
-import { Brain, TrendingUp, Share2, Copy, Check } from 'lucide-react';
+import { Brain, TrendingUp, GitCompareArrows, ShieldCheck, Target } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
-import Button from './common/Button';
+import { motion } from 'motion/react';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
@@ -16,45 +16,75 @@ interface SolvedDetails {
 
 const FormulaExplainer = ({ details }: { details: SolvedDetails }) => {
     const { type, coeffs, discriminant } = details;
-    const { a, b, c } = coeffs;
+    const { a, b } = coeffs;
     
     return (
-        <div className="mt-6 bg-brand-bg p-6 rounded-lg border border-brand-border">
-            <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2"><Brain size={20} /> Step-by-Step Solution</h3>
+        <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-brand-surface border border-brand-border p-8 rounded-[2.5rem] space-y-6"
+        >
+            <div className="flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-brand-primary rounded-full"></div>
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-brand-text italic flex items-center gap-2">
+                    <Brain size={14} className="text-brand-primary" /> 
+                    Logical Extraction Path
+                </h3>
+            </div>
+
             {type === 'linear' && (
-                <div className="space-y-4">
-                    <p>Linear equation: <Latex>{'$ax + b = 0$'}</Latex></p>
-                    <p>Formula: <Latex>{'$x = -\\frac{b}{a}$'}</Latex></p>
-                    <div className="bg-brand-surface p-4 rounded-md text-center text-xl">
-                        <Latex>{`$x = -\\frac{${b}}{${a}} = ${(-b / a).toFixed(4)}$`}</Latex>
+                <div className="space-y-6">
+                    <div className="p-4 bg-brand-bg rounded-2xl border border-brand-border flex items-center justify-center min-h-[100px]">
+                        <div className="text-2xl font-black text-brand-text font-mono">
+                            <Latex>{`$x = -\\frac{${b}}{${a}} = ${(-b / a).toFixed(4)}$`}</Latex>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-brand-bg/50 rounded-xl border border-brand-border text-center">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary block mb-1">Primitive</span>
+                            <Latex>{'$ax + b = 0$'}</Latex>
+                        </div>
+                        <div className="p-4 bg-brand-bg/50 rounded-xl border border-brand-border text-center">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary block mb-1">Isolate</span>
+                            <Latex>{'$x = -\\frac{b}{a}$'}</Latex>
+                        </div>
                     </div>
                 </div>
             )}
+
             {type === 'quadratic' && (
                  <div className="space-y-6">
-                    <p>Quadratic equation: <Latex>{'$ax^2 + bx + c = 0$'}</Latex></p>
-                    <div className="pt-3 border-t border-brand-border">
-                        <h4 className="font-semibold mb-2">1. Discriminant (<Latex>{'$\\Delta = b^2 - 4ac$'}</Latex>):</h4>
-                        <div className="bg-brand-surface p-4 rounded-md text-center text-xl">
-                            <Latex>{`$\\Delta = (${b})^2 - 4(${a})(${c}) = ${discriminant}$`}</Latex>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-6 bg-brand-bg rounded-2xl border border-brand-border space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-primary italic">Discriminant</span>
+                                <Latex>{'$\\Delta = b^2 - 4ac$'}</Latex>
+                            </div>
+                            <div className="text-2xl font-black text-brand-text font-mono text-center py-2">
+                                <Latex>{`$\\Delta = ${discriminant}$`}</Latex>
+                            </div>
+                            {discriminant !== undefined && (
+                                <p className="text-[9px] font-black uppercase tracking-wider text-center text-brand-text-secondary bg-brand-surface py-1.5 rounded-lg border border-brand-border">
+                                    {discriminant > 0 && "Two distinct real roots"}
+                                    {discriminant === 0 && "One real root"}
+                                    {discriminant < 0 && "Two complex roots"}
+                                </p>
+                            )}
                         </div>
-                        {discriminant !== undefined && (
-                            <p className="text-sm italic mt-2 text-brand-text-secondary">
-                                {discriminant > 0 && "Δ > 0: Two distinct real roots."}
-                                {discriminant === 0 && "Δ = 0: One real root."}
-                                {discriminant < 0 && "Δ < 0: Two complex roots."}
-                            </p>
-                        )}
-                    </div>
-                     <div className="pt-3 border-t border-brand-border">
-                        <h4 className="font-semibold mb-2">2. Quadratic Formula:</h4>
-                        <div className="bg-brand-surface p-4 rounded-md text-center text-xl overflow-x-auto">
-                           <Latex>{`$x = \\frac{-(${b}) \\pm \\sqrt{${discriminant}}}{2(${a})}$`}</Latex>
+                        
+                        <div className="p-6 bg-brand-bg rounded-2xl border border-brand-border space-y-3">
+                             <div className="flex items-center justify-between">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent italic">Quadratic Form</span>
+                                <Latex>{'$x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}$'}</Latex>
+                            </div>
+                            <div className="text-xl font-black text-brand-text font-mono text-center py-2 overflow-x-auto scrollbar-hide">
+                               <Latex>{`$x = \\frac{-(${b}) \\pm \\sqrt{${discriminant}}}{2(${a})}$`}</Latex>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 };
 
@@ -74,25 +104,6 @@ const EquationSolver = () => {
         }
     };
 
-    const handleShare = async () => {
-        if (solutions.length > 0) {
-            const sols = solutions.map(sol => `x = ${math.format(sol, { notation: 'fixed', precision: 4 })}`).join(', ');
-            const shareText = `${equation} => ${sols}`;
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'Equation Solution',
-                        text: shareText
-                    });
-                } catch (err) {
-                    console.error('Error sharing:', err);
-                }
-            } else {
-                handleCopy();
-            }
-        }
-    };
-
     const graphData = useMemo(() => {
         if (!solvedDetails) return null;
         const { a, b, c } = solvedDetails.coeffs;
@@ -108,28 +119,28 @@ const EquationSolver = () => {
 
     const handleSolve = () => {
         setError(null); setSolutions([]); setSolvedDetails(null);
-        if (!equation.trim()) { setError("Please enter an equation."); return; }
-        if (!equation.includes('x')) { setError("Equation must contain 'x'."); return; }
+        if (!equation.trim()) { setError("Waiting for symbolic input..."); return; }
+        if (!equation.includes('x')) { setError("Symbol 'x' not detected in stream."); return; }
 
         try {
             let expr;
             const parts = equation.split('=');
             if (parts.length === 1) expr = parts[0];
             else if (parts.length === 2) expr = `(${parts[0]}) - (${parts[1]})`;
-            else { setError("Invalid format."); return; }
+            else { setError("Malformed equation grammar."); return; }
 
             const details = math.rationalize(expr, {}, true);
-            if (!details.coefficients) { setError("Not a polynomial."); return; }
+            if (!details.coefficients) { setError("Expression is non-polynomial."); return; }
             const coeffs = details.coefficients.map(c => typeof c === 'number' ? c : parseFloat(c.toString()));
             
-            if (coeffs.length > 3) { setError("Only linear/quadratic supported."); return; }
+            if (coeffs.length > 3) { setError("System limited to degree <= 2."); return; }
 
             const newSols: (number | math.Complex)[] = [];
             if (coeffs.length === 3) {
                 const [c, b, a] = coeffs;
                 if (a === 0) {
                     if (b !== 0) { newSols.push(-c / b); setSolvedDetails({ type: 'linear', coeffs: { a: b, b: c, c: 0 }}); }
-                    else setError(c === 0 ? "Infinite solutions" : "No solution");
+                    else setError(c === 0 ? "Infinite solution set" : "Null solution set");
                 } else {
                     const d = b * b - 4 * a * c;
                     setSolvedDetails({ type: 'quadratic', coeffs: { a, b, c }, discriminant: d });
@@ -144,69 +155,131 @@ const EquationSolver = () => {
             } else if (coeffs.length === 2) {
                 const [b, a] = coeffs;
                 if (a !== 0) { newSols.push(-b / a); setSolvedDetails({ type: 'linear', coeffs: { a, b, c: 0 }}); }
-                else setError(b === 0 ? "Infinite solutions" : "No solution");
+                else setError(b === 0 ? "Infinite solution set" : "Null solution set");
             }
             setSolutions(newSols);
-        } catch (e: unknown) { setError(e instanceof Error ? e.message : "Error solving equation."); }
+        } catch (e: unknown) { setError(e instanceof Error ? e.message : "Calculation kernel failure."); }
     };
 
     return (
-        <div className="bg-brand-surface/50 p-6 rounded-lg">
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary text-center">Equation Solver</h2>
+        <div className="space-y-8 pb-12">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Panel: Input & Solution */}
                 <div className="space-y-6">
-                    <div>
-                        <label className="block text-lg font-medium mb-2">Enter equation (e.g., 2x + 5 = 10)</label>
-                        <div className="flex gap-2">
-                            <input type="text" value={equation} onChange={e => setEquation(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSolve()} className="flex-grow bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary" />
-                            <Button onClick={handleSolve} className="bg-brand-primary px-6">Solve</Button>
-                        </div>
-                    </div>
-                    <div className="bg-brand-bg p-6 rounded-lg min-h-[150px] border border-brand-border relative">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-brand-accent">Solution(s)</h3>
-                            {solutions.length > 0 && (
-                                <div className="flex gap-2">
-                                    <button onClick={handleShare} className="p-1.5 rounded hover:bg-brand-surface/50 text-brand-text-secondary hover:text-brand-primary transition-colors" title="Share result">
-                                        <Share2 size={18} />
-                                    </button>
-                                    <button onClick={handleCopy} className="p-1.5 rounded hover:bg-brand-surface/50 text-brand-text-secondary hover:text-brand-primary transition-colors" title="Copy result">
-                                        {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        {error && <p className="text-red-400 font-mono">{error}</p>}
-                        {solutions.length > 0 && (
-                            <div className="space-y-2">
-                                {solutions.map((sol, i) => <p key={i} className="text-3xl font-mono">x = {math.format(sol, { notation: 'fixed', precision: 4 })}</p>)}
+                    <div className="bg-brand-surface border border-brand-border p-8 rounded-[2.5rem] space-y-6 shadow-xl">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-6 bg-brand-primary rounded-full"></div>
+                                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-brand-text italic">Equation Register</h3>
                             </div>
-                        )}
-                        {!error && solutions.length === 0 && <p className="text-brand-text-secondary">Enter an equation to solve.</p>}
+                            <span className="text-[10px] font-mono text-brand-primary font-bold">READY_TO_PARSE</span>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                            <input 
+                                type="text" 
+                                value={equation} 
+                                onChange={e => setEquation(e.target.value)} 
+                                onKeyDown={e => e.key === 'Enter' && handleSolve()} 
+                                className="flex-grow bg-brand-bg border border-brand-border rounded-2xl px-6 py-4 font-mono text-xl focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all text-brand-text placeholder:opacity-20"
+                                placeholder="ax² + bx + c = 0"
+                            />
+                            <button 
+                                onClick={handleSolve}
+                                className="px-8 bg-brand-primary text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-brand-primary/20"
+                            >
+                                Compute
+                            </button>
+                        </div>
+
+                        <div className="relative group">
+                            <div className="absolute -inset-0.5 bg-brand-primary/10 rounded-3xl blur opacity-50"></div>
+                            <div className="relative bg-brand-bg border border-brand-border p-8 rounded-3xl min-h-[160px] flex flex-col justify-center">
+                                <div className="flex justify-between items-center mb-6 border-b border-brand-border pb-4">
+                                    <h3 className="text-[10px] font-black text-brand-accent uppercase tracking-widest italic flex items-center gap-2">
+                                        <Target size={12} /> Solution Buffer
+                                    </h3>
+                                    {solutions.length > 0 && (
+                                        <button 
+                                            onClick={handleCopy} 
+                                            className="px-4 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-[9px] font-black uppercase tracking-widest hover:text-brand-primary hover:border-brand-primary transition-all flex items-center gap-2"
+                                        >
+                                            {copied ? <ShieldCheck size={12} className="text-green-500" /> : <GitCompareArrows size={12} />}
+                                            {copied ? 'Captured' : 'Capture'}
+                                        </button>
+                                    )}
+                                </div>
+                                {error && <p className="text-red-400 font-mono text-sm uppercase tracking-tighter">{error}</p>}
+                                {solutions.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {solutions.map((sol, i) => (
+                                            <div key={i} className="flex items-center gap-4 group">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary group-hover:scale-150 transition-transform"></div>
+                                                <p className="text-3xl font-black text-brand-text font-mono tracking-tighter">
+                                                    x = {math.format(sol, { notation: 'fixed', precision: 4 })}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : !error && (
+                                    <div className="text-center opacity-20 py-4">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.4em]">Listening for Input...</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                     {solvedDetails && <FormulaExplainer details={solvedDetails} />}
                 </div>
+
+                {/* Right Panel: Visualization */}
                 <div className="space-y-6">
-                    <div className="bg-brand-bg p-6 rounded-lg border border-brand-border h-full min-h-[400px]">
-                        <h3 className="text-xl font-bold mb-4 text-brand-primary flex items-center gap-2"><TrendingUp size={20} /> Visual Representation</h3>
-                        {graphData ? (
-                            <div className="h-80 w-full mt-8">
-                                <ResponsiveContainer>
-                                    <LineChart data={graphData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                                        <XAxis dataKey="x" type="number" domain={['auto', 'auto']} stroke="var(--color-text-secondary)" />
-                                        <YAxis stroke="var(--color-text-secondary)" />
-                                        <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }} />
-                                        <ReferenceLine y={0} stroke="var(--color-text-secondary)" strokeWidth={2} />
-                                        <ReferenceLine x={0} stroke="var(--color-text-secondary)" strokeWidth={2} />
-                                        <Line type="monotone" dataKey="y" stroke="var(--color-primary)" strokeWidth={3} dot={false} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                                <p className="text-center text-xs text-brand-text-secondary mt-4 italic">The roots are where the line crosses the x-axis (y=0).</p>
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-64 text-brand-text-secondary italic">Solve an equation to see its graph.</div>
-                        )}
+                    <div className="bg-brand-surface border border-brand-border p-8 rounded-[2.5rem] shadow-xl h-full flex flex-col">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-1.5 h-6 bg-brand-accent rounded-full"></div>
+                            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-brand-text italic flex items-center gap-2">
+                                <TrendingUp size={14} className="text-brand-accent" />
+                                Geometric Projection
+                            </h3>
+                        </div>
+                        
+                        <div className="flex-1 min-h-[400px] flex flex-col justify-center">
+                            {graphData ? (
+                                <div className="h-96 w-full relative">
+                                    <div className="absolute inset-0 bg-brand-bg/30 rounded-[2rem] border border-brand-border border-dashed pointer-events-none"></div>
+                                    <ResponsiveContainer>
+                                        <LineChart data={graphData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                                            <CartesianGrid strokeDasharray="4 4" stroke="var(--color-border)" vertical={false} />
+                                            <XAxis dataKey="x" type="number" domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'var(--color-text-secondary)', fontWeight: 700 }} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'var(--color-text-secondary)', fontWeight: 700 }} />
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', borderRadius: '12px', border: '1px solid var(--color-border)', fontSize: '10px', fontWeight: 900 }} 
+                                            />
+                                            <ReferenceLine y={0} stroke="var(--color-text)" strokeWidth={1} opacity={0.2} />
+                                            <ReferenceLine x={0} stroke="var(--color-text)" strokeWidth={1} opacity={0.2} />
+                                            <Line 
+                                                type="monotone" 
+                                                dataKey="y" 
+                                                stroke="var(--color-primary)" 
+                                                strokeWidth={5} 
+                                                dot={false} 
+                                                animationDuration={1500}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                    <div className="mt-8 p-4 bg-brand-bg/50 rounded-xl border border-brand-border">
+                                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.1em] leading-relaxed italic text-center">
+                                            The roots are isolated at intersections where polynomial trajectory crosses the horizontal axis <span className="text-brand-primary">(Y=0)</span>.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center p-12 text-center space-y-4 opacity-30">
+                                    <Target size={48} className="text-brand-text-secondary" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">Projection module inactive</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
