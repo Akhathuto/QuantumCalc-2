@@ -2219,7 +2219,7 @@ const EquationSolver = () => {
 };
 
 // --- Main Student Tools Component ---
-const AcademicTerminal: React.FC = () => {
+const StudentTools: React.FC = () => {
     const { user, userData, signInWithGoogle } = useAuth();
     type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit';
     const [activeTool, setActiveTool] = useState<ToolID>('gpa');
@@ -2362,4 +2362,4 @@ const AcademicTerminal: React.FC = () => {
     );
 };
 
-export default AcademicTerminal;
+export default StudentTools;
