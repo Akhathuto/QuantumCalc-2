@@ -15,7 +15,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico'],
+      includeAssets: [],
       manifest: {
         name: 'QuantumCalc Dashboard',
         short_name: 'QuantumCalc',
