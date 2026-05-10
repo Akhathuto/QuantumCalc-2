@@ -30,7 +30,7 @@ const FinancialCalculator = lazy(() => import('./components/FinancialCalculator'
 const HealthCalculator = lazy(() => import('./components/HealthCalculator'));
 const TextTools = lazy(() => import('./components/TextTools'));
 const DeveloperTools = lazy(() => import('./components/DeveloperTools'));
-const StudentTools = lazy(() => import('./components/StudentTools'));
+const AcademicTerminal = lazy(() => import('./components/AcademicTerminal'));
 const FloatingAssistant = lazy(() => import('./components/FloatingAssistant'));
 const Scratchpad = lazy(() => import('./components/Scratchpad'));
 const CommandPalette = lazy(() => import('./components/CommandPalette'));
@@ -241,7 +241,7 @@ const App = () => {
         TabComponent = <DeveloperTools />;
         break;
       case 'student':
-        TabComponent = <StudentTools />;
+        TabComponent = <AcademicTerminal />;
         break;
       case 'history':
         TabComponent = <History history={history} loadFromHistory={loadFromHistory} clearHistory={clearHistory} toggleFavorite={toggleFavorite} />;

@@ -975,7 +975,7 @@ const MathTools: React.FC = () => {
     const { user, signInWithGoogle } = useAuth();
     const [activeCalc, setActiveCalc] = useState('dashboard');
 
-    const calculatorList = [
+    const calculatorList = useMemo(() => [
         { id: 'statistics', label: 'Summary', Icon: BarChart, category: 'Statistics' },
         { id: 'stddev', label: 'Std Dev', Icon: BarChartHorizontal, category: 'Statistics' },
         { id: 'confidence', label: 'Confidence', Icon: Scaling, category: 'Statistics' },
@@ -1000,7 +1000,7 @@ const MathTools: React.FC = () => {
         { id: 'random', label: 'Random', Icon: Shuffle, category: 'Utilities' },
         { id: 'financial', label: 'Finance', Icon: Landmark, category: 'Utilities' },
         { id: 'formulas', label: 'Handbook', Icon: Book, category: 'Knowledge' },
-    ];
+    ], []);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -1009,10 +1009,10 @@ const MathTools: React.FC = () => {
         return calculatorList.filter(calc => {
             const matchesSearch = calc.label.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                 calc.category.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesCategory = selectedCategory ? calc.category === selectedCategory : true;
+            const matchesCategory = (selectedCategory === null || selectedCategory === 'All') ? true : calc.category === selectedCategory;
             return matchesSearch && matchesCategory;
         });
-    }, [searchTerm, selectedCategory]);
+    }, [searchTerm, selectedCategory, calculatorList]);
 
     const categories = ['All', ...Array.from(new Set(calculatorList.map(c => c.category)))];
 
