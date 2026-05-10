@@ -859,7 +859,7 @@ const FormulaReference = () => {
         try {
             const ai = new GoogleGenAI({ apiKey: getApiKey() });
             const result = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: "gemini-3.1-pro-preview",
                 contents: `Explain the formula for "${searchTerm}". Provide the name, the equation in LaTeX format (use standard LaTeX, surround with $), and a 2-sentence explanation. Return as JSON: {"name": "...", "eq": "...", "explanation": "..."}`,
                 config: { responseMimeType: "application/json" }
             });
@@ -2108,7 +2108,7 @@ const EquationSolver = () => {
         try {
             const ai = new GoogleGenAI({ apiKey: getApiKey() });
             const resp = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: "gemini-3.1-pro-preview",
                 contents: `Solve this math equation: "${equation}". Provide the final answer and a list of 3-5 logical steps. Return as JSON: {"answer": "x = ...", "steps": ["step 1", "step 2", ...]}`,
                 config: { responseMimeType: "application/json" }
             });

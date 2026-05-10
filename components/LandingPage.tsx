@@ -92,7 +92,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
       try {
         const ai = new GoogleGenAI({ apiKey: getApiKey() });
         const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-3.1-pro-preview",
           contents: "Provide a one-sentence fun and surprising fact about mathematics, physics, or productivity. Keep it engaging and concise.",
         });
         setMathFact(response.text || 'Mathematics is the language of the universe.');

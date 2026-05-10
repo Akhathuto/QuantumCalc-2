@@ -32,7 +32,7 @@ const Scratchpad: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: `Please analyze, refine, or explain the following mathematical/scientific note content. Make it professional and clear: \n\n${note.content}`,
         config: {
           systemInstruction: "You are the QuantumCalc AI Research Assistant. Your goal is to help students and engineers refine their notes, explain complex formulas, and provide insights. Be concise but insightful.",

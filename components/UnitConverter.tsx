@@ -128,7 +128,7 @@ export const UnitConverter = () => {
     try {
         const ai = new GoogleGenAI({ apiKey: getApiKey() });
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.1-pro-preview",
             contents: `Convert this and return ONLY JSON: {"value": "numerical_result_as_string", "unit": "unit_name", "note": "brief_explanation_or_fact", "comparison": "an interesting real-world comparison for this value"}. Input: ${smartQuery}`,
             config: {
                 systemInstruction: "You are a unit conversion specialist. If the input is ambiguous, give the most likely conversion. Return strictly valid JSON. In 'comparison', provide a relatable fact (e.g., 'This is roughly the weight of 2 blue whales' or 'This distance is about 5 Marathons')."

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AppTab } from '../types';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
+import Markdown from 'react-markdown';
 
 interface FloatingAssistantProps {
   activeTab: AppTab;
@@ -92,10 +93,10 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
 
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: query,
         config: {
-          systemInstruction: `You are the QuantumCalc AI Research Assistant. You are currently helping the user in the "${activeTab}" section of the app. Keep answers extremely brief (max 2 sentences). If the user wants to solve a complex math problem, provide the answer directly and explain how to get more details in the 'Student Tools' tab. You help with navigation, quick math, and tool explanations.`,
+          systemInstruction: `You are the QuantumCalc AI Research Assistant. You are currently helping the user in the "${activeTab}" section of the app. Provide clear, concise, and educational answers, formatted nicely using Markdown. If you provide steps or code or math, format it properly. If the user wants to solve a complex math problem, provide the answer directly and explain how to get more details in the 'Student Tools' tab. You help with navigation, quick math, tool explanations, and general knowledge.`,
         }
       });
       
@@ -152,8 +153,14 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${m.role === 'user' ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-brand-surface border border-brand-border text-brand-text rounded-tl-none'}`}>
-                      {m.text}
+                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${m.role === 'user' ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-brand-surface border border-brand-border text-brand-text rounded-tl-none overflow-x-auto'}`}>
+                      {m.role === 'user' ? (
+                        m.text
+                      ) : (
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-brand-bg/50 prose-pre:border prose-pre:border-brand-border prose-pre:rounded-lg">
+                          <Markdown>{m.text}</Markdown>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

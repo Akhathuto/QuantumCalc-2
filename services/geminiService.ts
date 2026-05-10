@@ -119,7 +119,7 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
 
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -174,7 +174,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
     });
     
@@ -217,7 +217,7 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
     });
     
@@ -246,7 +246,7 @@ export const getFinancialInsight = async (data: any, calculatorType: string): Pr
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
     });
     
