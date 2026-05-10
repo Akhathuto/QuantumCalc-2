@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
+import 'katex/dist/katex.min.css';
 import { AuthProvider } from './components/AuthProvider';
 
 const rootElement = document.getElementById('root');
