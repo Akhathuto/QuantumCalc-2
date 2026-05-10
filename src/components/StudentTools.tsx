@@ -1,0 +1,2365 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { getApiKey } from '../services/geminiService';
+import { GoogleGenAI } from "@google/genai";
+import { 
+  GraduationCap, 
+  Triangle, 
+  Atom, 
+  BookOpen, 
+  BrainCircuit,
+  Play,
+  Pause,
+  RotateCcw,
+  Plus,
+  Trash2,
+  Send,
+  Quote,
+  Layers,
+  CheckSquare,
+  Search,
+  FlaskConical,
+  Copy,
+  Download,
+  StickyNote,
+  Loader2,
+  Sparkles,
+  Zap,
+  MousePointer2,
+  Activity,
+  ShieldCheck,
+  Target,
+  Coffee,
+  Moon,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Divide
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { useAuth } from './AuthProvider';
+
+// --- UI Components ---
+const CategoryTab: React.FC<{ label: string; icon: any; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isActive ? 'bg-brand-primary text-white shadow-xl shadow-brand-primary/30 -translate-y-1' : 'bg-brand-surface/40 text-brand-text-secondary hover:bg-brand-surface/80 hover:text-brand-text border border-brand-border/50'}`}
+    >
+        <Icon size={14} />
+        <span>{label}</span>
+    </button>
+);
+
+const ToolButton: React.FC<{ label: string; isActive: boolean; onClick: () => void }> = ({ label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border whitespace-nowrap ${isActive ? 'bg-brand-text text-brand-bg border-brand-text' : 'bg-transparent text-brand-text-secondary border-brand-border hover:border-brand-text/50 hover:text-brand-text'}`}
+    >
+        {label}
+    </button>
+);
+
+const Input = ({ label, id, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string, id: string }) => (
+    <div className="space-y-1">
+        <label htmlFor={id} className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">{label}</label>
+        <input id={id} {...props} className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-primary focus:border-brand-primary outline-none transition-all placeholder:text-brand-text-secondary/50" />
+    </div>
+);
+
+const GRADE_POINTS: Record<string, number> = {
+    'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+    'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+    'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+    'D+': 1.3, 'D': 1.0, 'F': 0.0
+};
+
+// --- 1. GPA Calculator ---
+const GPACalculator = () => {
+    const [courses, setCourses] = useState([{ id: 1, name: '', grade: 'A', credits: 3 }]);
+    const [targetGrade, setTargetGrade] = useState('');
+    const [currentGrade, setCurrentGrade] = useState('');
+    const [finalWeight, setFinalWeight] = useState('');
+
+    const addCourse = () => setCourses([...courses, { id: Date.now(), name: '', grade: 'A', credits: 3 }]);
+    const removeCourse = (id: number) => setCourses(courses.filter(c => c.id !== id));
+    const updateCourse = (id: number, field: string, value: any) => {
+        setCourses(courses.map(c => c.id === id ? { ...c, [field]: value } : c));
+    };
+
+    const gpa = useMemo(() => {
+        let totalPoints = 0;
+        let totalCredits = 0;
+        courses.forEach(c => {
+            const credits = Number(c.credits) || 0;
+            totalPoints += (GRADE_POINTS[c.grade] || 0) * credits;
+            totalCredits += credits;
+        });
+        return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+    }, [courses]);
+
+    const requiredFinal = useMemo(() => {
+        const target = parseFloat(targetGrade);
+        const current = parseFloat(currentGrade);
+        const weight = parseFloat(finalWeight) / 100;
+        if (isNaN(target) || isNaN(current) || isNaN(weight) || weight === 0) return null;
+        const required = (target - current * (1 - weight)) / weight;
+        return required.toFixed(2);
+    }, [targetGrade, currentGrade, finalWeight]);
+
+    return (
+        <div className="space-y-12 max-w-5xl mx-auto">
+            <div className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <GraduationCap size={140} />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                            <GraduationCap size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-widest">Performance Index</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.2em] font-black">Semester Quality-Point Average</p>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-6">
+                        {courses.map((course, index) => (
+                            <motion.div 
+                                layout
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                key={course.id} 
+                                className="flex flex-wrap gap-6 items-end bg-brand-bg/40 p-6 rounded-[2.5rem] border border-brand-border/30 hover:border-brand-primary/30 transition-all shadow-inner group/item"
+                            >
+                                <div className="flex-1 min-w-[200px]">
+                                    <Input label="Discipline Designation" id={`course_${course.id}`} type="text" value={course.name} onChange={e => updateCourse(course.id, 'name', e.target.value)} placeholder={`e.g. Quantum Mechanics ${index + 1}`} />
+                                </div>
+                                <div className="w-32">
+                                    <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest mb-1 ml-1">Grade</label>
+                                    <div className="relative">
+                                        <select value={course.grade} onChange={e => updateCourse(course.id, 'grade', e.target.value)} className="w-full bg-brand-bg/60 border border-brand-border rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all appearance-none cursor-pointer">
+                                            {Object.keys(GRADE_POINTS).map(g => <option key={g} value={g}>{g}</option>)}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand-text-secondary opacity-50">
+                                            <RotateCcw size={12} className="rotate-90" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="w-28">
+                                    <Input label="Credits" id={`credits_${course.id}`} type="number" value={course.credits} onChange={e => updateCourse(course.id, 'credits', e.target.value)} min="0" step="0.5" />
+                                </div>
+                                <button onClick={() => removeCourse(course.id)} className="p-4 text-red-400 hover:bg-red-400/10 rounded-2xl transition-all active:scale-90 group-hover/item:opacity-100 opacity-50">
+                                    <Trash2 size={20} />
+                                </button>
+                            </motion.div>
+                        ))}
+                    </div>
+                    
+                    <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <button onClick={addCourse} className="flex items-center gap-3 text-brand-primary hover:text-brand-secondary text-[10px] uppercase font-black tracking-widest px-6 py-3 bg-brand-primary/10 rounded-xl transition-all border border-brand-primary/20 hover:scale-105 active:scale-95">
+                            <Plus size={18} /> Append Assessment Node
+                        </button>
+                        
+                        <div className="flex-1 max-w-sm w-full bg-brand-bg/80 border-2 border-brand-primary rounded-[2.5rem] p-8 text-center shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 inset-x-0 h-1 bg-brand-primary animate-pulse" />
+                            <div className="text-[10px] font-black text-brand-primary uppercase tracking-[0.4em] mb-2">GPA Resultant Quotient</div>
+                            <div className="text-6xl font-black text-brand-text tracking-tightest font-mono">{gpa}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 left-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Target size={140} />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                            <Target size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-widest">Threshold Analysis</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.2em] font-black">Variable Assessment Forecaster</p>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+                        <Input label="Current Cumulative (%)" id="cur_grade" type="number" value={currentGrade} onChange={e => setCurrentGrade(e.target.value)} placeholder="85" />
+                        <Input label="Objective Threshold (%)" id="target_grade" type="number" value={targetGrade} onChange={e => setTargetGrade(e.target.value)} placeholder="90" />
+                        <Input label="Final Weight Coefficient (%)" id="final_weight" type="number" value={finalWeight} onChange={e => setFinalWeight(e.target.value)} placeholder="20" />
+                    </div>
+                    
+                    {requiredFinal !== null && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`p-10 rounded-[2.5rem] text-center border-2 shadow-2xl relative overflow-hidden ${parseFloat(requiredFinal) > 100 ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'}`}
+                        >
+                            <div className="absolute top-0 right-0 p-6 opacity-30">
+                                <Activity size={40} />
+                            </div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.4em] mb-4">Required Performance Variable</div>
+                            <div className="text-7xl font-black tracking-tightest mb-4">{requiredFinal}%</div>
+                            <p className="text-sm opacity-80 font-light max-w-md mx-auto leading-relaxed italic">The following magnitude is required on your final Terminal Assessment to reach the {targetGrade}% threshold.</p>
+                        </motion.div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 2. Pomodoro Timer ---
+const PomodoroTimer = () => {
+    const [mode, setMode] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
+    const [timeLeft, setTimeLeft] = useState(25 * 60);
+    const [isActive, setIsActive] = useState(false);
+
+    const modes = {
+        work: { label: 'Focus Cycle', time: 25 * 60, color: 'text-brand-primary', shadow: 'shadow-brand-primary/30', icon: BrainCircuit },
+        shortBreak: { label: 'Brief Respite', time: 5 * 60, color: 'text-emerald-400', shadow: 'shadow-emerald-400/30', icon: Coffee },
+        longBreak: { label: 'Long Recovery', time: 15 * 60, color: 'text-blue-400', shadow: 'shadow-blue-400/30', icon: Moon }
+    };
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isActive && timeLeft > 0) {
+            interval = setInterval(() => {
+                setTimeLeft(t => {
+                    if (t <= 1) {
+                        setIsActive(false);
+                        return 0;
+                    }
+                    return t - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isActive, timeLeft]);
+
+    const switchMode = (newMode: 'work' | 'shortBreak' | 'longBreak') => {
+        setMode(newMode);
+        setTimeLeft(modes[newMode].time);
+        setIsActive(false);
+    };
+
+    const toggleTimer = () => setIsActive(!isActive);
+    const resetTimer = () => {
+        setIsActive(false);
+        setTimeLeft(modes[mode].time);
+    };
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
+    const progress = ((modes[mode].time - timeLeft) / modes[mode].time) * 100;
+    const CurrentIcon = modes[mode].icon;
+
+    return (
+        <div className="bg-brand-surface/40 p-12 rounded-[4rem] border border-brand-border/50 max-w-2xl mx-auto text-center backdrop-blur-md shadow-2xl relative overflow-hidden group">
+            {/* Header progress bar */}
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-brand-border/20">
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    className={`h-full ${modes[mode].color.replace('text-', 'bg-')} transition-all shadow-[0_0_20px_rgba(var(--brand-primary),0.5)]`}
+                />
+            </div>
+
+            <div className="relative z-10">
+                <div className="flex justify-center gap-3 mb-16 bg-brand-bg/50 p-2 rounded-[2rem] w-fit mx-auto border border-brand-border/30 backdrop-blur-sm shadow-inner">
+                    {(Object.keys(modes) as Array<keyof typeof modes>).map(m => (
+                        <button
+                            key={m}
+                            onClick={() => switchMode(m)}
+                            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === m ? 'bg-brand-text text-brand-bg shadow-2xl scale-105' : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/40'}`}
+                        >
+                            {modes[m].label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="relative w-80 h-80 mx-auto mb-16 flex items-center justify-center group/timer">
+                    <div className={`absolute inset-0 rounded-full blur-[100px] opacity-20 transition-all duration-700 ${modes[mode].color.replace('text-', 'bg-')} ${isActive ? 'scale-110 animate-pulse' : 'scale-75'}`} />
+                    
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90 scale-110">
+                        <circle cx="160" cy="160" r="145" className="stroke-brand-border/20" strokeWidth="2" fill="none" />
+                        <motion.circle 
+                            cx="160" cy="160" r="145" 
+                            className={`stroke-current ${modes[mode].color}`} 
+                            strokeWidth="10" fill="none" 
+                            strokeDasharray={2 * Math.PI * 145}
+                            animate={{ strokeDashoffset: 2 * Math.PI * 145 * (1 - progress / 100) }}
+                            transition={{ duration: 1, ease: "linear" }}
+                            strokeLinecap="round"
+                        />
+                    </svg>
+
+                    <div className="relative z-10 flex flex-col items-center">
+                        <motion.div 
+                            initial={false}
+                            animate={{ scale: isActive ? 1.05 : 1 }}
+                            className={`text-8xl font-black font-mono tracking-tightest leading-none ${modes[mode].color}`}
+                        >
+                            {formatTime(timeLeft)}
+                        </motion.div>
+                        <div className="flex items-center gap-3 mt-6 bg-brand-bg/40 px-6 py-2 rounded-full border border-brand-border/30 backdrop-blur-sm">
+                            <CurrentIcon size={14} className={isActive ? 'animate-spin-slow' : ''} />
+                            <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em]">
+                                {isActive ? 'System Active' : 'Idle Protocol'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-center gap-8">
+                    <button 
+                        onClick={toggleTimer}
+                        className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-brand-bg transition-all hover:scale-105 active:scale-90 shadow-[0_20px_50px_rgba(0,0,0,0.3)] ${modes[mode].color.replace('text-', 'bg-')} ${modes[mode].shadow} relative overflow-hidden group/btn`}
+                    >
+                        <div className="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-20 transition-opacity" />
+                        {isActive ? <Pause size={40} /> : <Play size={40} className="ml-1" />}
+                    </button>
+                    <button 
+                        onClick={resetTimer}
+                        className="w-24 h-24 rounded-[2.5rem] bg-brand-surface border border-brand-border hover:border-brand-primary/50 flex items-center justify-center text-brand-text transition-all hover:scale-105 active:scale-90 shadow-2xl hover:text-brand-primary group/reset"
+                    >
+                        <RotateCcw size={32} className="group-hover/reset:rotate-[-45deg] transition-transform" />
+                    </button>
+                </div>
+                
+                <div className="mt-16 pt-10 border-t border-brand-border/20 flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-3 text-brand-text-secondary/50 grayscale hover:grayscale-0 transition-all duration-500">
+                        <ShieldCheck size={18} className="text-emerald-400" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em]">Cognitive Optimization Protocol: Active</span>
+                    </div>
+                    <div className="text-[9px] font-mono text-brand-text-secondary/30 uppercase tracking-widest">
+                        Node_Ref: {mode.toUpperCase()}_TIMER_0x{timeLeft.toString(16).toUpperCase()}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 3. Geometry Solver ---
+const GeometrySolver = () => {
+    const [shape, setShape] = useState('circle');
+    const [inputs, setInputs] = useState<Record<string, string>>({});
+
+    const shapes = {
+        circle: { name: 'Circle', params: ['Radius (r)'], icon: Target, calc: (r: number) => ({ Area: Math.PI * r * r, Circumference: 2 * Math.PI * r }) },
+        rectangle: { name: 'Rectangle', params: ['Length (l)', 'Width (w)'], icon: Triangle, calc: (l: number, w: number) => ({ Area: l * w, Perimeter: 2 * (l + w) }) },
+        triangle: { name: 'Triangle', params: ['Base (b)', 'Height (h)'], icon: Triangle, calc: (b: number, h: number) => ({ Area: 0.5 * b * h }) },
+        sphere: { name: 'Sphere', params: ['Radius (r)'], icon: Atom, calc: (r: number) => ({ Volume: (4/3) * Math.PI * Math.pow(r, 3), 'Surface Area': 4 * Math.PI * r * r }) },
+        cylinder: { name: 'Cylinder', params: ['Radius (r)', 'Height (h)'], icon: FlaskConical, calc: (r: number, h: number) => ({ Volume: Math.PI * r * r * h, 'Surface Area': 2 * Math.PI * r * (r + h) }) },
+    };
+
+    const currentShape = shapes[shape as keyof typeof shapes];
+
+    const results = useMemo(() => {
+        const args = currentShape.params.map(p => parseFloat(inputs[p] || '0'));
+        if (args.some(isNaN) || args.some(a => a <= 0)) return null;
+        return (currentShape.calc as any)(...args);
+    }, [inputs, currentShape]);
+
+    return (
+        <div className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 max-w-5xl mx-auto backdrop-blur-md shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Triangle size={200} className="rotate-45" />
+            </div>
+            
+            <div className="relative z-10">
+                <div className="flex flex-wrap gap-2 mb-12 bg-brand-bg/50 p-2 rounded-[2rem] border border-brand-border/30 w-fit backdrop-blur-sm shadow-inner">
+                    {Object.entries(shapes).map(([key, val]) => (
+                        <button
+                            key={key}
+                            onClick={() => { setShape(key); setInputs({}); }}
+                            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${shape === key ? 'bg-brand-primary text-brand-bg shadow-2xl scale-105' : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/40'}`}
+                        >
+                            {val.name}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                    <div className="space-y-10">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shadow-lg shadow-brand-primary/10">
+                                <currentShape.icon size={24} />
+                            </div>
+                            <div>
+                                <h4 className="text-xl font-black text-brand-text uppercase tracking-widest">{currentShape.name} Analysis</h4>
+                                <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.2em] font-black">Vector Topology Engine</p>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            {currentShape.params.map(param => (
+                                <Input 
+                                    key={param}
+                                    label={param} 
+                                    id={`geom_${param}`}
+                                    type="number" 
+                                    value={inputs[param] || ''} 
+                                    onChange={e => setInputs({...inputs, [param]: e.target.value})}
+                                    placeholder="0.00"
+                                    min="0"
+                                />
+                            ))}
+                            <div className="p-6 bg-brand-bg/30 rounded-2xl border border-brand-border/30 text-[9px] text-brand-text-secondary uppercase leading-relaxed tracking-wider font-mono italic">
+                                // Enter scalar magnitudes for Euclidean space calculations.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-brand-bg/60 p-10 rounded-[3rem] border border-brand-border/50 flex flex-col justify-center shadow-2xl relative overflow-hidden group/res min-h-[360px]">
+                        <div className="absolute -top-20 -right-20 p-20 opacity-5 group-hover/res:opacity-20 transition-all duration-1000 scale-150 rotate-12">
+                            <currentShape.icon size={240} />
+                        </div>
+                        <div className="relative z-10">
+                            <div className="text-[10px] font-black text-brand-primary uppercase tracking-[0.4em] mb-10 text-center">Computed Euclidean Metrics</div>
+                            {results ? (
+                                <div className="space-y-8">
+                                    {Object.entries(results).map(([key, val]) => (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            key={key} 
+                                            className="flex flex-col items-center border-b border-brand-border/30 pb-6 group/metric"
+                                        >
+                                            <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.3em] mb-2 group-hover/metric:text-brand-primary transition-colors">{key} Resultant</span>
+                                            <span className="font-mono font-black text-5xl text-brand-text tracking-tightest group-hover/metric:scale-110 transition-transform">
+                                                {(val as number).toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                                            </span>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center space-y-6">
+                                    <div className="w-16 h-16 bg-brand-border/20 rounded-[2rem] flex items-center justify-center mx-auto text-brand-text-secondary/50 animate-pulse">
+                                        <Activity size={32} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black">
+                                            Awaiting Coordinate Inputs
+                                        </p>
+                                        <p className="text-[8px] text-brand-text-secondary/50 uppercase tracking-widest font-mono">
+                                            Input magnitude sequence to trigger solver.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ATOMIC_WEIGHTS: Record<string, number> = {
+    H: 1.008, He: 4.0026, Li: 6.94, Be: 9.0122, B: 10.81, C: 12.011, N: 14.007, O: 15.999, 
+    F: 18.998, Ne: 20.180, Na: 22.990, Mg: 24.305, Al: 26.982, Si: 28.085, P: 30.974, S: 32.06, 
+    Cl: 35.45, K: 39.098, Ca: 40.078, Fe: 55.845, Cu: 63.546, Zn: 65.38, Ag: 107.87, I: 126.90, 
+    Au: 196.97, Hg: 200.59, Pb: 207.2, U: 238.03, Pu: 244
+};
+
+// --- 4. Science Tools ---
+const ScienceTools = () => {
+    // Molar Mass
+    const [formula, setFormula] = useState('');
+
+    const molarMass = useMemo(() => {
+        if (!formula) return null;
+        try {
+            const regex = /([A-Z][a-z]*)(\d*)/g;
+            let match;
+            let mass = 0;
+            let valid = false;
+            
+            while ((match = regex.exec(formula)) !== null) {
+                valid = true;
+                const element = match[1];
+                const count = match[2] ? parseInt(match[2], 10) : 1;
+                
+                if (ATOMIC_WEIGHTS[element]) {
+                    mass += ATOMIC_WEIGHTS[element] * count;
+                } else {
+                    return { error: `Element [${element}] Not Found` };
+                }
+            }
+            return valid ? { mass: mass.toFixed(3) } : { error: 'Invalid Structure' };
+        } catch (e) {
+            return { error: 'Computation Error' };
+        }
+    }, [formula]);
+
+    // Ideal Gas Law
+    const [p, setP] = useState('');
+    const [v, setV] = useState('');
+    const [n, setN] = useState('');
+    const [t, setT] = useState('');
+    const [solveFor, setSolveFor] = useState('P');
+    const R = 0.08206; // L*atm/(mol*K)
+
+    const idealResult = useMemo(() => {
+        const pNum = parseFloat(p);
+        const vNum = parseFloat(v);
+        const nNum = parseFloat(n);
+        const tNum = parseFloat(t);
+
+        try {
+            if (solveFor === 'P') {
+                if (isNaN(nNum) || isNaN(tNum) || isNaN(vNum) || vNum === 0) return null;
+                return `${((nNum * R * tNum) / vNum).toFixed(4)} atm`;
+            }
+            if (solveFor === 'V') {
+                if (isNaN(nNum) || isNaN(tNum) || isNaN(pNum) || pNum === 0) return null;
+                return `${((nNum * R * tNum) / pNum).toFixed(4)} L`;
+            }
+            if (solveFor === 'n') {
+                if (isNaN(pNum) || isNaN(vNum) || isNaN(tNum) || tNum === 0) return null;
+                return `${((pNum * vNum) / (R * tNum)).toFixed(4)} mol`;
+            }
+            if (solveFor === 'T') {
+                if (isNaN(pNum) || isNaN(vNum) || isNaN(nNum) || nNum === 0) return null;
+                return `${((pNum * vNum) / (nNum * R)).toFixed(4)} K`;
+            }
+        } catch (e) {
+            return 'Error';
+        }
+        return null;
+    }, [p, v, n, t, solveFor]);
+
+    return (
+        <div className="space-y-12 max-w-5xl mx-auto">
+            <div className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <FlaskConical size={180} />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                            <Atom size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-widest">Stoichiometric Engine</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.2em] font-black">Empirical Mass Matrix Analysis</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                        <div className="space-y-6">
+                            <Input 
+                                label="Chemical Empirical Notation" 
+                                id="chem_formula"
+                                type="text" 
+                                value={formula} 
+                                onChange={e => setFormula(e.target.value)}
+                                placeholder="e.g. C6H12O6"
+                                className="text-xl font-mono tracking-widest bg-brand-bg/60 p-5 rounded-2xl"
+                            />
+                            <div className="p-6 bg-brand-bg/40 rounded-2xl border border-brand-border/30 text-[10px] text-brand-text-secondary uppercase leading-relaxed tracking-wider font-mono italic">
+                                // Formula character set is CASE-SENSITIVE.<br/>
+                                // Example: NaCl [Sodium Chloride], H2O [Dihydrogen Monoxide].
+                            </div>
+                        </div>
+                        
+                        <div className="relative group/mass">
+                            <div className="absolute -inset-2 bg-brand-primary/10 rounded-[3rem] blur-2xl opacity-0 group-hover/mass:opacity-100 transition-opacity duration-700" />
+                            <div className={`relative p-12 rounded-[2.5rem] border-2 flex flex-col items-center justify-center transition-all duration-500 backdrop-blur-sm min-h-[220px] ${molarMass?.error ? 'bg-red-500/5 border-red-500/20 text-red-500 shadow-[0_0_40px_rgba(239,68,68,0.1)]' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500 shadow-[0_0_40px_rgba(16,185,129,0.1)]'}`}>
+                                {molarMass && !molarMass.error ? (
+                                    <>
+                                        <div className="flex items-center gap-2 mb-4 text-emerald-500/60">
+                                            <ShieldCheck size={14} />
+                                            <span className="text-[10px] font-black uppercase tracking-[0.5em]">Calculated Aggregate Mass</span>
+                                        </div>
+                                        <div className="text-7xl font-black font-mono tracking-tightest mb-2 group-hover/mass:scale-110 transition-transform">{molarMass.mass}</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60 font-mono">grams // mole</div>
+                                    </>
+                                ) : molarMass?.error ? (
+                                    <div className="text-center space-y-4">
+                                        <div className="w-12 h-12 rounded-full border-2 border-red-500/20 flex items-center justify-center mx-auto">
+                                            <Activity size={24} className="text-red-500 animate-pulse" />
+                                        </div>
+                                        <p className="font-black text-xs uppercase tracking-[0.3em] font-mono">{molarMass.error}</p>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4 space-y-6">
+                                        <Activity size={40} className="mx-auto opacity-20 animate-pulse text-brand-text-secondary" />
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-text-secondary">Input Required</p>
+                                            <p className="text-[8px] font-mono text-brand-text-secondary/40 uppercase tracking-widest italic">Awaiting structural sequence...</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-16 pt-16 border-t border-brand-border/20">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shadow-lg shadow-brand-primary/10">
+                            <FlaskConical size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-brand-text uppercase tracking-widest">Thermodynamic State V.2</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.2em] font-black">Ideal Gas Law [PV=nRT] Solver</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-12">
+                        <div className="p-2 bg-brand-bg/50 rounded-[2rem] w-fit flex gap-2 border border-brand-border/30 backdrop-blur-sm shadow-inner mx-auto lg:mx-0">
+                            {['P', 'V', 'n', 'T'].map(val => (
+                                <button
+                                    key={val}
+                                    onClick={() => setSolveFor(val)}
+                                    className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all ${solveFor === val ? 'bg-brand-text text-brand-bg shadow-2xl scale-105' : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/40'}`}
+                                >
+                                    {val === 'P' ? 'Pressure (P)' : val === 'V' ? 'Volume (V)' : val === 'n' ? 'Moles (n)' : 'Temp (T)'}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            <div className={`transition-all duration-500 ${solveFor === 'P' ? 'opacity-20 scale-95 grayscale pointer-events-none' : ''}`}>
+                                <Input label="Pressure (atm)" id="gas_p" type="number" value={p} onChange={e => setP(e.target.value)} placeholder="1.0" />
+                            </div>
+                            <div className={`transition-all duration-500 ${solveFor === 'V' ? 'opacity-20 scale-95 grayscale pointer-events-none' : ''}`}>
+                                <Input label="Volume (L)" id="gas_v" type="number" value={v} onChange={e => setV(e.target.value)} placeholder="22.4" />
+                            </div>
+                            <div className={`transition-all duration-500 ${solveFor === 'n' ? 'opacity-20 scale-95 grayscale pointer-events-none' : ''}`}>
+                                <Input label="Moles (n)" id="gas_n" type="number" value={n} onChange={e => setN(e.target.value)} placeholder="1.0" />
+                            </div>
+                            <div className={`transition-all duration-500 ${solveFor === 'T' ? 'opacity-20 scale-95 grayscale pointer-events-none' : ''}`}>
+                                <Input label="Temperature (K)" id="gas_t" type="number" value={t} onChange={e => setT(e.target.value)} placeholder="273.15" />
+                            </div>
+                        </div>
+
+                        {idealResult !== null && (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="p-16 rounded-[3rem] bg-brand-primary/10 border-2 border-brand-primary/20 text-brand-primary text-center shadow-2xl relative overflow-hidden group/ideal"
+                            >
+                                <div className="absolute top-0 inset-x-0 h-1 bg-brand-primary opacity-30" />
+                                <div className="flex items-center justify-center gap-3 mb-6 text-brand-primary/60">
+                                    <Activity size={16} />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.5em]">Isolated Variable: {solveFor}</span>
+                                </div>
+                                <div className="text-8xl font-black font-mono tracking-tightest group-hover/ideal:scale-110 transition-transform">{idealResult}</div>
+                            </motion.div>
+                        )}
+                        
+                        <div className="p-6 bg-brand-bg/30 rounded-2xl border border-brand-border/30 text-[9px] text-brand-text-secondary/50 uppercase tracking-widest font-mono text-center">
+                            // Universal Gas Constant (R) ≈ 0.08206 L⋅atm/(mol⋅K) // System Alpha-V.2
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 4.5 Physics Tools ---
+const PhysicsTools = () => {
+    // Kinematics Calculator (1D)
+    const [dx, setDx] = useState('');
+    const [vi, setVi] = useState('');
+    const [vf, setVf] = useState('');
+    const [a, setA] = useState('');
+    const [t, setT] = useState('');
+    const [isSolved, setIsSolved] = useState(false);
+
+    const calculateKinematics = () => {
+        let count = 0;
+        const vals = { dx: parseFloat(dx), vi: parseFloat(vi), vf: parseFloat(vf), a: parseFloat(a), t: parseFloat(t) };
+        if (!isNaN(vals.dx)) count++; if (!isNaN(vals.vi)) count++; if (!isNaN(vals.vf)) count++; if (!isNaN(vals.a)) count++; if (!isNaN(vals.t)) count++;
+        
+        if (count < 3) { return; }
+        if (count > 3) { return; }
+
+        let nDx = vals.dx, nVi = vals.vi, nVf = vals.vf, nA = vals.a, nT = vals.t;
+
+        let madeProgress = true;
+        while (madeProgress) {
+            madeProgress = false;
+            if (isNaN(nVf) && !isNaN(nVi) && !isNaN(nA) && !isNaN(nT)) { nVf = nVi + nA * nT; madeProgress = true; }
+            if (isNaN(nVi) && !isNaN(nVf) && !isNaN(nA) && !isNaN(nT)) { nVi = nVf - nA * nT; madeProgress = true; }
+            if (isNaN(nA) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nT)) { nA = (nVf - nVi) / nT; madeProgress = true; }
+            if (isNaN(nT) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nA)) { nT = (nVf - nVi) / nA; madeProgress = true; }
+            if (isNaN(nDx) && !isNaN(nVi) && !isNaN(nA) && !isNaN(nT)) { nDx = nVi * nT + 0.5 * nA * nT * nT; madeProgress = true; }
+            if (isNaN(nVi) && !isNaN(nDx) && !isNaN(nA) && !isNaN(nT) && nT !== 0) { nVi = (nDx - 0.5 * nA * nT * nT) / nT; madeProgress = true; }
+            if (isNaN(nA) && !isNaN(nDx) && !isNaN(nVi) && !isNaN(nT) && nT !== 0) { nA = (2 * (nDx - nVi * nT)) / (nT * nT); madeProgress = true; }
+            if (isNaN(nVf) && !isNaN(nVi) && !isNaN(nA) && !isNaN(nDx)) { 
+                const sq = nVi * nVi + 2 * nA * nDx;
+                if (sq >= 0) { nVf = Math.sqrt(sq); madeProgress = true; }
+            }
+            if (isNaN(nVi) && !isNaN(nVf) && !isNaN(nA) && !isNaN(nDx)) { 
+                const sq = nVf * nVf - 2 * nA * nDx;
+                if (sq >= 0) { nVi = Math.sqrt(sq); madeProgress = true; }
+            }
+            if (isNaN(nA) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nDx) && nDx !== 0) { nA = (nVf * nVf - nVi * nVi) / (2 * nDx); madeProgress = true; }
+            if (isNaN(nDx) && !isNaN(nVf) && !isNaN(nVi) && !isNaN(nA) && nA !== 0) { nDx = (nVf * nVf - nVi * nVi) / (2 * nA); madeProgress = true; }
+            if (isNaN(nDx) && !isNaN(nVi) && !isNaN(nVf) && !isNaN(nT)) { nDx = 0.5 * (nVi + nVf) * nT; madeProgress = true; }
+            if (isNaN(nT) && !isNaN(nDx) && !isNaN(nVi) && !isNaN(nVf)) { nT = (2 * nDx) / (nVi + nVf); madeProgress = true; }
+        }
+
+        setDx(isNaN(nDx) ? '' : nDx.toFixed(4));
+        setVi(isNaN(nVi) ? '' : nVi.toFixed(4));
+        setVf(isNaN(nVf) ? '' : nVf.toFixed(4));
+        setA(isNaN(nA) ? '' : nA.toFixed(4));
+        setT(isNaN(nT) ? '' : nT.toFixed(4));
+        setIsSolved(true);
+        setTimeout(() => setIsSolved(false), 2000);
+    };
+
+    return (
+        <div className="space-y-12 max-w-6xl mx-auto">
+            <div className="bg-brand-surface/40 p-12 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-16 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Zap size={240} className="rotate-12" />
+                </div>
+                
+                <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-12">
+                        <div className="w-14 h-14 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                            <Triangle size={28} className="rotate-90" />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-black text-brand-text uppercase tracking-widest">Kinematics Analyzer</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black">1D Linear Motion Matrix [System V.1]</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+                        {[
+                            { label: 'Displacement (Δx)', id: 'k_dx', val: dx, set: setDx, unit: 'm' },
+                            { label: 'Init Velocity (vᵢ)', id: 'k_vi', val: vi, set: setVi, unit: 'm/s' },
+                            { label: 'Final Velocity (v_f)', id: 'k_vf', val: vf, set: setVf, unit: 'm/s' },
+                            { label: 'Acceleration (a)', id: 'k_a', val: a, set: setA, unit: 'm/s²' },
+                            { label: 'Time duration (t)', id: 'k_t', val: t, set: setT, unit: 's' }
+                        ].map((item) => (
+                            <div key={item.id} className="space-y-2 group/input">
+                                <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest px-1 group-hover/input:text-brand-primary transition-colors">
+                                    {item.label}
+                                </label>
+                                <div className="relative">
+                                    <input 
+                                        type="number"
+                                        id={item.id}
+                                        value={item.val}
+                                        onChange={e => item.set(e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full bg-brand-bg/50 border border-brand-border/50 rounded-2xl p-4 text-brand-text font-mono focus:outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/20 transition-all placeholder:text-brand-text-secondary/20"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-mono text-brand-text-secondary/30 pointer-events-none uppercase">
+                                        {item.unit}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row gap-6 pt-10 border-t border-brand-border/20">
+                        <div className="flex-1 flex gap-4">
+                            <motion.button 
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={calculateKinematics} 
+                                className={`flex-1 px-10 py-5 rounded-2xl bg-brand-primary text-brand-bg font-black uppercase tracking-[0.3em] text-[11px] transition-all shadow-2xl shadow-brand-primary/20 flex items-center justify-center gap-3 ${isSolved ? 'bg-emerald-500' : ''}`}
+                            >
+                                {isSolved ? <ShieldCheck size={18} /> : <Activity size={18} />}
+                                {isSolved ? 'System Converged' : 'Compute Kinematic State'}
+                            </motion.button>
+                            <motion.button 
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => { setDx(''); setVi(''); setVf(''); setA(''); setT(''); }} 
+                                className="px-10 py-5 rounded-2xl bg-brand-surface border border-brand-border text-brand-text-secondary font-black uppercase tracking-[0.3em] text-[11px] hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-3"
+                            >
+                                <RotateCcw size={18} />
+                                Reset
+                            </motion.button>
+                        </div>
+                        <div className="lg:w-1/3 p-5 bg-brand-bg/30 rounded-2xl border border-brand-border/30 flex items-center gap-4 group/hint">
+                            <div className="w-10 h-10 rounded-xl bg-brand-surface border border-brand-border/50 flex items-center justify-center text-brand-text-secondary/40">
+                                <MousePointer2 size={20} />
+                            </div>
+                            <p className="text-[9px] text-brand-text-secondary uppercase leading-relaxed tracking-wider font-mono italic">
+                                // Input exactly [3] kinematic variables to solve for unknowns. <br/>
+                                // System employs iterative differential state mapping.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {isSolved && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 bg-emerald-500/5 pointer-events-none flex items-center justify-center"
+                    >
+                        <div className="w-full h-1 absolute bottom-0 bg-emerald-500/30 animate-pulse" />
+                    </motion.div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// --- 5. Formula Reference ---
+const FormulaReference = () => {
+    const categories = [
+        {
+            name: 'Algebra',
+            formulas: [
+                { name: 'Quadratic Formula', eq: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}' },
+                { name: 'Distance Formula', eq: 'd = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}' },
+                { name: 'Slope Intersection', eq: 'y = mx + b' },
+                { name: 'Logarithm Product', eq: '\\log_b(xy) = \\log_b(x) + \\log_b(y)' },
+            ]
+        },
+        {
+            name: 'Calculus',
+            formulas: [
+                { name: 'Fundamental Theorem', eq: '\\int_a^b f(x) dx = F(b) - F(a)' },
+                { name: 'Product Rule', eq: '(fg)\' = f\'g + fg\'' },
+                { name: 'Chain Rule', eq: '\\frac{dy}{dx} = \\frac{dy}{du} \\cdot \\frac{du}{dx}' },
+                { name: 'Power Rule', eq: '\\frac{d}{dx} [x^n] = n x^{n-1}' },
+            ]
+        },
+        {
+            name: 'Physics // Classical',
+            formulas: [
+                { name: 'Time-Independent Kinematics', eq: 'v^2 = v_0^2 + 2a\\Delta x' },
+                { name: 'Newton\'s Second Law', eq: '\\vec{F} = m\\vec{a}' },
+                { name: 'Gravitational Force', eq: 'F = G \\frac{m_1 m_2}{r^2}' },
+                { name: 'Centripetal Accel.', eq: 'a_c = \\frac{v^2}{r}' },
+            ]
+        }
+    ];
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [aiFormula, setAiFormula] = useState<{name: string, eq: string, explanation: string} | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const searchAiFormula = async () => {
+        if (!searchTerm.trim() || isSearching) return;
+        setIsSearching(true);
+        setAiFormula(null);
+        try {
+            const ai = new GoogleGenAI({ apiKey: getApiKey() });
+            const result = await ai.models.generateContent({
+                model: "gemini-3.1-pro-preview",
+                contents: `Explain the formula for "${searchTerm}". Provide the name, the equation in LaTeX format (use standard LaTeX, surround with $), and a 2-sentence explanation. Return as JSON: {"name": "...", "eq": "...", "explanation": "..."}`,
+                config: { responseMimeType: "application/json" }
+            });
+            let text = result.text || '{}';
+            text = text.replace(/```json\n?/, '').replace(/\n?```/, '');
+            const data = JSON.parse(text);
+            setAiFormula(data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    return (
+        <div className="space-y-16 max-w-6xl mx-auto px-4">
+            <div className="bg-brand-surface/40 p-12 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group/synth">
+                <div className="absolute top-0 right-0 p-16 opacity-5 group-hover/synth:opacity-10 transition-opacity">
+                    <Sparkles size={200} className="rotate-12" />
+                </div>
+                <div className="relative z-10 w-full">
+                    <div className="flex items-center gap-6 mb-10">
+                        <div className="w-16 h-16 rounded-[2rem] bg-brand-primary text-brand-bg flex items-center justify-center shadow-2xl shadow-brand-primary/30">
+                            <Zap size={32} />
+                        </div>
+                        <div>
+                            <h3 className="text-3xl font-black text-brand-text uppercase tracking-widest">Logic Synthesizer</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.4em] font-black">AI Formula Derivation Matrix // Alpha-Node</p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex flex-col md:flex-row gap-6 mb-4">
+                        <div className="flex-1 relative group/input">
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-text-secondary group-focus-within/input:text-brand-primary transition-colors" size={24} />
+                            <input 
+                                type="text" 
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && searchAiFormula()}
+                                placeholder="Search laws, theorems, or quantum states..."
+                                className="w-full bg-brand-bg/50 border border-brand-border rounded-[2rem] pl-16 pr-8 py-6 text-lg outline-none focus:ring-4 focus:ring-brand-primary/10 transition-all placeholder:opacity-30 font-medium"
+                            />
+                        </div>
+                        <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={searchAiFormula}
+                            disabled={isSearching || !searchTerm.trim()}
+                            className="px-14 py-6 bg-brand-primary text-brand-bg font-black rounded-2xl text-[11px] uppercase tracking-[0.4em] hover:bg-brand-secondary active:scale-95 transition-all shadow-2xl shadow-brand-primary/40 disabled:opacity-50 flex items-center justify-center gap-3"
+                        >
+                            {isSearching ? <Loader2 size={24} className="animate-spin" /> : <Zap size={24} />}
+                            {isSearching ? "Synthesizing..." : "Derive Protocol"}
+                        </motion.button>
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                        {aiFormula && (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -30 }}
+                                className="mt-12 p-12 bg-brand-bg/60 rounded-[3.5rem] border border-brand-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.5)] relative group/res overflow-hidden"
+                            >
+                                <div className="absolute top-0 inset-x-0 h-1.5 bg-brand-primary animate-pulse shadow-[0_0_20px_rgba(var(--brand-primary-rgb),0.5)]" />
+                                <div className="absolute -right-20 -bottom-20 opacity-5 group-hover/res:opacity-10 transition-opacity">
+                                    <Activity size={300} />
+                                </div>
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
+                                        <div className="text-[10px] font-black text-brand-primary uppercase tracking-[0.6em]">System Output // Derivation Complete</div>
+                                    </div>
+                                    <h4 className="text-4xl font-black text-brand-text mb-10 tracking-tightest leading-none">{aiFormula.name}</h4>
+                                    <div className="bg-brand-bg p-10 rounded-[2.5rem] border-2 border-brand-border shadow-inner flex items-center justify-center mb-10 group/formula">
+                                        <div className="markdown-body prose prose-invert max-w-none text-2xl font-mono overflow-x-auto no-scrollbar w-full text-center group-hover/formula:scale-110 transition-transform duration-700">
+                                            <ReactMarkdown>{aiFormula.eq}</ReactMarkdown>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-8 items-start">
+                                        <div className="w-1.5 h-auto self-stretch bg-brand-primary/30 rounded-full" />
+                                        <p className="text-brand-text-secondary text-lg leading-relaxed italic tracking-wide font-medium">
+                                            {aiFormula.explanation}
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+                {categories.map((cat, cIdx) => (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: cIdx * 0.1 }}
+                        key={cat.name} 
+                        className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md hover:border-brand-primary/50 transition-all duration-500 shadow-xl group/card relative overflow-hidden"
+                    >
+                        <div className="absolute -right-4 -top-4 opacity-5 group-hover/card:opacity-10 transition-opacity">
+                            <BookOpen size={100} />
+                        </div>
+                        <div className="flex items-center gap-4 mb-10 pb-4 border-b border-brand-border/20">
+                            <div className="w-10 h-10 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+                                <Layers size={20} />
+                            </div>
+                            <h3 className="text-xs font-black text-brand-text uppercase tracking-[0.4em]">{cat.name}</h3>
+                        </div>
+                        <div className="space-y-10">
+                            {cat.formulas.map((f, fIdx) => (
+                                <div key={f.name} className="space-y-4 group/item">
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="text-[9px] font-black text-brand-text-secondary uppercase tracking-[0.2em] group-hover/item:text-brand-primary transition-colors">{f.name}</div>
+                                        <div className="text-[8px] font-mono text-brand-text-secondary/20">0{fIdx+1}</div>
+                                    </div>
+                                    <div className="bg-brand-bg/50 p-6 rounded-2xl border border-transparent group-hover/item:border-brand-primary/30 transition-all shadow-inner group-hover/item:scale-105 duration-300">
+                                        <div className="markdown-body prose prose-invert prose-brand text-xs overflow-x-auto no-scrollbar font-mono text-center">
+                                            <ReactMarkdown>{`$${f.eq}$`}</ReactMarkdown>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// --- 6. Citation Generator ---
+const CitationGenerator = () => {
+    const [type, setType] = useState('website');
+    const [authorLast, setAuthorLast] = useState('');
+    const [authorFirst, setAuthorFirst] = useState('');
+    const [title, setTitle] = useState('');
+    const [publisher, setPublisher] = useState('');
+    const [year, setYear] = useState('');
+    const [url, setUrl] = useState('');
+
+    const mla = useMemo(() => {
+        let citation = '';
+        if (authorLast) citation += `${authorLast}${authorFirst ? `, ${authorFirst}` : ''}. `;
+        citation += `"${title || 'Untitled Document'}." `;
+        if (publisher) citation += `${publisher}, `;
+        if (year) citation += `${year}, `;
+        if (url) citation += `${url}.`;
+        return citation.trim().replace(/,$/, '.');
+    }, [authorLast, authorFirst, title, publisher, year, url]);
+
+    const apa = useMemo(() => {
+        let citation = '';
+        if (authorLast) citation += `${authorLast}${authorFirst ? `, ${authorFirst.charAt(0)}.` : ''} `;
+        if (year) citation += `(${year}). `;
+        citation += `${title || 'Untitled Document'}. `;
+        if (publisher) citation += `${publisher}. `;
+        if (url) citation += `${url}`;
+        return citation.trim();
+    }, [authorLast, authorFirst, title, publisher, year, url]);
+
+    const copyCitation = (text: string) => {
+        navigator.clipboard.writeText(text);
+    };
+
+    return (
+        <div className="bg-brand-surface/40 p-12 rounded-[4rem] border border-brand-border/50 max-w-5xl mx-auto backdrop-blur-md shadow-2xl relative overflow-hidden group/citation">
+             <div className="absolute top-0 right-0 p-16 opacity-5 group-hover/citation:opacity-10 transition-opacity">
+                <Quote size={200} className="-rotate-12" />
+            </div>
+            <div className="relative z-10 w-full">
+                <div className="flex items-center gap-6 mb-12">
+                    <div className="w-16 h-16 rounded-[2rem] bg-brand-primary text-brand-bg flex items-center justify-center shadow-2xl shadow-brand-primary/30">
+                        <Quote size={32} />
+                    </div>
+                    <div>
+                        <h3 className="text-3xl font-black text-brand-text uppercase tracking-widest">Bibliographic Engine</h3>
+                        <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.4em] font-black">Formal Academic Attribution Matrix // Ver-IX</p>
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16 bg-brand-bg/30 p-10 rounded-[3rem] border border-brand-border/20 shadow-inner">
+                    <div className="space-y-1 group/field">
+                        <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-3 group-hover/field:text-brand-primary transition-colors">Archive Sequence Classification</label>
+                        <div className="relative">
+                            <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-brand-bg/60 border border-brand-border rounded-2xl p-5 text-sm font-bold text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/10 transition-all appearance-none cursor-pointer">
+                                <option value="website">Digital Document (Website)</option>
+                                <option value="book">Hardcover Manuscript (Book)</option>
+                                <option value="article">Scholarly Periodical (Article)</option>
+                            </select>
+                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-brand-text-secondary opacity-30">
+                                <ChevronDown size={20} />
+                            </div>
+                        </div>
+                    </div>
+                    <Input label="Temporal Node (Year)" id="cite_year" type="text" value={year} onChange={e => setYear(e.target.value)} placeholder="e.g. 2024" className="bg-brand-bg/60" />
+                    <Input label="Scholar Surname" id="cite_last" type="text" value={authorLast} onChange={e => setAuthorLast(e.target.value)} placeholder="e.g. von Neumann" className="bg-brand-bg/60" />
+                    <Input label="Scholar Given Name" id="cite_first" type="text" value={authorFirst} onChange={e => setAuthorFirst(e.target.value)} placeholder="e.g. John" className="bg-brand-bg/60" />
+                    <div className="md:col-span-2">
+                        <Input label="Document Nomenclature (Title)" id="cite_title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Theory of Self-Reproducing Automata" className="bg-brand-bg/60" />
+                    </div>
+                    <div className="md:col-span-2">
+                        <Input label="Publisher / Institutional Repository" id="cite_publisher" type="text" value={publisher} onChange={e => setPublisher(e.target.value)} placeholder="e.g. University of Illinois Press" className="bg-brand-bg/60" />
+                    </div>
+                    {type === 'website' && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:col-span-2">
+                            <Input label="Digital Locator Link (URL)" id="cite_url" type="text" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://archive.scholarly-domain.net/..." className="bg-brand-bg/60" />
+                        </motion.div>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    {[
+                        { label: 'MLA // 9th Expansion', citation: mla, id: 'mla' },
+                        { label: 'APA // 7th Foundation', citation: apa, id: 'apa' }
+                    ].map((style) => (
+                        <div key={style.id} className="bg-brand-bg/80 p-10 rounded-[3.5rem] border-2 border-brand-border/50 relative group/style hover:border-brand-primary/50 transition-all duration-500 shadow-2xl">
+                            <div className="flex justify-between items-center mb-8">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-brand-primary shadow-[0_0_10px_rgba(var(--brand-primary-rgb),1)]" />
+                                    <div className="text-[10px] font-black text-brand-primary uppercase tracking-[0.5em]">{style.label}</div>
+                                </div>
+                                <motion.button 
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => copyCitation(style.citation)} 
+                                    className="p-4 bg-brand-surface rounded-2xl text-brand-text-secondary hover:text-brand-primary transition-all border border-brand-border/50 shadow-xl group/copy"
+                                >
+                                    <Copy size={18} className="group-hover/copy:scale-110 transition-transform" />
+                                </motion.button>
+                            </div>
+                            <div className="font-serif text-xl text-brand-text leading-relaxed bg-brand-bg/40 p-10 rounded-[2.5rem] border border-brand-border/30 min-h-[160px] flex items-center justify-center italic text-center tracking-wide shadow-inner">
+                                {style.citation || <span className="opacity-10 uppercase font-sans text-xs tracking-[0.5em] font-black text-brand-primary line-clamp-1">Awaiting Data stream...</span>}
+                            </div>
+                            <div className="mt-8 flex justify-center opacity-10 uppercase font-mono text-[8px] tracking-[0.3em] font-black text-brand-text-secondary">
+                                // System-Generated Attribution Node
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 7. Flashcards ---
+const Flashcards = () => {
+    const [cards, setCards] = useState<{id: number, front: string, back: string}[]>([
+        { id: 1, front: 'Quantum Superposition', back: 'A fundamental principle of quantum mechanics where a physical system exists partly in all its theoretically possible states simultaneously.' },
+        { id: 2, front: 'Heisenberg Uncertainty', back: 'States that the more precisely the position of a particle is determined, the less precisely its momentum can be predicted.' },
+        { id: 3, front: 'Entanglement', back: 'A phenomenon where two particles become linked and share the same existence, even when separated by vast distances.' }
+    ]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isFlipped, setIsFlipped] = useState(false);
+    const [newFront, setNewFront] = useState('');
+    const [newBack, setNewBack] = useState('');
+
+    const addCard = () => {
+        if (!newFront.trim() || !newBack.trim()) return;
+        setCards([...cards, { id: Date.now(), front: newFront, back: newBack }]);
+        setNewFront('');
+        setNewBack('');
+    };
+
+    const deleteCard = (id: number) => {
+        const newCards = cards.filter(c => c.id !== id);
+        setCards(newCards);
+        if (currentIndex >= newCards.length) {
+            setCurrentIndex(Math.max(0, newCards.length - 1));
+        }
+        setIsFlipped(false);
+    };
+
+    const nextCard = () => {
+        setIsFlipped(false);
+        setCurrentIndex((prev) => (prev + 1) % cards.length);
+    };
+
+    const prevCard = () => {
+        setIsFlipped(false);
+        setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto space-y-16 lg:px-8">
+            {cards.length > 0 ? (
+                <div className="flex flex-col items-center">
+                    <div className="text-[10px] font-black text-brand-primary uppercase tracking-[0.5em] mb-12 bg-brand-primary/10 px-8 py-3 rounded-full border border-brand-primary/20 shadow-[0_0_20px_rgba(var(--brand-primary-rgb),0.15)] flex items-center gap-3">
+                        <Activity size={14} className="animate-pulse" />
+                        Recursive Memory Unit {currentIndex + 1} // {cards.length}
+                    </div>
+                    
+                    <div 
+                        className="w-full h-[450px] cursor-pointer group relative"
+                        style={{ perspective: '2500px' }}
+                        onClick={() => setIsFlipped(!isFlipped)}
+                    >
+                        <div className="absolute inset-0 bg-brand-primary/10 blur-[100px] rounded-full opacity-40 animate-pulse" />
+                        
+                        <motion.div 
+                            className="relative w-full h-full"
+                            style={{ transformStyle: 'preserve-3d' }}
+                            animate={{ rotateY: isFlipped ? 180 : 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                        >
+                            {/* Front */}
+                            <div 
+                                className="absolute inset-0 bg-brand-surface/80 backdrop-blur-2xl border-2 border-brand-border/50 rounded-[4rem] p-16 flex flex-col items-center justify-center text-center shadow-[0_40px_100px_rgba(0,0,0,0.6)] overflow-hidden"
+                                style={{ backfaceVisibility: 'hidden' }}
+                            >
+                                <div className="absolute top-0 left-0 p-12 opacity-5">
+                                    <BrainCircuit size={180} />
+                                </div>
+                                <div className="absolute -right-10 -bottom-10 opacity-5">
+                                    <Zap size={140} />
+                                </div>
+                                <h3 className="text-5xl font-black text-brand-text tracking-tightest leading-[1.1] mb-10">{cards[currentIndex].front}</h3>
+                                <div className="mt-8 flex items-center gap-3 text-[11px] font-black text-brand-primary uppercase tracking-[0.4em] opacity-40 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
+                                    <RotateCcw size={16} className="group-hover:rotate-180 transition-transform duration-700" />
+                                    <span>Trigger Flip Protocol</span>
+                                </div>
+                            </div>
+                            {/* Back */}
+                            <div 
+                                className="absolute inset-0 bg-brand-primary text-brand-bg rounded-[4rem] p-16 flex flex-col items-center justify-center text-center shadow-[0_40px_100px_rgba(var(--brand-primary-rgb),0.3)]"
+                                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                            >
+                                <div className="absolute top-0 right-0 p-12 opacity-10">
+                                    <Sparkles size={180} />
+                                </div>
+                                <p className="text-2xl font-bold leading-relaxed max-w-2xl italic tracking-wide">{cards[currentIndex].back}</p>
+                                <div className="mt-12 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.6em] opacity-60">
+                                    <ShieldCheck size={18} />
+                                    Verification Complete
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    <div className="flex items-center gap-8 mt-16 bg-brand-bg/50 p-3 rounded-[2.5rem] border border-brand-border/30 backdrop-blur-md shadow-2xl">
+                        <motion.button whileHover={{ scale: 1.1, x: -5 }} whileTap={{ scale: 0.9 }} onClick={prevCard} className="w-16 h-16 bg-brand-surface hover:bg-brand-text hover:text-brand-bg rounded-2xl transition-all flex items-center justify-center shadow-xl group border border-brand-border/50">
+                            <ChevronLeft size={28} />
+                        </motion.button>
+                        <motion.button whileHover={{ scale: 1.1, y: 5 }} whileTap={{ scale: 0.9 }} onClick={() => deleteCard(cards[currentIndex].id)} className="w-16 h-16 text-red-400 hover:bg-red-400/20 rounded-2xl transition-all flex items-center justify-center border border-transparent hover:border-red-400/30" title="Purge Node">
+                            <Trash2 size={28} />
+                        </motion.button>
+                        <motion.button whileHover={{ scale: 1.1, x: 5 }} whileTap={{ scale: 0.9 }} onClick={nextCard} className="w-16 h-16 bg-brand-surface hover:bg-brand-text hover:text-brand-bg rounded-2xl transition-all flex items-center justify-center shadow-xl border border-brand-border/50">
+                            <ChevronRight size={28} />
+                        </motion.button>
+                    </div>
+                </div>
+            ) : (
+                <div className="text-center p-32 bg-brand-surface/40 rounded-[4rem] border-2 border-brand-border/50 border-dashed backdrop-blur-md">
+                    <Layers size={80} className="mx-auto text-brand-border mb-8 animate-pulse opacity-30" />
+                    <p className="text-2xl font-black text-brand-text-secondary uppercase tracking-[0.5em]">Memory Store Depleted</p>
+                    <p className="text-sm text-brand-text-secondary/60 mt-4 tracking-widest font-mono italic">// Initialize new knowledge nodes for ingestion.</p>
+                </div>
+            )}
+
+            <div className="bg-brand-surface/40 p-12 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group/add">
+                <div className="absolute top-0 right-0 p-12 opacity-5 group-hover/add:opacity-10 transition-opacity">
+                    <Plus size={150} />
+                </div>
+                <div className="flex items-center gap-4 mb-10">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                        <Sparkles size={24} />
+                    </div>
+                    <h4 className="text-xl font-black text-brand-text uppercase tracking-widest">Neural Knowledge Ingestion</h4>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end">
+                    <div className="space-y-8">
+                        <Input label="Neural Trigger Node (Front)" id="card_front" type="text" value={newFront} onChange={e => setNewFront(e.target.value)} placeholder="e.g. Concept, Term, or Formula" className="bg-brand-bg/50" />
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Synthesis Resolution (Back)</label>
+                            <textarea value={newBack} onChange={e => setNewBack(e.target.value)} placeholder="Provide the core logic, definition, or solution..." className="w-full bg-brand-bg/50 border border-brand-border rounded-2xl p-6 text-sm outline-none focus:ring-4 focus:ring-brand-primary/10 h-40 resize-none transition-all font-medium text-brand-text placeholder:opacity-30" />
+                        </div>
+                    </div>
+                    <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={addCard} 
+                        className="h-[272px] bg-brand-text text-brand-bg font-black uppercase tracking-[0.4em] text-[12px] rounded-[2.5rem] hover:bg-brand-primary hover:text-white transition-all shadow-2xl flex flex-col items-center justify-center gap-6 group/btn"
+                    >
+                        <div className="w-20 h-20 bg-brand-bg/10 rounded-full flex items-center justify-center border-4 border-brand-bg/20 group-hover/btn:scale-110 transition-transform duration-500">
+                            <Layers size={32} />
+                        </div>
+                        <div className="text-center">
+                            <span>Commit to Memory Matrix</span>
+                            <p className="text-[8px] opacity-40 mt-2 font-mono tracking-[0.2em] italic">// Persistence Protocol Active</p>
+                        </div>
+                    </motion.button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 8. Assignment Tracker ---
+const AssignmentTracker = () => {
+    const [assignments, setAssignments] = useState<{id: number, title: string, subject: string, date: string, done: boolean}[]>([]);
+    const [title, setTitle] = useState('');
+    const [subject, setSubject] = useState('');
+    const [date, setDate] = useState('');
+
+    const addAssignment = () => {
+        if (!title.trim()) return;
+        setAssignments([...assignments, { id: Date.now(), title, subject, date, done: false }]);
+        setTitle(''); setSubject(''); setDate('');
+    };
+
+    const toggleDone = (id: number) => {
+        setAssignments(assignments.map(a => a.id === id ? { ...a, done: !a.done } : a));
+    };
+
+    const deleteAssignment = (id: number) => {
+        setAssignments(assignments.filter(a => a.id !== id));
+    };
+
+    const sortedAssignments = [...assignments].sort((a, b) => {
+        if (a.done === b.done) {
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return new Date(a.date).getTime() - new Date(b.date).getTime();
+        }
+        return a.done ? 1 : -1;
+    });
+
+    return (
+        <div className="max-w-5xl mx-auto space-y-12">
+            <div className="bg-brand-surface/40 p-12 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group/tracker">
+                <div className="absolute top-0 right-0 p-16 opacity-5 group-hover/tracker:opacity-10 transition-opacity">
+                    <Target size={180} />
+                </div>
+                <div className="flex items-center gap-6 mb-12">
+                    <div className="w-16 h-16 rounded-[2rem] bg-brand-primary text-brand-bg flex items-center justify-center shadow-2xl shadow-brand-primary/30">
+                        <Target size={32} />
+                    </div>
+                    <div>
+                        <h3 className="text-3xl font-black text-brand-text uppercase tracking-widest">Milestone Log Engine</h3>
+                        <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.4em] font-black">Strategic Objective & Deadline Management Matrix</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 bg-brand-bg/30 p-10 rounded-[3rem] border border-brand-border/20 shadow-inner">
+                    <Input label="Objective Designation" id="as_title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Master Thesis Beta" className="bg-brand-bg/60" />
+                    <Input label="Discipline Core" id="as_subject" type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Astrophysics" className="bg-brand-bg/60" />
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Terminal Deadline</label>
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-brand-bg/60 border border-brand-border rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all text-brand-text placeholder:opacity-30" />
+                    </div>
+                </div>
+                
+                <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={addAssignment} 
+                    className="w-full py-6 bg-brand-primary text-brand-bg font-black uppercase tracking-[0.5em] text-[12px] rounded-[2rem] hover:bg-brand-secondary transition-all shadow-2xl shadow-brand-primary/40 flex items-center justify-center gap-4 group/addbtn"
+                >
+                    <Plus size={24} className="group-hover/addbtn:rotate-180 transition-transform duration-500" />
+                    <span>Initialize Tracking Node</span>
+                </motion.button>
+            </div>
+
+            <div className="grid lg:grid-cols-1 gap-6 px-4">
+                <AnimatePresence mode="popLayout" initial={false}>
+                    {sortedAssignments.length === 0 ? (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-center p-24 bg-brand-surface/20 rounded-[4rem] border-2 border-brand-border/30 border-dashed backdrop-blur-sm"
+                        >
+                            <ShieldCheck size={64} className="mx-auto text-emerald-500/30 mb-6 animate-pulse" />
+                            <p className="text-[12px] font-black text-brand-text-secondary uppercase tracking-[0.6em]">All objectives secured. Zero pending active nodes.</p>
+                            <div className="mt-4 text-[8px] font-mono text-brand-text-secondary/20 uppercase tracking-[0.3em]">System clear for next phase // convergence 100%</div>
+                        </motion.div>
+                    ) : (
+                        sortedAssignments.map((a, idx) => (
+                            <motion.div 
+                                layout
+                                initial={{ opacity: 0, x: -30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, x: 30 }}
+                                transition={{ delay: idx * 0.05 }}
+                                key={a.id} 
+                                className={`group flex items-center justify-between p-8 rounded-[2.5rem] border transition-all duration-500 ${a.done ? 'bg-emerald-500/5 border-emerald-500/30 opacity-60' : 'bg-brand-surface/60 border-brand-border/50 hover:border-brand-primary shadow-2xl'}`}
+                            >
+                                <div className="flex items-center gap-10">
+                                    <motion.button 
+                                        whileTap={{ scale: 0.8 }}
+                                        onClick={() => toggleDone(a.id)} 
+                                        className={`w-14 h-14 rounded-[1.25rem] flex items-center justify-center border-4 transition-all duration-500 ${a.done ? 'bg-emerald-500 border-emerald-500 text-brand-bg shadow-[0_0_30px_rgba(16,185,129,0.4)] rotate-0' : 'bg-brand-bg/50 border-brand-border text-transparent hover:border-brand-primary -rotate-12 hover:rotate-0'}`}
+                                    >
+                                        <Check size={32} strokeWidth={4} />
+                                    </motion.button>
+                                    <div>
+                                        <div className={`text-2xl font-black tracking-tightest leading-none mb-3 ${a.done ? 'line-through text-brand-text-secondary/50' : 'text-brand-text'}`}>{a.title}</div>
+                                        <div className="flex flex-wrap items-center gap-4">
+                                            {a.subject && (
+                                                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-primary/10 border border-brand-primary/30 text-[9px] font-black uppercase tracking-[0.2em] text-brand-primary">
+                                                    <BookOpen size={12} />
+                                                    {a.subject}
+                                                </div>
+                                            )}
+                                            {a.date && (
+                                                <div className={`flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-bg/50 border border-brand-border text-[9px] font-black uppercase tracking-[0.2em] ${!a.done && new Date(a.date) < new Date() ? 'text-red-400 border-red-400/30 pulse' : 'text-brand-text-secondary/60'}`}>
+                                                    <Activity size={12} />
+                                                    {a.done ? 'Manifest Fulfilled' : `Due Node: ${a.date}`}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => deleteAssignment(a.id)} className="w-14 h-14 flex items-center justify-center text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-400/20 rounded-2xl transition-all duration-300">
+                                    <Trash2 size={24} />
+                                </motion.button>
+                            </motion.div>
+                        ))
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+};
+
+// --- 9. Notes Tool (Structured Archives) ---
+const NotesTool = () => {
+    const [notes, setNotes] = useState<{id: number, title: string, content: string, category: string, date: string}[]>(() => {
+        try { return JSON.parse(localStorage.getItem('academic_notes') || '[]'); } catch { return []; }
+    });
+    const [title, setTitle] = useState('');
+    const [category, setCategory] = useState('General');
+    const [content, setContent] = useState('');
+    const [search, setSearch] = useState('');
+    const [activeTab, setActiveTab] = useState<'vault' | 'scratchpad'>('vault');
+    const [quickNotes, setQuickNotes] = useState<string>(() => localStorage.getItem('quick_notes') || '');
+
+    useEffect(() => {
+        localStorage.setItem('academic_notes', JSON.stringify(notes));
+    }, [notes]);
+
+    useEffect(() => {
+        localStorage.setItem('quick_notes', quickNotes);
+    }, [quickNotes]);
+
+    const addNote = () => {
+        if (!title.trim() || !content.trim()) return;
+        const newNote = {
+            id: Date.now(),
+            title,
+            category,
+            content,
+            date: new Date().toLocaleDateString()
+        };
+        setNotes([newNote, ...notes]);
+        setTitle('');
+        setContent('');
+    };
+
+    const deleteNote = (id: number) => {
+        setNotes(notes.filter(n => n.id !== id));
+    };
+
+    const filteredNotes = notes.filter(n => 
+        n.title.toLowerCase().includes(search.toLowerCase()) || 
+        n.content.toLowerCase().includes(search.toLowerCase()) ||
+        n.category.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+        <div className="max-w-7xl mx-auto space-y-16">
+            <div className="flex justify-center">
+                <div className="flex bg-brand-surface/40 p-2 rounded-[2.5rem] border border-brand-border/30 backdrop-blur-md shadow-2xl">
+                    <button 
+                        onClick={() => setActiveTab('vault')}
+                        className={`px-10 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${activeTab === 'vault' ? 'bg-brand-primary text-brand-bg shadow-[0_15px_40px_rgba(var(--brand-primary-rgb),0.3)] scale-105' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                    >
+                        Long-Term vaults
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('scratchpad')}
+                        className={`px-10 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${activeTab === 'scratchpad' ? 'bg-brand-primary text-brand-bg shadow-[0_15px_40px_rgba(var(--brand-primary-rgb),0.3)] scale-105' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                    >
+                        Volatile Scratchpad
+                    </button>
+                </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+                {activeTab === 'vault' ? (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        key="vault"
+                        className="grid grid-cols-1 lg:grid-cols-12 gap-12"
+                    >
+                        <div className="lg:col-span-4 space-y-10">
+                            <div className="bg-brand-surface/40 p-12 rounded-[4rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group/entry">
+                                <div className="absolute top-0 left-0 p-10 opacity-5 group-hover/entry:opacity-10 transition-opacity">
+                                    <StickyNote size={180} />
+                                </div>
+                                <div className="relative z-10 w-full">
+                                    <div className="flex items-center gap-4 mb-10">
+                                        <div className="w-14 h-14 rounded-[1.5rem] bg-brand-primary text-brand-bg flex items-center justify-center shadow-2xl shadow-brand-primary/30">
+                                            <Plus size={28} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-brand-text uppercase tracking-widest">New Archive</h3>
+                                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black">Archive Formalization Protocol</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-8">
+                                        <Input label="Node Designation (Title)" id="note_title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Relativistic Mass Synthesis" className="bg-brand-bg/50" />
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Segment Classification (Tag)</label>
+                                            <input 
+                                                value={category} 
+                                                onChange={e => setCategory(e.target.value)} 
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-2xl p-5 text-sm font-bold text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/10 transition-all placeholder:opacity-30" 
+                                                placeholder="General, Research, Lab, etc."
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Encoded Logic (Content)</label>
+                                            <textarea 
+                                                value={content} 
+                                                onChange={e => setContent(e.target.value)} 
+                                                className="w-full bg-brand-bg/50 border border-brand-border rounded-2xl p-6 text-sm font-medium text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/10 transition-all h-60 resize-none placeholder:opacity-30" 
+                                                placeholder="Begin formal archive documentation..."
+                                            />
+                                        </div>
+                                        <motion.button 
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={addNote} 
+                                            className="w-full py-5 bg-brand-primary text-brand-bg font-black uppercase tracking-[0.5em] text-[11px] rounded-2xl shadow-2xl shadow-brand-primary/30 active:scale-95 transition-all"
+                                        >
+                                            Commit to Archive Phase
+                                        </motion.button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-8 space-y-8">
+                            <div className="relative group/search">
+                                <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-brand-text-secondary/40 group-focus-within/search:text-brand-primary transition-colors" size={24} />
+                                <input 
+                                    type="text" 
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    placeholder="Search archive nodes by title, content, or tag classification..."
+                                    className="w-full bg-brand-surface/40 border border-brand-border/50 rounded-[2.5rem] pl-20 pr-10 py-6 text-lg font-bold text-brand-text focus:ring-8 focus:ring-brand-primary/5 outline-none backdrop-blur-md transition-all shadow-xl placeholder:opacity-20"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
+                                <AnimatePresence mode="popLayout" initial={false}>
+                                    {filteredNotes.map((note, idx) => (
+                                        <motion.div 
+                                            layout
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            key={note.id} 
+                                            className="bg-brand-surface/40 p-10 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md group/note relative hover:border-brand-primary/50 transition-all duration-500 flex flex-col shadow-2xl"
+                                        >
+                                            <div className="flex justify-between items-start mb-8">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-lg text-[9px] font-black text-brand-primary uppercase tracking-[0.3em] font-mono">
+                                                        {note.category}
+                                                    </div>
+                                                    <div className="text-[8px] font-mono text-brand-text-secondary/30 uppercase tracking-widest">{note.date}</div>
+                                                </div>
+                                                <button onClick={() => deleteNote(note.id)} className="w-10 h-10 flex items-center justify-center text-brand-text-secondary/20 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                            <h4 className="text-2xl font-black text-brand-text mb-6 tracking-tight group-hover/note:text-brand-primary transition-colors leading-none">{note.title}</h4>
+                                            <p className="text-brand-text-secondary text-sm leading-relaxed line-clamp-6 mb-10 italic flex-1">{note.content}</p>
+                                            <div className="pt-6 border-t border-brand-border/20 flex gap-2 overflow-hidden items-center justify-between">
+                                                <div className="flex items-center gap-2 opacity-20 uppercase font-mono text-[8px] tracking-[0.3em] font-black">
+                                                    // Node Hash: {note.id.toString(16).slice(-6).toUpperCase()}
+                                                </div>
+                                                <motion.button whileHover={{ scale: 1.1 }} className="p-3 bg-brand-bg rounded-xl text-brand-text-secondary hover:text-brand-primary transition-all shadow-lg border border-brand-border">
+                                                    <BookOpen size={14} />
+                                                </motion.button>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        key="scratchpad"
+                        className="max-w-5xl mx-auto"
+                    >
+                        <div className="bg-brand-surface/40 p-12 rounded-[4rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group/scratch">
+                            <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none group-focus-within/scratch:opacity-20 transition-opacity">
+                                <Zap size={240} className="animate-pulse" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-10">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-[1.5rem] bg-brand-primary/10 text-brand-primary flex items-center justify-center border border-brand-primary/20">
+                                            <Activity size={28} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-brand-text uppercase tracking-widest">Logic Scratchpad</h3>
+                                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.4em] font-black">Unstructured High-Volatility Data Ingestion</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 px-4 py-2 bg-brand-bg/50 rounded-full border border-brand-border text-[9px] font-black uppercase tracking-[0.5em] text-emerald-500 pulse">
+                                        <Activity size={12} />
+                                        Real-time Sync Active
+                                    </div>
+                                </div>
+                                <textarea 
+                                    value={quickNotes}
+                                    onChange={e => setQuickNotes(e.target.value)}
+                                    placeholder="Initiate unstructured data capture. All characters are automatically synced to local persistence layer. Cleanse periodically to optimize recall..."
+                                    className="w-full bg-brand-bg/40 border-2 border-brand-border rounded-[3rem] p-12 text-lg font-medium leading-relaxed text-brand-text outline-none focus:ring-[15px] focus:ring-brand-primary/5 focus:border-brand-primary min-h-[600px] transition-all shadow-inner placeholder:italic placeholder:opacity-20 scroll-smooth custom-scrollbar"
+                                />
+                                <div className="mt-8 flex justify-between items-center text-[9px] font-mono text-brand-text-secondary/40 font-black uppercase tracking-[0.4em]">
+                                    <div>// Volatile Buffer State: {quickNotes.length} chars</div>
+                                    <div>// Encryption Layer: AES-Node-X</div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+// --- 10. AI Tutor Workspace ---
+const AITutor = () => {
+    const [messages, setMessages] = useState<{role: 'user'|'model', text: string}[]>([
+        { role: 'model', text: "Systems online. I am **Nolo**, your terminal-optimized academic liaison. \n\nI specialize in algorithmic derivation, conceptual synthesis, and scientific inquiry. How shall we expand your knowledge base today?" }
+    ]);
+    const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [workspaceMode, setWorkspaceMode] = useState<'chat' | 'step-by-step' | 'explanation'>('chat');
+    const [subject, setSubject] = useState('General');
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const handleSend = async (quickPrompt?: string) => {
+        const userText = quickPrompt || input.trim();
+        if (!userText || isLoading) return;
+        
+        if (!quickPrompt) setInput('');
+        setMessages(prev => [...prev, { role: 'user', text: userText }]);
+        setIsLoading(true);
+
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error("Gemini API key is not configured.");
+            
+            const ai = new GoogleGenAI({ apiKey });
+            
+            let systemPrompt = `You are Nolo, a high-level academic tutor and research assistant. 
+            Current Subject Focus: ${subject}. 
+            Mode: ${workspaceMode}.
+            Guidelines:
+            1. Use formal but encouraging academic tone.
+            2. Break down complex derivations step-by-step.
+            3. Use LaTeX-style formatting for all math formulas (surround with $ or $$ for display).
+            4. At the end of your response, PROVIDE 3 "Suggested Follow-up" questions or directions as a bulleted list at the very end of the markdown, starting with the phrase "GUIDED PATHS:".`;
+            
+            if (workspaceMode === 'step-by-step') {
+                systemPrompt += " FOCUS: Be extremely detail-oriented. Index every logical transition as a [DERIVATION STEP].";
+            } else if (workspaceMode === 'explanation') {
+                systemPrompt += " FOCUS: Prioritize first-principles thinking and visual analogies.";
+            }
+
+            const historyParts = messages.map(m => ({
+                role: m.role,
+                parts: [{ text: m.text }]
+            }));
+
+            const response = await ai.models.generateContent({
+                model: "gemini-3.1-pro-preview",
+                contents: [...historyParts, { role: 'user', parts: [{ text: userText }] }],
+                config: {
+                    systemInstruction: systemPrompt,
+                }
+            });
+            
+            setMessages(prev => [...prev, { role: 'model', text: response.text || 'No response generated.' }]);
+        } catch (error: any) {
+            setMessages(prev => [...prev, { role: 'model', text: `CRITICAL ERROR: ${error.message}` }]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const copyChat = () => {
+        const text = messages.map(m => `**${m.role === 'user' ? 'Scholar' : 'Nolo AI'}**: ${m.text}`).join('\n\n');
+        navigator.clipboard.writeText(text);
+    };
+
+    const downloadChat = () => {
+        const text = messages.map(m => `**${m.role === 'user' ? 'Scholar' : 'Nolo AI'}**: ${m.text}`).join('\n\n');
+        const blob = new Blob([text], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nolo-derivation-log-${new Date().toISOString().slice(0,10)}.md`;
+        a.click();
+    };
+
+    const quickActions = [
+        { label: 'Synthesize Concept', icon: BookOpen, prompt: 'Synthesize the core mechanics of ' },
+        { label: 'Algorithmic Solve', icon: BrainCircuit, prompt: 'Apply first principles to solve: ' },
+        { label: 'Identify Fallacies', icon: Search, prompt: 'Analyze this logic for potential heuristic errors: ' },
+        { label: 'Simulate Exam', icon: CheckSquare, prompt: 'Generate 3 high-difficulty evaluation problems for ' },
+    ];
+
+    const subjects = ['General', 'Theoretical Physics', 'Applied Mathematics', 'Organic Chemistry', 'Computer Science', 'Philosophy'];
+
+    return (
+        <div className="flex flex-col lg:flex-row gap-6 h-[750px] animate-fade-in">
+            {/* Sidebar Controls */}
+            <div className="lg:w-64 flex flex-col gap-6">
+                <div className="bg-brand-surface/40 p-5 rounded-3xl border border-brand-border/50 space-y-6 backdrop-blur-md">
+                    <div className="space-y-3">
+                        <h4 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] pl-1">Knowledge focus</h4>
+                        <div className="grid grid-cols-1 gap-1.5">
+                            {subjects.map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => setSubject(s)}
+                                    className={`px-4 py-2.5 rounded-xl text-[10px] font-bold text-left transition-all border ${subject === s ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' : 'bg-brand-bg/30 border-brand-border/30 text-brand-text-secondary hover:text-brand-text hover:bg-brand-bg/50'}`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <h4 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] pl-1">Logic Pattern</h4>
+                        <div className="grid grid-cols-1 gap-1.5">
+                            {(['chat', 'step-by-step', 'explanation'] as const).map(mode => (
+                                <button
+                                    key={mode}
+                                    onClick={() => setWorkspaceMode(mode)}
+                                    className={`p-3 rounded-xl text-[10px] font-bold transition-all border uppercase tracking-widest ${workspaceMode === mode ? 'bg-brand-text text-brand-bg border-brand-text shadow-xl' : 'bg-brand-surface border-brand-border text-brand-text-secondary hover:border-brand-primary/50'}`}
+                                >
+                                    {mode}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-brand-surface/20 p-5 rounded-3xl border border-brand-border/30 mt-auto space-y-4">
+                    <h4 className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest pl-1">Active Presets</h4>
+                    <div className="grid grid-cols-1 gap-2">
+                        {quickActions.map(action => (
+                            <button
+                                key={action.label}
+                                onClick={() => setInput(action.prompt)}
+                                className="w-full p-3 text-[9px] bg-brand-surface/40 border border-brand-border/50 rounded-xl text-left hover:bg-brand-primary hover:text-white transition-all flex items-center gap-3 group"
+                            >
+                                <div className="w-6 h-6 rounded-lg bg-brand-bg flex items-center justify-center text-brand-primary group-hover:bg-white/20 group-hover:text-white transition-colors">
+                                    <action.icon size={12} />
+                                </div>
+                                <span className="font-bold uppercase tracking-wider">{action.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Workspace */}
+            <div className="flex-1 bg-brand-surface/40 rounded-[2.5rem] border border-brand-border flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl group/chat relative">
+                <div className="p-6 border-b border-brand-border bg-brand-surface/80 flex items-center justify-between z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary flex items-center justify-center text-brand-bg shadow-xl shadow-brand-primary/20 relative">
+                            <BrainCircuit size={24} />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-brand-bg rounded-full animate-pulse" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-black text-brand-text text-sm uppercase tracking-widest">Nolo Module</h3>
+                                <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">Active</div>
+                            </div>
+                            <p className="text-[10px] text-brand-text-secondary font-mono tracking-wider">SECURE_CHANNEL // SYNCED: {subject.toUpperCase()}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={copyChat} className="p-2.5 text-brand-text-secondary hover:bg-brand-surface hover:text-brand-text rounded-xl transition-all" title="Copy Chat">
+                            <Copy size={18} />
+                        </button>
+                        <button onClick={downloadChat} className="p-2.5 text-brand-text-secondary hover:bg-brand-surface hover:text-brand-text rounded-xl transition-all" title="Download Session">
+                            <Download size={18} />
+                        </button>
+                        <div className="w-px h-6 bg-brand-border mx-1" />
+                        <button onClick={() => setMessages([messages[0]])} className="p-2.5 text-red-400 hover:bg-red-400/10 rounded-xl transition-all" title="Reset Session">
+                            <RotateCcw size={18} />
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-8 space-y-10 scroll-smooth no-scrollbar">
+                    {messages.map((msg, idx) => (
+                        <motion.div 
+                            key={idx}
+                            initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div className={`max-w-[85%] relative`}>
+                                {msg.role === 'model' && (
+                                    <div className="absolute -top-4 left-0 text-[8px] font-black text-brand-primary uppercase tracking-[0.2em]">Nolo AI Response</div>
+                                )}
+                                <div className={`p-6 rounded-[2rem] shadow-xl ${msg.role === 'user' ? 'bg-brand-text text-brand-bg rounded-tr-none' : 'bg-brand-bg/60 border border-brand-border text-brand-text rounded-tl-none backdrop-blur-sm'}`}>
+                                    {msg.role === 'user' ? (
+                                        <div className="whitespace-pre-wrap font-bold text-sm tracking-wide leading-relaxed">{msg.text}</div>
+                                    ) : (
+                                        <div className="markdown-body prose prose-invert prose-brand max-w-none text-sm leading-relaxed">
+                                            <ReactMarkdown>{msg.text.split('GUIDED PATHS:')[0]}</ReactMarkdown>
+                                            
+                                            {msg.text.includes('GUIDED PATHS:') && (
+                                                <div className="mt-8 pt-6 border-t border-brand-border/30 space-y-4">
+                                                    <div className="flex items-center gap-2 text-brand-primary">
+                                                        <Zap size={14} className="fill-current" />
+                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Guided Derivations</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {msg.text.split('GUIDED PATHS:')[1].split('\n').filter(l => l.trim().startsWith('*') || l.trim().startsWith('-')).map((line, lIdx) => {
+                                                            const text = line.replace(/^\s*[*-]\s*/, '').trim();
+                                                            return (
+                                                                <button
+                                                                    key={lIdx}
+                                                                    onClick={() => handleSend(text)}
+                                                                    className="px-4 py-2 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-primary/20 rounded-xl text-[10px] font-bold transition-all shadow-sm"
+                                                                >
+                                                                    {text}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                {msg.role === 'user' && (
+                                    <div className="absolute -top-4 right-0 text-[8px] font-black text-brand-text-secondary uppercase tracking-[0.2em]">Researcher Input</div>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))}
+                    {isLoading && (
+                        <div className="flex justify-start">
+                             <div className="bg-brand-bg/40 border border-brand-border p-6 rounded-[2rem] rounded-tl-none flex items-center gap-4 backdrop-blur-md">
+                                <div className="flex gap-1.5">
+                                    <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" />
+                                    <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                                    <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                                </div>
+                                <span className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em]">Decoding Quantum State...</span>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+                
+                <div className="p-8 bg-brand-bg/80 border-t border-brand-border backdrop-blur-xl relative z-10">
+                    <div className="flex gap-4 items-end">
+                        <div className="flex-1 relative">
+                            <textarea 
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                    }
+                                }}
+                                placeholder="Transmit data or inquiry for Nolo..."
+                                className="w-full bg-brand-surface/40 border border-brand-border rounded-2xl px-6 py-4 text-sm outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary min-h-[60px] max-h-[200px] resize-none transition-all font-medium placeholder:text-brand-text-secondary/30"
+                            />
+                            <div className="absolute right-4 bottom-4 flex items-center gap-3">
+                                <div className="flex items-center gap-2 px-2 py-1 bg-brand-bg/50 rounded-md border border-brand-border">
+                                    <span className="text-[8px] text-brand-text-secondary font-black uppercase tracking-tighter">Enter to send</span>
+                                </div>
+                                <div className="flex items-center gap-2 px-2 py-1 bg-brand-bg/50 rounded-md border border-brand-border">
+                                    <span className="text-[8px] text-brand-text-secondary font-black uppercase tracking-tighter">Shift+Enter new line</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => handleSend()}
+                            disabled={isLoading || !input.trim()}
+                            className="bg-brand-primary hover:bg-brand-secondary disabled:opacity-50 disabled:grayscale text-brand-bg w-16 h-16 rounded-2xl transition-all shadow-2xl shadow-brand-primary/30 flex items-center justify-center group/send active:scale-95"
+                        >
+                            <Send size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SCALES = {
+    length: { m: 1, km: 0.001, cm: 100, mm: 1000, mile: 0.000621371, yard: 1.09361, feet: 3.28084, inch: 39.3701, nm: 1e9, angstrom: 1e10, 'light-year': 1.057e-16 } as Record<string, number>,
+    mass: { kg: 1, g: 1000, mg: 1000000, lb: 2.20462, oz: 35.274, 'atomic-mass-unit': 6.022e+26, ton: 0.00110231 } as Record<string, number>,
+    energy: { joule: 1, kilojoule: 0.001, calorie: 0.239006, electronvolt: 6.242e+18, 'watt-hour': 0.000277778, btu: 0.000947817 } as Record<string, number>,
+    pressure: { pascal: 1, bar: 1e-5, atm: 9.8692e-6, torr: 0.00750062, psi: 0.000145038 } as Record<string, number>,
+    temperature: { celsius: 'C', fahrenheit: 'F', kelvin: 'K' } as Record<string, any>
+};
+
+// --- 11. Scientific Unit Converter ---
+const ScientificUnitConverter = () => {
+    const [value, setValue] = useState('1');
+    const [category, setCategory] = useState<keyof typeof SCALES>('length');
+    const [from, setFrom] = useState('m');
+    const [to, setTo] = useState('km');
+
+    const currentUnits = Object.keys(SCALES[category]);
+
+    const result = useMemo(() => {
+        const val = parseFloat(value);
+        if (isNaN(val)) return '0';
+        
+        if (category === 'temperature') {
+            let base = val;
+            if (from === 'fahrenheit') base = (val - 32) * 5/9;
+            if (from === 'kelvin') base = val - 273.15;
+            
+            if (to === 'fahrenheit') return (base * 9/5 + 32).toFixed(4);
+            if (to === 'kelvin') return (base + 273.15).toFixed(4);
+            return base.toFixed(4);
+        }
+
+        const scales = SCALES[category] as Record<string, number>;
+        const inBase = val / scales[from];
+        return (inBase * scales[to]).toExponential(4).replace(/e\+0/g, 'e').replace(/e-0/g, 'e-');
+    }, [value, category, from, to]);
+
+    return (
+        <div className="bg-brand-surface/40 p-12 rounded-[3.5rem] border border-brand-border/50 max-w-5xl mx-auto backdrop-blur-md shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 left-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                <RotateCcw size={180} />
+            </div>
+            <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-12">
+                    <div className="w-14 h-14 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                        <RotateCcw size={28} />
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-black text-brand-text uppercase tracking-widest">Dimension Phase Swapper</h3>
+                        <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black">Multi-Scale Physical Unit Protocol // Alpha-7</p>
+                    </div>
+                </div>
+
+                <div className="flex gap-2 p-2 bg-brand-bg/50 border border-brand-border/30 rounded-[2rem] mb-12 overflow-x-auto no-scrollbar shadow-inner backdrop-blur-sm">
+                    {Object.keys(SCALES).map(cat => (
+                        <button 
+                            key={cat}
+                            onClick={() => {
+                                setCategory(cat as any);
+                                const units = Object.keys(SCALES[cat as keyof typeof SCALES]);
+                                setFrom(units[0]);
+                                setTo(units[1] || units[0]);
+                            }}
+                            className={`px-8 py-3 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest transition-all ${category === cat ? 'bg-brand-primary text-brand-bg shadow-2xl scale-105' : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/40'}`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                    <div className="space-y-8 bg-brand-bg/30 p-8 rounded-[2.5rem] border border-brand-border/20 shadow-inner">
+                        <Input label="Scalar Magnitude // Input" id="conv_val" type="number" value={value} onChange={e => setValue(e.target.value)} placeholder="0.00" className="bg-brand-surface/60" />
+                        <div className="space-y-1">
+                            <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Source Domain Matrix</label>
+                            <div className="relative group/sel">
+                                <select value={from} onChange={e => setFrom(e.target.value)} className="w-full bg-brand-surface/60 border border-brand-border/50 rounded-2xl p-5 text-sm font-bold text-brand-text outline-none focus:ring-2 focus:ring-brand-primary transition-all appearance-none cursor-pointer group-hover/sel:border-brand-primary/50">
+                                    {currentUnits.map(u => <option key={u} value={u} className="bg-brand-bg text-brand-text">{u.toUpperCase()}</option>)}
+                                </select>
+                                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-brand-text-secondary">
+                                    <ChevronDown size={18} className="opacity-30 group-hover/sel:opacity-100 transition-opacity" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <div className="p-12 bg-brand-bg/60 rounded-[3rem] border-2 border-brand-border flex flex-col items-center justify-center min-h-[220px] shadow-2xl relative group/res overflow-hidden">
+                            <div className="absolute top-4 left-6 text-[9px] font-black text-brand-primary uppercase tracking-[0.5em] opacity-40">Resulting Vector magnitude</div>
+                            <div className="absolute -right-10 -top-10 opacity-5 group-hover/res:opacity-10 transition-opacity">
+                                <Activity size={160} />
+                            </div>
+                            <div className="text-6xl font-black font-mono text-brand-text truncate w-full text-center tracking-tightest group-hover/res:scale-110 transition-transform duration-500">
+                                {result}
+                            </div>
+                            <div className="absolute bottom-4 text-[8px] font-mono text-brand-text-secondary/30 uppercase tracking-[0.4em]">// Scientific Notation Encoded</div>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Target Domain Matrix</label>
+                            <div className="relative group/sel2">
+                                <select value={to} onChange={e => setTo(e.target.value)} className="w-full bg-brand-bg/50 border border-brand-border rounded-2xl p-5 text-sm font-bold text-brand-text outline-none focus:ring-2 focus:ring-brand-primary transition-all appearance-none cursor-pointer group-hover/sel2:border-brand-primary/50">
+                                    {currentUnits.map(u => <option key={u} value={u} className="bg-brand-bg text-brand-text">{u.toUpperCase()}</option>)}
+                                </select>
+                                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-brand-text-secondary">
+                                    <ChevronDown size={18} className="opacity-30 group-hover/sel2:opacity-100 transition-opacity" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 12. Periodic Table ---
+const PeriodicTable = () => {
+    const elements = [
+        { s: 'H', n: 'Hydrogen', a: 1.008, c: 'bg-emerald-500', cat: 'Reactive Nonmetal', state: 'Gas' },
+        { s: 'He', n: 'Helium', a: 4.002, c: 'bg-purple-500', cat: 'Noble Gas', state: 'Gas' },
+        { s: 'Li', n: 'Lithium', a: 6.941, c: 'bg-red-500', cat: 'Alkali Metal', state: 'Solid' },
+        { s: 'Be', n: 'Beryllium', a: 9.012, c: 'bg-orange-500', cat: 'Alkaline Earth Metal', state: 'Solid' },
+        { s: 'B', n: 'Boron', a: 10.81, c: 'bg-yellow-500', cat: 'Metalloid', state: 'Solid' },
+        { s: 'C', n: 'Carbon', a: 12.01, c: 'bg-green-500', cat: 'Reactive Nonmetal', state: 'Solid' },
+        { s: 'N', n: 'Nitrogen', a: 14.01, c: 'bg-blue-500', cat: 'Reactive Nonmetal', state: 'Gas' },
+        { s: 'O', n: 'Oxygen', a: 16.00, c: 'bg-indigo-500', cat: 'Reactive Nonmetal', state: 'Gas' },
+        { s: 'F', n: 'Fluorine', a: 19.00, c: 'bg-pink-500', cat: 'Reactive Nonmetal', state: 'Gas' },
+        { s: 'Ne', n: 'Neon', a: 20.18, c: 'bg-purple-500', cat: 'Noble Gas', state: 'Gas' },
+        { s: 'Na', n: 'Sodium', a: 22.98, c: 'bg-red-500', cat: 'Alkali Metal', state: 'Solid' },
+        { s: 'Mg', n: 'Magnesium', a: 24.31, c: 'bg-orange-500', cat: 'Alkaline Earth Metal', state: 'Solid' },
+        { s: 'Al', n: 'Aluminum', a: 26.98, c: 'bg-gray-500', cat: 'Post-Transition Metal', state: 'Solid' },
+        { s: 'Si', n: 'Silicon', a: 28.08, c: 'bg-yellow-500', cat: 'Metalloid', state: 'Solid' },
+        { s: 'P', n: 'Phosphorus', a: 30.97, c: 'bg-green-500', cat: 'Reactive Nonmetal', state: 'Solid' },
+    ];
+
+    const [selected, setSelected] = useState(elements[0]);
+
+    return (
+        <div className="bg-brand-surface/40 p-10 rounded-[3.5rem] border border-brand-border/50 max-w-6xl mx-auto backdrop-blur-md shadow-2xl relative overflow-hidden group/table">
+            <div className="absolute -top-20 -left-20 p-40 opacity-5 group-hover/table:opacity-10 transition-opacity">
+                <Atom size={300} />
+            </div>
+            
+            <div className="relative z-10 flex flex-col xl:flex-row gap-12">
+                <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="w-14 h-14 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                            <Atom size={28} />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-black text-brand-text uppercase tracking-widest">Elemental Matrix Alpha</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black">Standard Atomic Architecture // Periodic Protocol</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-5 sm:grid-cols-5 md:grid-cols-8 gap-4">
+                        {elements.map(el => (
+                            <motion.button 
+                                whileHover={{ scale: 1.05, y: -4 }}
+                                whileTap={{ scale: 0.95 }}
+                                key={el.s}
+                                onClick={() => setSelected(el)}
+                                className={`aspect-square rounded-2xl border-2 transition-all flex flex-col items-center justify-center relative overflow-hidden group/el ${selected.s === el.s ? 'border-brand-primary bg-brand-primary/10 shadow-[0_0_25px_rgba(var(--brand-primary-rgb),0.3)]' : 'border-brand-border/40 bg-brand-bg/40 hover:border-brand-primary/40'}`}
+                            >
+                                <div className={`absolute top-0 left-0 w-full h-1.5 ${el.c} opacity-60 group-hover/el:opacity-100 transition-opacity`} />
+                                <span className="text-xl font-black text-brand-text tracking-tighter">{el.s}</span>
+                                <span className="text-[8px] font-black text-brand-text-secondary uppercase tracking-widest font-mono">{el.a}</span>
+                            </motion.button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="w-full xl:w-96 flex flex-col gap-6">
+                    <div className="bg-brand-bg/60 p-10 rounded-[3rem] border border-brand-border shadow-2xl flex flex-col items-center justify-center text-center relative overflow-hidden group/detail">
+                        <div className={`absolute top-0 inset-x-0 h-3 ${selected.c} shadow-[0_4px_20px_rgba(0,0,0,0.5)]`} />
+                        <div className="absolute -right-10 -bottom-10 opacity-5 group-hover/detail:opacity-10 transition-opacity">
+                            <Atom size={200} />
+                        </div>
+                        
+                        <div className="relative z-10 w-full">
+                            <div className="text-8xl font-black text-brand-text mb-2 tracking-tightest group-hover/detail:scale-110 transition-transform duration-700">{selected.s}</div>
+                            <div className="text-2xl font-black text-brand-primary uppercase tracking-[0.2em] mb-8">{selected.n}</div>
+                            
+                            <div className="space-y-5">
+                                {[
+                                    { label: 'Atomic Mass', val: `${selected.a} u`, icon: Activity },
+                                    { label: 'Matter State', val: selected.state, icon: FlaskConical },
+                                    { label: 'Classification', val: selected.cat, icon: ShieldCheck }
+                                ].map((row, i) => (
+                                    <div key={i} className="flex flex-col items-center py-4 border-b border-brand-border/20 group/row">
+                                        <span className="text-[9px] uppercase font-black text-brand-text-secondary tracking-[0.4em] mb-1 group-hover/row:text-brand-primary transition-colors">{row.label}</span>
+                                        <span className="text-sm font-black text-brand-text font-mono tracking-wider">{row.val}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <motion.button 
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="mt-10 w-full py-4 bg-brand-surface border border-brand-border/50 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] text-brand-text-secondary hover:text-brand-primary hover:border-brand-primary/30 transition-all flex items-center justify-center gap-3 shadow-xl"
+                            >
+                                Spectral Data Feed
+                                <Zap size={14} />
+                            </motion.button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- 13. Equation Solver ---
+const EquationSolver = () => {
+    const [equation, setEquation] = useState('2x + 5 = 15');
+    const [result, setResult] = useState<string | null>(null);
+    const [steps, setSteps] = useState<string[]>([]);
+    const [isSolving, setIsSolving] = useState(false);
+
+    const solveEquation = async () => {
+        if (!equation.trim()) return;
+        setIsSolving(true);
+        try {
+            const ai = new GoogleGenAI({ apiKey: getApiKey() });
+            const resp = await ai.models.generateContent({
+                model: "gemini-3.1-pro-preview",
+                contents: `Solve this math equation: "${equation}". Provide the final answer and a list of 3-5 logical steps. Return as JSON: {"answer": "x = ...", "steps": ["step 1", "step 2", ...]}`,
+                config: { responseMimeType: "application/json" }
+            });
+            let text = resp.text || '{}';
+            // Handle common markdown wrapping if it happens
+            text = text.replace(/```json\n?/, '').replace(/\n?```/, '');
+            const data = JSON.parse(text);
+            setResult(data.answer);
+            setSteps(data.steps || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSolving(false);
+        }
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto bg-brand-surface/40 p-12 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group/solver">
+            <div className="absolute top-0 right-0 p-16 opacity-5 group-hover/solver:opacity-10 transition-opacity">
+                <Divide size={240} className="-rotate-12" />
+            </div>
+
+            <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-12">
+                    <div className="w-14 h-14 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-xl shadow-brand-primary/20">
+                        <Divide size={28} />
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-black text-brand-text uppercase tracking-widest">Variable Phase Isolator</h3>
+                        <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black">AI-Driven Algebraic Resolution Matrix</p>
+                    </div>
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-6 mb-16">
+                    <div className="flex-1 relative group/input">
+                        <input 
+                            type="text" 
+                            value={equation} 
+                            onChange={e => setEquation(e.target.value)} 
+                            placeholder="e.g. sin(x) = 0.5 or 3x² - 4 = 11"
+                            className="w-full bg-brand-bg/50 border border-brand-border rounded-[2rem] p-6 font-mono text-2xl text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/10 transition-all placeholder:opacity-20 shadow-inner group-hover/input:border-brand-primary/30"
+                        />
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none opacity-20 uppercase font-mono text-[9px] tracking-widest text-brand-primary font-black">
+                            // Logic Stream 0xAlpha
+                        </div>
+                    </div>
+                    <motion.button 
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={solveEquation}
+                        disabled={isSolving}
+                        className="px-12 bg-brand-primary text-brand-bg font-black uppercase tracking-[0.3em] text-[11px] rounded-[2rem] hover:bg-brand-secondary transition-all shadow-2xl shadow-brand-primary/30 disabled:opacity-50 flex items-center justify-center gap-3 min-h-[72px]"
+                    >
+                        {isSolving ? <Loader2 className="animate-spin" size={20} /> : <Zap size={20} />}
+                        {isSolving ? "Analyzing Topology..." : "Initiate Resolution"}
+                    </motion.button>
+                </div>
+
+                <AnimatePresence mode="wait">
+                    {result && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -30 }}
+                            className="grid grid-cols-1 xl:grid-cols-3 gap-12"
+                        >
+                            <div className="xl:col-span-2 space-y-8">
+                                <div className="flex items-center gap-3">
+                                    <Activity size={14} className="text-brand-primary" />
+                                    <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.6em]">Stepwise Phase Derivation</div>
+                                </div>
+                                <div className="space-y-4">
+                                    {steps.map((step, i) => (
+                                        <motion.div 
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            key={i} 
+                                            className="flex gap-6 p-6 bg-brand-bg/40 border border-brand-border/20 rounded-[2rem] group/step hover:border-brand-primary/30 transition-all backdrop-blur-sm"
+                                        >
+                                            <div className="w-8 h-8 rounded-xl bg-brand-surface border border-brand-border text-brand-primary flex items-center justify-center text-[10px] font-black shrink-0 shadow-lg group-hover/step:bg-brand-primary group-hover/step:text-brand-bg transition-all font-mono">{i+1}</div>
+                                            <p className="text-sm text-brand-text-secondary italic leading-relaxed py-1">{step}</p>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="lg:mt-0 xl:mt-8">
+                                <div className="bg-brand-bg p-12 rounded-[3.5rem] border-2 border-brand-primary flex flex-col items-center justify-center text-center shadow-[0_0_50px_rgba(var(--brand-primary-rgb),0.2)] relative overflow-hidden h-fit group/node">
+                                    <div className="absolute top-0 inset-x-0 h-1.5 bg-brand-primary animate-pulse" />
+                                    <div className="absolute -right-10 -bottom-10 opacity-5 group-hover/node:opacity-10 transition-opacity">
+                                        <ShieldCheck size={200} />
+                                    </div>
+                                    <div className="text-[10px] font-black text-brand-primary uppercase tracking-[0.5em] mb-6">Resolution convergence</div>
+                                    <div className="text-4xl font-black text-brand-text font-mono truncate w-full group-hover/node:scale-110 transition-transform duration-700 tracking-tightest">{result}</div>
+                                    <div className="mt-8 pt-8 border-t border-brand-border/20 w-full">
+                                        <p className="text-[8px] font-mono text-brand-text-secondary/40 uppercase tracking-[0.3em]">
+                                            // Verified Node Output 0x7F
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+};
+
+// --- Main Student Tools Component ---
+const StudentTools: React.FC = () => {
+    const { user, userData, signInWithGoogle } = useAuth();
+    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit';
+    const [activeTool, setActiveTool] = useState<ToolID>('gpa');
+
+    const categories = [
+        { id: 'productivity', label: 'Productivity', icon: Activity, types: ['pomodoro', 'assignments', 'notes', 'flashcards'] },
+        { id: 'math', label: 'Advanced Math', icon: Zap, types: ['equation', 'geometry', 'gpa'] },
+        { id: 'science', label: 'Science Core', icon: Atom, types: ['science', 'physics', 'elements', 'unit'] },
+        { id: 'research', label: 'Research', icon: BookOpen, types: ['tutor', 'formulas', 'citations'] }
+    ];
+
+    const currentCategoryId = categories.find(c => c.types.includes(activeTool))?.id || 'productivity';
+    const [activeCategory, setActiveCategory] = useState(currentCategoryId);
+
+    const renderTool = () => {
+        switch (activeTool) {
+            case 'gpa': return <GPACalculator />;
+            case 'pomodoro': return <PomodoroTimer />;
+            case 'geometry': return <GeometrySolver />;
+            case 'science': return <ScienceTools />;
+            case 'physics': return <PhysicsTools />;
+            case 'formulas': return <FormulaReference />;
+            case 'notes': return <NotesTool />;
+            case 'citations': return <CitationGenerator />;
+            case 'flashcards': return <Flashcards />;
+            case 'assignments': return <AssignmentTracker />;
+            case 'elements': return <PeriodicTable />;
+            case 'tutor': return <AITutor />;
+            case 'equation': return <EquationSolver />;
+            case 'unit': return <ScientificUnitConverter />;
+            default: return null;
+        }
+    };
+
+    return (
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3 text-brand-primary mb-2">
+                        <GraduationCap className="animate-pulse" size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Academic Engine v4.1</span>
+                    </div>
+                    <h2 className="text-5xl md:text-7xl font-black text-brand-text tracking-tightest leading-none">Research <span className="text-brand-primary">Terminal</span></h2>
+                    <p className="text-brand-text-secondary text-lg font-light max-w-xl">
+                        Integrated computational workspace for academic exploration and scientific derivation.
+                        {userData?.school ? ` Authorized for ${userData.school}.` : ''}
+                    </p>
+                </div>
+                {!user && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        onClick={signInWithGoogle}
+                        className="flex items-center gap-4 p-4 pr-6 bg-brand-surface/40 hover:bg-brand-surface/60 border border-brand-border/50 rounded-[2rem] group cursor-pointer transition-all backdrop-blur-md"
+                    >
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary flex items-center justify-center text-brand-bg shadow-lg shadow-brand-primary/20">
+                            <ShieldCheck size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest leading-none mb-1">Encrypted Session</p>
+                            <p className="text-sm text-brand-text-secondary group-hover:text-brand-text transition-colors">Sign in to sync research.</p>
+                        </div>
+                    </motion.div>
+                )}
+            </div>
+
+            {/* Navigation Section */}
+            <div className="space-y-8 mb-12">
+                <div className="flex flex-wrap gap-3 overflow-x-auto no-scrollbar pb-2">
+                    {categories.map(cat => (
+                        <CategoryTab 
+                            key={cat.id}
+                            label={cat.label}
+                            icon={cat.icon}
+                            isActive={activeCategory === cat.id}
+                            onClick={() => {
+                                setActiveCategory(cat.id);
+                                if (!cat.types.includes(activeTool)) {
+                                    setActiveTool(cat.types[0] as ToolID);
+                                }
+                            }}
+                        />
+                    ))}
+                </div>
+
+                <motion.div 
+                    initial={false}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-wrap gap-2 p-1.5 bg-brand-surface/20 border border-brand-border/30 rounded-2xl"
+                >
+                    {categories.find(c => c.id === activeCategory)?.types.map(type => (
+                        <ToolButton 
+                            key={type}
+                            label={type.charAt(0).toUpperCase() + type.slice(1).replace('gpa', 'GPA').replace('elements', 'Periodic Table').replace('tutor', 'AI Tutor').replace('equation', 'Equation Solver')}
+                            isActive={activeTool === type}
+                            onClick={() => setActiveTool(type as ToolID)}
+                        />
+                    ))}
+                </motion.div>
+            </div>
+
+            <AnimatePresence mode="wait">
+                <motion.div 
+                    key={activeTool} 
+                    initial={{ opacity: 0, scale: 0.98, y: 30 }} 
+                    animate={{ opacity: 1, scale: 1, y: 0 }} 
+                    exit={{ opacity: 0, scale: 0.98, y: -20 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    className="relative group/tool"
+                >
+                    <div className="absolute -inset-4 bg-brand-primary/5 rounded-[3rem] blur-3xl opacity-0 group-hover/tool:opacity-100 transition-opacity duration-1000" />
+                    <div className="relative">
+                        {renderTool()}
+                    </div>
+
+                    {!user && (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            className="mt-16 p-10 md:p-16 rounded-[4rem] bg-brand-surface/30 border border-brand-border/50 flex flex-col md:flex-row items-center justify-between gap-10 backdrop-blur-xl group/cta"
+                        >
+                            <div className="space-y-4 max-w-xl">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest">
+                                    <MousePointer2 size={12} /> Researcher License
+                                </div>
+                                <h4 className="font-black text-brand-text text-4xl leading-tight">Persistent Subject Repository</h4>
+                                <p className="text-brand-text-secondary text-lg font-light">Authenticated scholars save derivation logs, customized flashcard decks, and AI tutor conversation history across devices.</p>
+                            </div>
+                            <button 
+                                onClick={signInWithGoogle}
+                                className="w-full md:w-auto px-12 py-6 bg-brand-primary text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-primary/40"
+                            >
+                                Secure Workspace
+                            </button>
+                        </motion.div>
+                    )}
+                </motion.div>
+            </AnimatePresence>
+        </div>
+    );
+};
+
+export default StudentTools;

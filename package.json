@@ -11,7 +11,7 @@
     "build": "tsc && vite build",
     "vercel-build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint src"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.2",
@@ -35,8 +35,8 @@
   },
   "devDependencies": {
     "@types/plotly.js": "^3.0.10",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
     "@typescript-eslint/parser": "^8.58.0",
     "@vitejs/plugin-react": "^4.3.1",

@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #1a202c;
+  --color-surface: #2d3748;
+  --color-primary: #4299e1;
+  --color-secondary: #ed8936;
+  --color-accent: #48bb78;
+  --color-text: #e2e8f0;
+  --color-text-secondary: #a0aec0;
+  --color-border: #4a5568;
+}
+html.light {
+  --color-bg: #f7fafc;
+  --color-surface: #ffffff;
+  --color-primary: #3182ce;
+  --color-secondary: #dd6b20;
+  --color-accent: #38a169;
+  --color-text: #2d3748;
+  --color-text-secondary: #718096;
+  --color-border: #e2e8f0;
+}
+
+html.neon {
+  --color-bg: #050505;
+  --color-surface: #111111;
+  --color-primary: #00ffcc;
+  --color-secondary: #ff007f;
+  --color-accent: #bc13fe;
+  --color-text: #f0f0f0;
+  --color-text-secondary: #00ffa3;
+  --color-border: #333333;
+}
+
+html.royal {
+  --color-bg: #1a0b2e;
+  --color-surface: #2d1b4d;
+  --color-primary: #ffd700;
+  --color-secondary: #ff69b4;
+  --color-accent: #9b4dff;
+  --color-text: #f8f8f8;
+  --color-text-secondary: #c084fc;
+  --color-border: #4d2d7d;
+}
+
+html.terminal {
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-primary: #00ff00;
+  --color-secondary: #00cc00;
+  --color-accent: #33ff33;
+  --color-text: #00ff00;
+  --color-text-secondary: #008800;
+  --color-border: #004400;
+}
+
+html.cyberpunk {
+  --color-bg: #130019;
+  --color-surface: #2b003a;
+  --color-primary: #ff00ff;
+  --color-secondary: #00ffff;
+  --color-accent: #ffff00;
+  --color-text: #ffffff;
+  --color-text-secondary: #ff00ff;
+  --color-border: #5a0071;
+}
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin-slow 10s linear infinite;
+  }
+  .vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .mask-fade-edges {
+    mask-image: linear-gradient(to bottom, transparent, black 1rem, black calc(100% - 1rem), transparent);
+  }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+body {
+    @apply bg-brand-bg text-brand-text transition-colors duration-300;
+}
