@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, BrainCircuit, X, Bot, Sparkles, Command } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppTab } from '../types';
@@ -20,7 +20,23 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', text: string }[]>([]);
 
   // Speech Recognition Setup
-  const [recognition, setRecognition] = useState<any>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const handleVoiceCommand = (cmd: string) => {
+    if (cmd.includes('calculator') || cmd.includes('calc')) setActiveTab('calculator');
+    else if (cmd.includes('graph')) setActiveTab('graphing');
+    else if (cmd.includes('student') || cmd.includes('school')) setActiveTab('student');
+    else if (cmd.includes('history')) setActiveTab('history');
+    else if (cmd.includes('setting')) setActiveTab('settings');
+    else if (cmd.includes('financial') || cmd.includes('loan')) setActiveTab('financial');
+    else if (cmd.includes('about')) setActiveTab('about');
+    else if (cmd.includes('contact')) setActiveTab('contact');
+    
+    // Quick Solve intent
+    if (cmd.includes('solve') || cmd.includes('calculate')) {
+       askAi(cmd);
+    }
+  };
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -44,33 +60,17 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
       rec.onerror = () => setIsListening(false);
       rec.onend = () => setIsListening(false);
 
-      setRecognition(rec);
+      recognitionRef.current = rec;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleVoiceCommand = (cmd: string) => {
-    if (cmd.includes('calculator') || cmd.includes('calc')) setActiveTab('calculator');
-    else if (cmd.includes('graph')) setActiveTab('graphing');
-    else if (cmd.includes('student') || cmd.includes('school')) setActiveTab('student');
-    else if (cmd.includes('history')) setActiveTab('history');
-    else if (cmd.includes('setting')) setActiveTab('settings');
-    else if (cmd.includes('financial') || cmd.includes('loan')) setActiveTab('financial');
-    else if (cmd.includes('about')) setActiveTab('about');
-    else if (cmd.includes('contact')) setActiveTab('contact');
-    
-    // Quick Solve intent
-    if (cmd.includes('solve') || cmd.includes('calculate')) {
-       askAi(cmd);
-    }
-  };
-
   const toggleListening = () => {
     if (isListening) {
-      recognition?.stop();
+      recognitionRef.current?.stop();
     } else {
       setTranscript('');
-      recognition?.start();
+      recognitionRef.current?.start();
       setIsListening(true);
     }
   };

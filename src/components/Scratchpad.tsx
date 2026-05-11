@@ -18,7 +18,14 @@ interface Note {
 const Scratchpad: React.FC = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    try {
+      const saved = localStorage.getItem('quantum_notes');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
@@ -51,8 +58,6 @@ const Scratchpad: React.FC = () => {
 
   useEffect(() => {
     if (!user) {
-      const saved = localStorage.getItem('quantum_notes');
-      if (saved) setNotes(JSON.parse(saved));
       return;
     }
 
@@ -60,7 +65,12 @@ const Scratchpad: React.FC = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const notesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Note));
       setNotes(notesData.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)));
-      if (notesData.length > 0 && !activeNoteId) setActiveNoteId(notesData[0].id);
+      if (notesData.length > 0) {
+        setActiveNoteId(current => {
+           if (!current) return notesData[0].id;
+           return current;
+        });
+      }
     }, (error: any) => {
       handleFirestoreError(error, OperationType.GET, 'notes');
     });

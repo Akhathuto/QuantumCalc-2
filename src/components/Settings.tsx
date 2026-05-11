@@ -172,9 +172,12 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
 
     useEffect(() => {
         if (userData) {
-            setEditRole(userData.role || '');
-            setEditGrade(userData.grade || '');
-            setEditSchool(userData.school || '');
+            // Defer updates to avoid synchronous state update warning
+            setTimeout(() => {
+                setEditRole(userData.role || '');
+                setEditGrade(userData.grade || '');
+                setEditSchool(userData.school || '');
+            }, 0);
         }
     }, [userData]);
 

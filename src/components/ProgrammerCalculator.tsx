@@ -19,6 +19,74 @@ import { motion, AnimatePresence } from 'motion/react';
 type Base = 'bin' | 'oct' | 'dec' | 'hex';
 type WordSize = 8 | 16 | 32 | 64;
 
+interface KeypadProps {
+    inputBase: Base;
+    currentInputString: string;
+    handleInputChange: (base: Base, strValue: string) => void;
+    performBitwise: (op: 'AND' | 'OR' | 'XOR' | 'NOT' | 'LSH' | 'RSH' | 'NEG') => void;
+}
+
+const Keypad: React.FC<KeypadProps> = ({ inputBase, currentInputString, handleInputChange, performBitwise }) => {
+    const hexButtons = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const numButtons = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0'];
+    
+    const isButtonDisabled = (btn: string) => {
+        if (inputBase === 'bin') return !/^[01]$/.test(btn);
+        if (inputBase === 'oct') return !/^[0-7]$/.test(btn);
+        if (inputBase === 'dec') return !/^[0-9]$/.test(btn);
+        return false;
+    };
+
+    return (
+        <div className="grid grid-cols-4 gap-3">
+            <div className="col-span-4 grid grid-cols-6 gap-2 mb-2">
+                {hexButtons.map(b => (
+                    <button
+                        key={b}
+                        disabled={inputBase !== 'hex'}
+                        onClick={() => handleInputChange('hex', currentInputString + b)}
+                        className={`p-3 rounded-lg font-mono font-bold transition-all ${
+                            inputBase === 'hex' 
+                            ? 'bg-brand-surface hover:bg-brand-primary hover:text-brand-bg text-brand-primary border border-brand-border hover:border-brand-primary shadow-sm' 
+                            : 'bg-brand-bg/20 text-brand-text-secondary/10 border border-transparent cursor-not-allowed'
+                        }`}
+                    >
+                        {b}
+                    </button>
+                ))}
+            </div>
+            <div className="col-span-3 grid grid-cols-3 gap-3">
+                {numButtons.map(b => (
+                    <button
+                        key={b}
+                        disabled={isButtonDisabled(b)}
+                        onClick={() => handleInputChange(inputBase, currentInputString + b)}
+                        className={`p-5 rounded-2xl font-mono text-2xl font-bold transition-all ${
+                            isButtonDisabled(b)
+                            ? 'bg-brand-bg/20 text-brand-text-secondary/10 cursor-not-allowed border border-transparent'
+                            : 'bg-brand-surface border border-brand-border hover:border-brand-primary hover:text-brand-primary hover:shadow-lg active:scale-95 text-brand-text'
+                        } ${b === '0' ? 'col-span-2' : ''}`}
+                    >
+                        {b}
+                    </button>
+                ))}
+                <button 
+                    onClick={() => handleInputChange(inputBase, currentInputString.slice(0, -1))}
+                    className="p-5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
+                >
+                    <Delete size={24} />
+                </button>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+                <button onClick={() => performBitwise('LSH')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">LSH</button>
+                <button onClick={() => performBitwise('RSH')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">RSH</button>
+                <button onClick={() => performBitwise('NOT')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NOT</button>
+                <button onClick={() => performBitwise('NEG')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NEG</button>
+            </div>
+        </div>
+    );
+};
+
 const ProgrammerCalculator: React.FC = () => {
     const [value, setValue] = useState<bigint>(0n);
     const [floatValue, setFloatValue] = useState<number>(0);
@@ -200,66 +268,6 @@ const ProgrammerCalculator: React.FC = () => {
         );
     };
 
-    const Keypad = () => {
-        const hexButtons = ['A', 'B', 'C', 'D', 'E', 'F'];
-        const numButtons = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0'];
-        
-        const isButtonDisabled = (btn: string) => {
-            if (inputBase === 'bin') return !/^[01]$/.test(btn);
-            if (inputBase === 'oct') return !/^[0-7]$/.test(btn);
-            if (inputBase === 'dec') return !/^[0-9]$/.test(btn);
-            return false;
-        };
-
-        return (
-            <div className="grid grid-cols-4 gap-3">
-                <div className="col-span-4 grid grid-cols-6 gap-2 mb-2">
-                    {hexButtons.map(b => (
-                        <button
-                            key={b}
-                            disabled={inputBase !== 'hex'}
-                            onClick={() => handleInputChange('hex', currentInputString + b)}
-                            className={`p-3 rounded-lg font-mono font-bold transition-all ${
-                                inputBase === 'hex' 
-                                ? 'bg-brand-surface hover:bg-brand-primary hover:text-brand-bg text-brand-primary border border-brand-border hover:border-brand-primary shadow-sm' 
-                                : 'bg-brand-bg/20 text-brand-text-secondary/10 border border-transparent cursor-not-allowed'
-                            }`}
-                        >
-                            {b}
-                        </button>
-                    ))}
-                </div>
-                <div className="col-span-3 grid grid-cols-3 gap-3">
-                    {numButtons.map(b => (
-                        <button
-                            key={b}
-                            disabled={isButtonDisabled(b)}
-                            onClick={() => handleInputChange(inputBase, currentInputString + b)}
-                            className={`p-5 rounded-2xl font-mono text-2xl font-bold transition-all ${
-                                isButtonDisabled(b)
-                                ? 'bg-brand-bg/20 text-brand-text-secondary/10 cursor-not-allowed border border-transparent'
-                                : 'bg-brand-surface border border-brand-border hover:border-brand-primary hover:text-brand-primary hover:shadow-lg active:scale-95 text-brand-text'
-                            } ${b === '0' ? 'col-span-2' : ''}`}
-                        >
-                            {b}
-                        </button>
-                    ))}
-                    <button 
-                        onClick={() => handleInputChange(inputBase, currentInputString.slice(0, -1))}
-                        className="p-5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
-                    >
-                        <Delete size={24} />
-                    </button>
-                </div>
-                <div className="grid grid-cols-1 gap-3">
-                    <button onClick={() => performBitwise('LSH')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">LSH</button>
-                    <button onClick={() => performBitwise('RSH')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">RSH</button>
-                    <button onClick={() => performBitwise('NOT')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NOT</button>
-                    <button onClick={() => performBitwise('NEG')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NEG</button>
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -398,7 +406,12 @@ const ProgrammerCalculator: React.FC = () => {
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.3 }}
                                 >
-                                    <Keypad />
+                                    <Keypad 
+                                        inputBase={inputBase}
+                                        currentInputString={currentInputString}
+                                        handleInputChange={handleInputChange}
+                                        performBitwise={performBitwise}
+                                    />
                                 </motion.div>
                             )}
                             {activeView === 'bits' && (

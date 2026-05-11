@@ -212,17 +212,17 @@ const GPACalculator = () => {
     );
 };
 
+const POMODORO_MODES = {
+    work: { label: 'Focus Cycle', time: 25 * 60, color: 'text-brand-primary', shadow: 'shadow-brand-primary/30', icon: BrainCircuit },
+    shortBreak: { label: 'Brief Respite', time: 5 * 60, color: 'text-emerald-400', shadow: 'shadow-emerald-400/30', icon: Coffee },
+    longBreak: { label: 'Long Recovery', time: 15 * 60, color: 'text-blue-400', shadow: 'shadow-blue-400/30', icon: Moon }
+};
+
 // --- 2. Pomodoro Timer ---
 const PomodoroTimer = () => {
     const [mode, setMode] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
-
-    const modes = {
-        work: { label: 'Focus Cycle', time: 25 * 60, color: 'text-brand-primary', shadow: 'shadow-brand-primary/30', icon: BrainCircuit },
-        shortBreak: { label: 'Brief Respite', time: 5 * 60, color: 'text-emerald-400', shadow: 'shadow-emerald-400/30', icon: Coffee },
-        longBreak: { label: 'Long Recovery', time: 15 * 60, color: 'text-blue-400', shadow: 'shadow-blue-400/30', icon: Moon }
-    };
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -242,14 +242,14 @@ const PomodoroTimer = () => {
 
     const switchMode = (newMode: 'work' | 'shortBreak' | 'longBreak') => {
         setMode(newMode);
-        setTimeLeft(modes[newMode].time);
+        setTimeLeft(POMODORO_MODES[newMode].time);
         setIsActive(false);
     };
 
     const toggleTimer = () => setIsActive(!isActive);
     const resetTimer = () => {
         setIsActive(false);
-        setTimeLeft(modes[mode].time);
+        setTimeLeft(POMODORO_MODES[mode].time);
     };
 
     const formatTime = (seconds: number) => {
@@ -258,8 +258,8 @@ const PomodoroTimer = () => {
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-    const progress = ((modes[mode].time - timeLeft) / modes[mode].time) * 100;
-    const CurrentIcon = modes[mode].icon;
+    const progress = ((POMODORO_MODES[mode].time - timeLeft) / POMODORO_MODES[mode].time) * 100;
+    const CurrentIcon = POMODORO_MODES[mode].icon;
 
     return (
         <div className="bg-brand-surface/40 p-12 rounded-[4rem] border border-brand-border/50 max-w-2xl mx-auto text-center backdrop-blur-md shadow-2xl relative overflow-hidden group">
@@ -268,31 +268,31 @@ const PomodoroTimer = () => {
                 <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
-                    className={`h-full ${modes[mode].color.replace('text-', 'bg-')} transition-all shadow-[0_0_20px_rgba(var(--brand-primary),0.5)]`}
+                    className={`h-full ${POMODORO_MODES[mode].color.replace('text-', 'bg-')} transition-all shadow-[0_0_20px_rgba(var(--brand-primary),0.5)]`}
                 />
             </div>
 
             <div className="relative z-10">
                 <div className="flex justify-center gap-3 mb-16 bg-brand-bg/50 p-2 rounded-[2rem] w-fit mx-auto border border-brand-border/30 backdrop-blur-sm shadow-inner">
-                    {(Object.keys(modes) as Array<keyof typeof modes>).map(m => (
+                    {(Object.keys(POMODORO_MODES) as Array<keyof typeof POMODORO_MODES>).map(m => (
                         <button
                             key={m}
                             onClick={() => switchMode(m)}
                             className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === m ? 'bg-brand-text text-brand-bg shadow-2xl scale-105' : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/40'}`}
                         >
-                            {modes[m].label}
+                            {POMODORO_MODES[m].label}
                         </button>
                     ))}
                 </div>
 
                 <div className="relative w-80 h-80 mx-auto mb-16 flex items-center justify-center group/timer">
-                    <div className={`absolute inset-0 rounded-full blur-[100px] opacity-20 transition-all duration-700 ${modes[mode].color.replace('text-', 'bg-')} ${isActive ? 'scale-110 animate-pulse' : 'scale-75'}`} />
+                    <div className={`absolute inset-0 rounded-full blur-[100px] opacity-20 transition-all duration-700 ${POMODORO_MODES[mode].color.replace('text-', 'bg-')} ${isActive ? 'scale-110 animate-pulse' : 'scale-75'}`} />
                     
                     <svg className="absolute inset-0 w-full h-full transform -rotate-90 scale-110">
                         <circle cx="160" cy="160" r="145" className="stroke-brand-border/20" strokeWidth="2" fill="none" />
                         <motion.circle 
                             cx="160" cy="160" r="145" 
-                            className={`stroke-current ${modes[mode].color}`} 
+                            className={`stroke-current ${POMODORO_MODES[mode].color}`} 
                             strokeWidth="10" fill="none" 
                             strokeDasharray={2 * Math.PI * 145}
                             animate={{ strokeDashoffset: 2 * Math.PI * 145 * (1 - progress / 100) }}
@@ -305,7 +305,7 @@ const PomodoroTimer = () => {
                         <motion.div 
                             initial={false}
                             animate={{ scale: isActive ? 1.05 : 1 }}
-                            className={`text-8xl font-black font-mono tracking-tightest leading-none ${modes[mode].color}`}
+                            className={`text-8xl font-black font-mono tracking-tightest leading-none ${POMODORO_MODES[mode].color}`}
                         >
                             {formatTime(timeLeft)}
                         </motion.div>
@@ -321,7 +321,7 @@ const PomodoroTimer = () => {
                 <div className="flex justify-center gap-8">
                     <button 
                         onClick={toggleTimer}
-                        className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-brand-bg transition-all hover:scale-105 active:scale-90 shadow-[0_20px_50px_rgba(0,0,0,0.3)] ${modes[mode].color.replace('text-', 'bg-')} ${modes[mode].shadow} relative overflow-hidden group/btn`}
+                        className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-brand-bg transition-all hover:scale-105 active:scale-90 shadow-[0_20px_50px_rgba(0,0,0,0.3)] ${POMODORO_MODES[mode].color.replace('text-', 'bg-')} ${POMODORO_MODES[mode].shadow} relative overflow-hidden group/btn`}
                     >
                         <div className="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-20 transition-opacity" />
                         {isActive ? <Pause size={40} /> : <Play size={40} className="ml-1" />}
@@ -348,24 +348,24 @@ const PomodoroTimer = () => {
     );
 };
 
+const GEOMETRY_SHAPES = {
+    circle: { name: 'Circle', params: ['Radius (r)'], icon: Target, calc: (r: number) => ({ Area: Math.PI * r * r, Circumference: 2 * Math.PI * r }) },
+    rectangle: { name: 'Rectangle', params: ['Length (l)', 'Width (w)'], icon: Triangle, calc: (l: number, w: number) => ({ Area: l * w, Perimeter: 2 * (l + w) }) },
+    triangle: { name: 'Triangle', params: ['Base (b)', 'Height (h)'], icon: Triangle, calc: (b: number, h: number) => ({ Area: 0.5 * b * h }) },
+    sphere: { name: 'Sphere', params: ['Radius (r)'], icon: Atom, calc: (r: number) => ({ Volume: (4/3) * Math.PI * Math.pow(r, 3), 'Surface Area': 4 * Math.PI * r * r }) },
+    cylinder: { name: 'Cylinder', params: ['Radius (r)', 'Height (h)'], icon: FlaskConical, calc: (r: number, h: number) => ({ Volume: Math.PI * r * r * h, 'Surface Area': 2 * Math.PI * r * (r + h) }) },
+};
+
 // --- 3. Geometry Solver ---
 const GeometrySolver = () => {
     const [shape, setShape] = useState('circle');
     const [inputs, setInputs] = useState<Record<string, string>>({});
 
-    const shapes = {
-        circle: { name: 'Circle', params: ['Radius (r)'], icon: Target, calc: (r: number) => ({ Area: Math.PI * r * r, Circumference: 2 * Math.PI * r }) },
-        rectangle: { name: 'Rectangle', params: ['Length (l)', 'Width (w)'], icon: Triangle, calc: (l: number, w: number) => ({ Area: l * w, Perimeter: 2 * (l + w) }) },
-        triangle: { name: 'Triangle', params: ['Base (b)', 'Height (h)'], icon: Triangle, calc: (b: number, h: number) => ({ Area: 0.5 * b * h }) },
-        sphere: { name: 'Sphere', params: ['Radius (r)'], icon: Atom, calc: (r: number) => ({ Volume: (4/3) * Math.PI * Math.pow(r, 3), 'Surface Area': 4 * Math.PI * r * r }) },
-        cylinder: { name: 'Cylinder', params: ['Radius (r)', 'Height (h)'], icon: FlaskConical, calc: (r: number, h: number) => ({ Volume: Math.PI * r * r * h, 'Surface Area': 2 * Math.PI * r * (r + h) }) },
-    };
-
-    const currentShape = shapes[shape as keyof typeof shapes];
+    const currentShape = (GEOMETRY_SHAPES as any)[shape];
 
     const results = useMemo(() => {
-        const args = currentShape.params.map(p => parseFloat(inputs[p] || '0'));
-        if (args.some(isNaN) || args.some(a => a <= 0)) return null;
+        const args = (currentShape.params as string[]).map((p: string) => parseFloat(inputs[p] || '0'));
+        if (args.some(isNaN) || args.some((a: number) => a <= 0)) return null;
         return (currentShape.calc as any)(...args);
     }, [inputs, currentShape]);
 
@@ -377,13 +377,13 @@ const GeometrySolver = () => {
             
             <div className="relative z-10">
                 <div className="flex flex-wrap gap-2 mb-12 bg-brand-bg/50 p-2 rounded-[2rem] border border-brand-border/30 w-fit backdrop-blur-sm shadow-inner">
-                    {Object.entries(shapes).map(([key, val]) => (
+                    {Object.entries(GEOMETRY_SHAPES).map(([key, val]) => (
                         <button
                             key={key}
                             onClick={() => { setShape(key); setInputs({}); }}
                             className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${shape === key ? 'bg-brand-primary text-brand-bg shadow-2xl scale-105' : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/40'}`}
                         >
-                            {val.name}
+                            {(val as any).name}
                         </button>
                     ))}
                 </div>
@@ -401,7 +401,7 @@ const GeometrySolver = () => {
                         </div>
                         
                         <div className="space-y-6">
-                            {currentShape.params.map(param => (
+                            {(currentShape.params as string[]).map((param: string) => (
                                 <Input 
                                     key={param}
                                     label={param} 
@@ -471,6 +471,8 @@ const ATOMIC_WEIGHTS: Record<string, number> = {
     Au: 196.97, Hg: 200.59, Pb: 207.2, U: 238.03, Pu: 244
 };
 
+const CHEMICAL_REGEX = /([A-Z][a-z]*)(\d*)/g;
+
 // --- 4. Science Tools ---
 const ScienceTools = () => {
     // Molar Mass
@@ -479,13 +481,11 @@ const ScienceTools = () => {
     const molarMass = useMemo(() => {
         if (!formula) return null;
         try {
-            const regex = /([A-Z][a-z]*)(\d*)/g;
-            let match;
-            let mass = 0;
-            let valid = false;
+            const matches = Array.from(formula.matchAll(CHEMICAL_REGEX));
+            if (matches.length === 0) return { error: 'Invalid Structure' };
             
-            while ((match = regex.exec(formula)) !== null) {
-                valid = true;
+            let mass = 0;
+            for (const match of matches) {
                 const element = match[1];
                 const count = match[2] ? parseInt(match[2], 10) : 1;
                 
@@ -495,7 +495,7 @@ const ScienceTools = () => {
                     return { error: `Element [${element}] Not Found` };
                 }
             }
-            return valid ? { mass: mass.toFixed(3) } : { error: 'Invalid Structure' };
+            return { mass: mass.toFixed(3) };
         } catch (e) {
             return { error: 'Computation Error' };
         }

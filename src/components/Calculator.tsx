@@ -86,6 +86,11 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   const [tickerHistory, setTickerHistory] = useState<HistoryEntry[]>([]);
   const [copied, setCopied] = useState(false);
 
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(''), 2000);
+  }, []);
+
   const handleCopy = useCallback(() => {
     if (currentInput) {
       navigator.clipboard.writeText(currentInput);
@@ -111,7 +116,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
         navigator.clipboard.writeText(shareText);
         showToast('Calculation copied to clipboard!');
     }
-  }, [expression, currentInput]);
+  }, [expression, currentInput, showToast]);
 
   const parser = useMemo(() => {
     const p = math.parser();
@@ -156,16 +161,17 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
 
   useEffect(() => {
     if (expressionToLoad) {
-      clear();
-      setCurrentInput(expressionToLoad.expression);
-      onExpressionLoaded();
+      setTimeout(() => {
+        setExpression('');
+        setCurrentInput(expressionToLoad.expression);
+        setIsResultState(false);
+        setError(null);
+        setExplanation(null);
+        setIsSecond(false);
+        onExpressionLoaded();
+      }, 0);
     }
-  }, [expressionToLoad, onExpressionLoaded, clear]);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => setToastMessage(''), 2000);
-  };
+  }, [expressionToLoad, onExpressionLoaded]);
 
   const handleInput = useCallback((value: string) => {
     setError(null);
@@ -345,33 +351,33 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
     };
   }, [handleInput, handleOp, calculate, backspace, clear]);
 
-  const memoryClear = () => { setMemory(null); showToast("Memory cleared"); };
-  const memoryRecall = () => { if(memory !== null) { setCurrentInput(String(memory)); setIsResultState(false); } };
-  const memoryAdd = () => {
+  const memoryClear = useCallback(() => { setMemory(null); showToast("Memory cleared"); }, [showToast]);
+  const memoryRecall = useCallback(() => { if(memory !== null) { setCurrentInput(String(memory)); setIsResultState(false); } }, [memory]);
+  const memoryAdd = useCallback(() => {
     const currentVal = parseFloat(currentInput);
      if (!isNaN(currentVal)) {
         setMemory(prev => (prev || 0) + currentVal);
         showToast("Value added to memory");
     }
-  };
-  const memorySubtract = () => {
+  }, [currentInput, showToast]);
+  const memorySubtract = useCallback(() => {
     const currentVal = parseFloat(currentInput);
     if (!isNaN(currentVal)) {
         setMemory(prev => (prev || 0) - currentVal);
         showToast("Value subtracted from memory");
     }
-  };
+  }, [currentInput, showToast]);
   
-  const styles = {
+  const styles = useMemo(() => ({
     op: 'bg-brand-secondary hover:bg-orange-500 text-white font-black',
     mem: 'bg-brand-surface border border-brand-border hover:bg-brand-border text-brand-text-secondary text-xs',
     clear: 'bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20',
     num: 'bg-brand-surface/40 hover:bg-brand-surface text-brand-text font-bold border border-brand-border/30',
     func: 'bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-brand-bg font-bold border border-brand-primary/20',
     active: 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20',
-  };
+  }), []);
 
-  const buttonGrid: { label: string, secondLabel?: string, action: () => void, secondAction?: () => void, className: string, colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = [
+  const buttonGrid: { label: string, secondLabel?: string, action: () => void, secondAction?: () => void, className: string, colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = useMemo(() => [
       [
           { label: '2nd', action: () => setIsSecond(s => !s), className: styles.func, active: isSecond, title: 'Toggle Secondary Functions' },
           { label: 'π', action: () => handleInput('π'), className: styles.func, title: 'Pi (3.141...)' },
@@ -427,7 +433,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
           { label: '+', action: () => handleOp('+'), className: styles.op, title: 'Add' },
           { label: '=', action: calculate, className: styles.op, title: 'Equals (Enter)' },
       ]
-  ];
+  ], [styles, isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract]);
 
   const angleModes: { id: AngleMode, label: string }[] = [{ id: 'deg', label: 'DEG' }, { id: 'rad', label: 'RAD' }, { id: 'grad', label: 'GRAD' }];
 
