@@ -78,8 +78,12 @@ const ProfileOnboarding: React.FC = () => {
         try {
           await googleDriveService.saveProfile(accessToken, profileData);
           console.log("Profile synced to Google Drive successfully.");
-        } catch (driveError) {
-          // Drive sync failed
+        } catch (driveError: any) {
+          if (driveError.message?.includes('401') || driveError.message?.includes('invalid_grant')) {
+              console.warn("Drive Access Expired. Profile was saved locally but not synced to Drive.");
+          } else {
+              console.warn("Profile updated locally. Drive sync failed.", driveError);
+          }
         }
       }
     } catch (error) {
