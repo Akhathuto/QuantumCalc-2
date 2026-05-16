@@ -15,7 +15,9 @@ import {
   School,
   HardHat,
   Braces,
-  RefreshCw
+  RefreshCw,
+  ShieldCheck,
+  Cloud
 } from 'lucide-react';
 
 import { googleDriveService } from '../services/googleDriveService';
@@ -99,11 +101,20 @@ const ProfileOnboarding: React.FC = () => {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <div className="inline-block p-3 rounded-2xl bg-brand-primary/10 text-brand-primary mb-2">
-                <Braces size={32} />
+              <div className="inline-flex items-center justify-center p-3 rounded-3xl bg-brand-primary/10 text-brand-primary mb-2">
+                {user?.photoURL ? (
+                   <img src={user.photoURL} alt="Avatar" className="w-16 h-16 rounded-2xl shadow-lg border border-brand-primary/20" />
+                ) : (
+                   <Braces size={32} />
+                )}
               </div>
-              <h2 className="text-4xl font-black tracking-tight text-brand-text italic">Welcome to QuantumCalc</h2>
-              <p className="text-brand-text-secondary font-light">Select your primary focus within the workspace.</p>
+              <h2 className="text-4xl font-black tracking-tight text-brand-text italic">Welcome, {user?.displayName?.split(' ')[0] || 'Explorer'}</h2>
+              <p className="text-brand-text-secondary font-light text-sm max-w-sm mx-auto">
+                <span className="flex items-center justify-center gap-1.5 mb-2 text-emerald-500 font-bold">
+                  <ShieldCheck size={16} /> Authenticated Securely
+                </span>
+                Select your primary focus within the workspace to initialize algorithms.
+              </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {roles.map((r) => {
@@ -245,6 +256,17 @@ const ProfileOnboarding: React.FC = () => {
               <p className="text-brand-text-secondary font-light">Confirming identity parameters before initialization.</p>
             </div>
             <div className="bg-brand-surface/40 backdrop-blur-md border border-brand-border/60 rounded-[2rem] p-8 space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-brand-border/40">
+                <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Authentication</span>
+                <div className="flex items-center gap-2">
+                   {user?.photoURL && <img src={user.photoURL} alt="Avatar" className="w-6 h-6 rounded-full border border-brand-border" />}
+                   <span className="font-bold text-brand-text">{user?.email}</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pb-4 border-b border-brand-border/40">
+                <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Cloud Sync</span>
+                <span className="font-bold text-brand-text flex items-center gap-1.5"><Cloud size={14} className="text-brand-primary" /> Google Drive Enabled</span>
+              </div>
               <div className="flex items-center justify-between pb-4 border-b border-brand-border/40">
                 <span className="text-[10px] font-black text-brand-text-secondary uppercase tracking-widest">Selected Role</span>
                 <span className="font-black text-brand-primary italic text-lg uppercase tracking-tight">{role.replace('_', ' ')}</span>

@@ -933,14 +933,25 @@ const TrigonometryCalculator = () => {
 };
 
 const LogarithmsCalculator = () => {
+    // Basic
     const [value, setValue] = useState('100');
     const [base, setBase] = useState('10');
 
-    const result = useMemo(() => {
+    // Antilog
+    const [antiValue, setAntiValue] = useState('2');
+    const [antiBase, setAntiBase] = useState('10');
+
+    // Properties
+    const [pBase, setPBase] = useState('2');
+    const [pX, setPX] = useState('8');
+    const [pY, setPY] = useState('4');
+    const [power, setPower] = useState('3');
+
+    const basicResult = useMemo(() => {
         const x = parseFloat(value);
         const b = parseFloat(base);
 
-        if (isNaN(x) || x <= 0) return { "log10": 'x must be > 0', "ln": 'x must be > 0', "logB": 'x must be > 0' };
+        if (isNaN(x) || x <= 0) return { log10: 'x must be > 0', ln: 'x must be > 0', logB: 'x must be > 0' };
         
         const res: any = {
             log10: Math.log10(x).toFixed(6),
@@ -955,16 +966,128 @@ const LogarithmsCalculator = () => {
         return res;
     }, [value, base]);
 
+    const antiResult = useMemo(() => {
+        const y = parseFloat(antiValue);
+        const b = parseFloat(antiBase);
+
+        if (isNaN(y)) return { base10: 'Invalid', basee: 'Invalid', baseb: 'Invalid' };
+        
+        const res: any = {
+            base10: Math.pow(10, y).toExponential(4),
+            basee: Math.exp(y).toExponential(4),
+            baseb: 'Invalid base'
+        };
+
+        if (!isNaN(b) && b > 0) {
+            res.baseb = Math.pow(b, y).toExponential(4);
+        }
+        
+        // Auto convert to standard formatting if not too large/small
+        Object.keys(res).forEach(k => {
+             if (res[k] !== 'Invalid base' && res[k] !== 'Invalid') {
+                 const num = parseFloat(res[k]);
+                 if (num >= 0.0001 && num <= 100000) {
+                     res[k] = parseFloat(num.toFixed(6)).toString();
+                 }
+             }
+        });
+
+        return res;
+    }, [antiValue, antiBase]);
+
+    const propResult = useMemo(() => {
+        const x = parseFloat(pX);
+        const y = parseFloat(pY);
+        const b = parseFloat(pBase);
+        const p = parseFloat(power);
+        
+        if (isNaN(x) || x <= 0 || isNaN(y) || y <= 0 || isNaN(b) || b <= 0 || b === 1 || isNaN(p)) {
+            return { product: 'Invalid inputs', quotient: 'Invalid inputs', powerR: 'Invalid inputs', baseChange: 'Invalid inputs' };
+        }
+
+        const logBase = (val: number) => Math.log(val) / Math.log(b);
+        const lX = logBase(x);
+        const lY = logBase(y);
+
+        return {
+            product: (lX + lY).toFixed(6),
+            productDesc: `${lX.toFixed(2)} + ${lY.toFixed(2)}`,
+            quotient: (lX - lY).toFixed(6),
+            quotientDesc: `${lX.toFixed(2)} - ${lY.toFixed(2)}`,
+            powerR: (p * lX).toFixed(6),
+            powerDesc: `${p} × ${lX.toFixed(2)}`,
+            baseChange: (Math.log(x) / Math.log(y)).toFixed(6),
+            baseChangeDesc: `ln(${x.toFixed(2)}) / ln(${y.toFixed(2)})`
+        };
+    }, [pX, pY, pBase, power]);
+
     return (
-        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
-             <div className="grid md:grid-cols-2 gap-4">
-                <Input label="Value (x)" type="number" value={value} onChange={e => setValue(e.target.value)} />
-                <Input label="Custom Base (b)" type="number" value={base} onChange={e => setBase(e.target.value)} />
+        <div className="space-y-8">
+            <div className="flex items-center gap-3 mb-6">
+                 <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-lg shadow-brand-primary/20">
+                     <Activity size={24} />
+                 </div>
+                 <div>
+                     <h2 className="text-3xl font-black text-brand-text uppercase tracking-widest leading-none">Logarithms</h2>
+                     <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black mt-1">Multi-Base & Properties</p>
+                 </div>
+             </div>
+
+             <div className="bg-brand-surface border border-brand-border p-6 md:p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                    <Scaling size={120} />
+                </div>
+                <div className="relative z-10 space-y-6">
+                    <h3 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em] mb-4">Core Logarithms</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <Input label="Value (x)" type="number" value={value} onChange={e => setValue(e.target.value)} />
+                        <Input label="Custom Base (b)" type="number" value={base} onChange={e => setBase(e.target.value)} />
+                    </div>
+                    <div className="grid sm:grid-cols-3 gap-4 pt-4 border-t border-brand-border/50">
+                        <ResultCard title="Common Log (base 10)" value={basicResult.log10} />
+                        <ResultCard title="Natural Log (ln)" value={basicResult.ln} />
+                        <ResultCard title={`Log\u208B(${value})`} description={`Base ${base || 'b'}`} value={basicResult.logB} />
+                    </div>
+                </div>
             </div>
-            <div className="grid sm:grid-cols-3 gap-4 mt-4">
-                <ResultCard title="Common Log (base 10)" value={result.log10} />
-                <ResultCard title="Natural Log (ln)" value={result.ln} />
-                <ResultCard title={`Log base ${base || 'b'}`} value={result.logB} />
+
+            <div className="bg-brand-surface border border-brand-border p-6 md:p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                    <Superscript size={120} />
+                </div>
+                <div className="relative z-10 space-y-6">
+                    <h3 className="text-[10px] font-black text-[#fbbc05] uppercase tracking-[0.3em] mb-4">Antilogarithms / Exponents</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <Input label="Exponent (y)" type="number" value={antiValue} onChange={e => setAntiValue(e.target.value)} />
+                        <Input label="Custom Base (b)" type="number" value={antiBase} onChange={e => setAntiBase(e.target.value)} />
+                    </div>
+                    <div className="grid sm:grid-cols-3 gap-4 pt-4 border-t border-brand-border/50">
+                        <ResultCard title="10^y" description="Common Antilog" value={antiResult.base10} />
+                        <ResultCard title="e^y" description="Natural Antilog" value={antiResult.basee} />
+                        <ResultCard title={`${antiBase || 'b'}^${antiValue || 'y'}`} description={`Base ${antiBase || 'b'}`} value={antiResult.baseb} />
+                    </div>
+                </div>
+            </div>
+
+             <div className="bg-brand-surface border border-brand-border p-6 md:p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                    <Atom size={120} />
+                </div>
+                <div className="relative z-10 space-y-6">
+                    <h3 className="text-[10px] font-black text-[#ea4335] uppercase tracking-[0.3em] mb-4">Properties & Laws</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Input label="Base (b)" type="number" value={pBase} onChange={e => setPBase(e.target.value)} />
+                        <Input label="Value (X)" type="number" value={pX} onChange={e => setPX(e.target.value)} />
+                        <Input label="Value (Y)" type="number" value={pY} onChange={e => setPY(e.target.value)} />
+                        <Input label="Power (p)" type="number" value={power} onChange={e => setPower(e.target.value)} />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-brand-border/50">
+                        <ResultCard title="Product: logь(X · Y)" description={`= logь(X) + logь(Y) = ${propResult.productDesc}`} value={propResult.product} />
+                        <ResultCard title="Quotient: logь(X / Y)" description={`= logь(X) - logь(Y) = ${propResult.quotientDesc}`} value={propResult.quotient} />
+                        <ResultCard title="Power: logь(X^p)" description={`= p · logь(X) = ${propResult.powerDesc}`} value={propResult.powerR} />
+                        <ResultCard title="Change of Base: logʏ(X)" description={`= ln(X) / ln(Y) = ${propResult.baseChangeDesc}`} value={propResult.baseChange} />
+                    </div>
+                </div>
             </div>
         </div>
     );

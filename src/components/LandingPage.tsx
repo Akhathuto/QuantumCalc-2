@@ -28,6 +28,7 @@ import { GoogleGenAI } from "@google/genai";
 interface LandingPageProps {
   onTabClick: (tabId: AppTab) => void;
   history: HistoryEntry[];
+  onLoginClick: () => void;
 }
 
 const toolCategories = [
@@ -63,7 +64,7 @@ const toolCategories = [
   }
 ];
 
-const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) => {
   const { user, userData } = useAuth();
   const [mathFact, setMathFact] = useState<string>('Loading a brain-teasing fact...');
   const [isLoadingFact, setIsLoadingFact] = useState(true);
@@ -324,7 +325,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick }) => {
               Connect your account to sync your history across devices, access advanced AI workspaces, and personalize your experience. No credit card required.
             </p>
             <button 
-              onClick={() => onTabClick('student')}
+              onClick={onLoginClick}
               className="inline-flex items-center gap-3 px-12 py-5 bg-brand-primary text-brand-bg rounded-full font-bold text-sm uppercase tracking-[0.1em] hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-brand-primary/30 relative z-10 outline-none focus:ring-4 focus:ring-brand-primary/50"
             >
               Get Started for Free <ArrowRight size={20} />
