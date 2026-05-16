@@ -10,10 +10,8 @@ export const auth = getAuth();
 async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log("Firestore connection successful");
   } catch (error: any) {
     if (error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied' || (error instanceof Error && error.message.includes('Missing or insufficient permissions'))) {
-      console.log("Firestore connection successful (permission denied on test document)");
       return;
     }
     console.error("Firestore connectivity error:", error);
