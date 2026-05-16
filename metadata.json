@@ -1,5 +1,8 @@
 {
   "name": "QuantumCalc",
   "description": "QuantumCalc: An all-in-one suite with a scientific calculator, multi-function graphing, matrix and statistics tools, an equation solver, financial and date calculators, unit/base converters, atomic tools, and more. Features light/dark themes and formula explanations by Gemini.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
