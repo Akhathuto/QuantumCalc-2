@@ -77,7 +77,7 @@ const App = () => {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
+      // User accepted the install prompt
     }
     setDeferredPrompt(null);
   };
@@ -311,7 +311,7 @@ const App = () => {
               <button onClick={() => setActiveTab('support')} className="hover:text-brand-text transition-colors">Support Hub</button>
               <button onClick={() => setActiveTab('terms')} className="hover:text-brand-text transition-colors">Terms of Service</button>
             </div>
-            <div>Powered by Edgtec 2025</div>
+            <div>Powered by Edgtec 2026</div>
           </div>
         </footer>
       </div>

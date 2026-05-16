@@ -23,5 +23,7 @@ async function testConnection() {
   }
 }
 
-// Delay test to ensure environment is ready
-setTimeout(testConnection, 2000);
+// Delay test to ensure environment is ready in non-production
+if (import.meta.env.DEV) {
+  setTimeout(testConnection, 2000);
+}

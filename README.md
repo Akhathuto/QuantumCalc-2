@@ -1,5 +1,7 @@
 # QuantumCalc ⚛️
 
+**Live App**: [https://qcalc.edgtec.co.za/](https://qcalc.edgtec.co.za/)
+
 *Your All-in-One Scientific & Utility Suite, Powered by Gemini.*
 
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)

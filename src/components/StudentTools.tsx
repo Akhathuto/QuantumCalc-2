@@ -1418,7 +1418,7 @@ const NotesTool = () => {
                         onClick={() => setActiveTab('vault')}
                         className={`px-10 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${activeTab === 'vault' ? 'bg-brand-primary text-brand-bg shadow-[0_15px_40px_rgba(var(--brand-primary-rgb),0.3)] scale-105' : 'text-brand-text-secondary hover:text-brand-text'}`}
                     >
-                        Long-Term vaults
+                        Long-Term Vaults
                     </button>
                     <button 
                         onClick={() => setActiveTab('scratchpad')}

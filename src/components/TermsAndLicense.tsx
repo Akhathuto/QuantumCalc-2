@@ -46,7 +46,7 @@ const TermsAndLicense: React.FC = () => {
                 </Section>
 
                 <Section title="MIT License" icon={FileText}>
-                    <p>Copyright (c) 2024 EDGTEC</p>
+                    <p>Copyright (c) 2024 - 2026 EDGTEC</p>
                     <p>
                         Permission is hereby granted, free of charge, to any person obtaining a copy
                         of this software and associated documentation files (the "Software"), to deal
