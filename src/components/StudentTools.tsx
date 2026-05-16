@@ -39,27 +39,9 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from './AuthProvider';
+import SubNavButton from './common/SubNavButton';
 
 // --- UI Components ---
-const CategoryTab: React.FC<{ label: string; icon: any; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isActive ? 'bg-brand-primary text-white shadow-xl shadow-brand-primary/30 -translate-y-1' : 'bg-brand-surface/40 text-brand-text-secondary hover:bg-brand-surface/80 hover:text-brand-text border border-brand-border/50'}`}
-    >
-        <Icon size={14} />
-        <span>{label}</span>
-    </button>
-);
-
-const ToolButton: React.FC<{ label: string; isActive: boolean; onClick: () => void }> = ({ label, isActive, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border whitespace-nowrap ${isActive ? 'bg-brand-text text-brand-bg border-brand-text' : 'bg-transparent text-brand-text-secondary border-brand-border hover:border-brand-text/50 hover:text-brand-text'}`}
-    >
-        {label}
-    </button>
-);
-
 const Input = ({ label, id, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string, id: string }) => (
     <div className="space-y-1">
         <label htmlFor={id} className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">{label}</label>
@@ -471,17 +453,16 @@ const ATOMIC_WEIGHTS: Record<string, number> = {
     Au: 196.97, Hg: 200.59, Pb: 207.2, U: 238.03, Pu: 244
 };
 
-const CHEMICAL_REGEX = /([A-Z][a-z]*)(\d*)/g;
-
 // --- 4. Science Tools ---
 const ScienceTools = () => {
     // Molar Mass
     const [formula, setFormula] = useState('');
 
-    const molarMass = useMemo(() => {
+    const calculateMolarMass = () => {
         if (!formula) return null;
         try {
-            const matches = Array.from(formula.matchAll(CHEMICAL_REGEX));
+            const regex = /([A-Z][a-z]*)(\d*)/g;
+            const matches = Array.from(formula.matchAll(regex));
             if (matches.length === 0) return { error: 'Invalid Structure' };
             
             let mass = 0;
@@ -499,7 +480,8 @@ const ScienceTools = () => {
         } catch (e) {
             return { error: 'Computation Error' };
         }
-    }, [formula]);
+    };
+    const molarMass = calculateMolarMass();
 
     // Ideal Gas Law
     const [p, setP] = useState('');
@@ -2231,9 +2213,6 @@ const StudentTools: React.FC = () => {
         { id: 'research', label: 'Research', icon: BookOpen, types: ['tutor', 'formulas', 'citations'] }
     ];
 
-    const currentCategoryId = categories.find(c => c.types.includes(activeTool))?.id || 'productivity';
-    const [activeCategory, setActiveCategory] = useState(currentCategoryId);
-
     const renderTool = () => {
         switch (activeTool) {
             case 'gpa': return <GPACalculator />;
@@ -2286,78 +2265,76 @@ const StudentTools: React.FC = () => {
                 )}
             </div>
 
-            {/* Navigation Section */}
-            <div className="space-y-8 mb-12">
-                <div className="flex flex-wrap gap-3 overflow-x-auto no-scrollbar pb-2">
-                    {categories.map(cat => (
-                        <CategoryTab 
-                            key={cat.id}
-                            label={cat.label}
-                            icon={cat.icon}
-                            isActive={activeCategory === cat.id}
-                            onClick={() => {
-                                setActiveCategory(cat.id);
-                                if (!cat.types.includes(activeTool)) {
-                                    setActiveTool(cat.types[0] as ToolID);
-                                }
-                            }}
-                        />
-                    ))}
+            <div className="flex flex-col md:flex-row gap-8 items-start relative">
+                {/* Navigation Sidebar */}
+                <div className="w-full md:w-64 shrink-0 flex flex-col gap-6 relative z-10">
+                    <div className="bg-brand-surface border border-brand-border/50 p-4 rounded-3xl shadow-2xl backdrop-blur-3xl sticky top-24">
+                        {categories.map((cat, index) => (
+                            <div key={cat.id} className={index !== 0 ? 'mt-6' : ''}>
+                                <div className="flex items-center gap-2 px-4 mb-2 text-brand-text-secondary">
+                                    <cat.icon size={12} className="opacity-80" />
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest">{cat.label}</h3>
+                                </div>
+                                <div className="flex flex-col">
+                                    {cat.types.map(type => {
+                                        const toolLabel = type.charAt(0).toUpperCase() + type.slice(1).replace('gpa', 'GPA').replace('elements', 'Periodic Table').replace('tutor', 'AI Tutor').replace('equation', 'Equation Solver');
+                                        return (
+                                            <SubNavButton
+                                                key={type}
+                                                label={toolLabel}
+                                                isActive={activeTool === type}
+                                                onClick={() => setActiveTool(type as ToolID)}
+                                                icon={ChevronRight}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                <motion.div 
-                    initial={false}
-                    animate={{ opacity: 1 }}
-                    className="flex flex-wrap gap-2 p-1.5 bg-brand-surface/20 border border-brand-border/30 rounded-2xl"
-                >
-                    {categories.find(c => c.id === activeCategory)?.types.map(type => (
-                        <ToolButton 
-                            key={type}
-                            label={type.charAt(0).toUpperCase() + type.slice(1).replace('gpa', 'GPA').replace('elements', 'Periodic Table').replace('tutor', 'AI Tutor').replace('equation', 'Equation Solver')}
-                            isActive={activeTool === type}
-                            onClick={() => setActiveTool(type as ToolID)}
-                        />
-                    ))}
-                </motion.div>
-            </div>
-
-            <AnimatePresence mode="wait">
-                <motion.div 
-                    key={activeTool} 
-                    initial={{ opacity: 0, scale: 0.98, y: 30 }} 
-                    animate={{ opacity: 1, scale: 1, y: 0 }} 
-                    exit={{ opacity: 0, scale: 0.98, y: -20 }}
-                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                    className="relative group/tool"
-                >
-                    <div className="absolute -inset-4 bg-brand-primary/5 rounded-[3rem] blur-3xl opacity-0 group-hover/tool:opacity-100 transition-opacity duration-1000" />
-                    <div className="relative">
-                        {renderTool()}
-                    </div>
-
-                    {!user && (
+                {/* Main Content Area */}
+                <div className="flex-1 w-full min-w-0">
+                    <AnimatePresence mode="wait">
                         <motion.div 
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            className="mt-16 p-10 md:p-16 rounded-[4rem] bg-brand-surface/30 border border-brand-border/50 flex flex-col md:flex-row items-center justify-between gap-10 backdrop-blur-xl group/cta"
+                            key={activeTool} 
+                            initial={{ opacity: 0, scale: 0.98, y: 30 }} 
+                            animate={{ opacity: 1, scale: 1, y: 0 }} 
+                            exit={{ opacity: 0, scale: 0.98, y: -20 }}
+                            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                            className="relative group/tool"
                         >
-                            <div className="space-y-4 max-w-xl">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest">
-                                    <MousePointer2 size={12} /> Researcher License
-                                </div>
-                                <h4 className="font-black text-brand-text text-4xl leading-tight">Persistent Subject Repository</h4>
-                                <p className="text-brand-text-secondary text-lg font-light">Authenticated scholars save derivation logs, customized flashcard decks, and AI tutor conversation history across devices.</p>
+                            <div className="absolute -inset-4 bg-brand-primary/5 rounded-[3rem] blur-3xl opacity-0 group-hover/tool:opacity-100 transition-opacity duration-1000" />
+                            <div className="relative">
+                                {renderTool()}
                             </div>
-                            <button 
-                                onClick={signInWithGoogle}
-                                className="w-full md:w-auto px-12 py-6 bg-brand-primary text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-primary/40"
-                            >
-                                Secure Workspace
-                            </button>
+
+                            {!user && (
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    whileInView={{ opacity: 1 }}
+                                    className="mt-16 p-10 md:p-16 rounded-[4rem] bg-brand-surface/30 border border-brand-border/50 flex flex-col md:flex-row items-center justify-between gap-10 backdrop-blur-xl group/cta"
+                                >
+                                    <div className="space-y-4 max-w-xl">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest">
+                                            <MousePointer2 size={12} /> Researcher License
+                                        </div>
+                                        <h4 className="font-black text-brand-text text-4xl leading-tight">Persistent Subject Repository</h4>
+                                        <p className="text-brand-text-secondary text-lg font-light">Authenticated scholars save derivation logs, customized flashcard decks, and AI tutor conversation history across devices.</p>
+                                    </div>
+                                    <button 
+                                        onClick={signInWithGoogle}
+                                        className="w-full md:w-auto px-12 py-6 bg-brand-primary text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-primary/40"
+                                    >
+                                        Secure Workspace
+                                    </button>
+                                </motion.div>
+                            )}
                         </motion.div>
-                    )}
-                </motion.div>
-            </AnimatePresence>
+                    </AnimatePresence>
+                </div>
+            </div>
         </div>
     );
 };

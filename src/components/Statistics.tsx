@@ -124,7 +124,7 @@ const Statistics = () => {
             if (data.length < 2) return { error: "Requires N >= 2 for meaningful analysis." };
 
             const sortedData = [...data].sort((a, b) => a - b);
-            const [q1, median, q3] = math.quantileSeq(sortedData, [0.25, 0.5, 0.75]) as number[];
+            const [q1, median, q3] = math.quantileSeq(sortedData, [0.25, 0.5, 0.75]) as unknown as number[];
 
             const min = sortedData[0];
             const max = sortedData[data.length - 1];

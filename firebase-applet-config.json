@@ -1,10 +1,10 @@
 {
-  "projectId": "smepal-281bc",
-  "appId": "1:389744369234:web:afeba22774ebc2aee7098b",
-  "apiKey": "AIzaSyAJS1bAdKCyGeIfsN-h6xDsS5GgBiffFgI",
-  "authDomain": "smepal-281bc.firebaseapp.com",
+  "projectId": "quantum-calculator-9c25e",
+  "appId": "1:933464056635:web:1fb63756ddc014bcbf8d1e",
+  "apiKey": "AIzaSyAkjRcLmH2ecduDTpYZSZ73QZO9SkfgtrA",
+  "authDomain": "quantum-calculator-9c25e.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-9c9042da-24a3-42b8-a568-fd417e242625",
-  "storageBucket": "smepal-281bc.firebasestorage.app",
-  "messagingSenderId": "389744369234",
-  "measurementId": "G-7VHWJ18J78"
+  "storageBucket": "quantum-calculator-9c25e.firebasestorage.app",
+  "messagingSenderId": "933464056635",
+  "measurementId": ""
 }

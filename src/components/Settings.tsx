@@ -205,11 +205,15 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                 try {
                     await googleDriveService.saveProfile(accessToken, profileData);
                     showToast("Profile updated and synced to Drive!");
-                } catch (driveError) {
-                    showToast("Profile updated locally. Drive sync failed.");
+                } catch (driveError: any) {
+                    if (driveError.message?.includes('401') || driveError.message?.includes('invalid_grant')) {
+                        showToast("Drive Access Expired. Please log out and sign back in to re-link Drive.");
+                    } else {
+                        showToast("Profile updated locally. Drive sync failed.");
+                    }
                 }
             } else {
-                showToast("Profile updated successfully!");
+                showToast("Profile updated locally!");
             }
         } catch (error) {
             handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
@@ -219,7 +223,10 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     };
 
     const handleRestoreFromDrive = async () => {
-        if (!accessToken || !user) return;
+        if (!accessToken || !user) {
+            showToast("No Google Drive access. Please connect using Google first.");
+            return;
+        }
         setIsRestoring(true);
         try {
             const driveProfile = await googleDriveService.getProfile(accessToken);
@@ -235,8 +242,12 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
             } else {
                 showToast("No profile found on your Google Drive.");
             }
-        } catch (error) {
-            handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
+        } catch (error: any) {
+            if (error.message?.includes('401') || error.message?.includes('invalid_grant')) {
+               showToast("Drive Access Expired. Please log out and sign back in to re-link Drive.");
+            } else {
+               showToast(`Failed to restore from Drive: ${error.message || 'Unknown error'}`);
+            }
         } finally {
             setIsRestoring(false);
         }

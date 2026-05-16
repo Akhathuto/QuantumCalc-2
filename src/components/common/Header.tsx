@@ -11,7 +11,7 @@ interface HeaderProps {
   onMenuClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onTabClick, onLoginClick, onMenuClick }) => {
+const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, onMenuClick }) => {
   const { user, userData, logout } = useAuth();
 
   const handleSearchClick = () => {
@@ -32,9 +32,16 @@ const Header: React.FC<HeaderProps> = ({ onTabClick, onLoginClick, onMenuClick }
               <Menu size={20} />
             </button>
 
-            <div className="hidden lg:flex" onClick={() => onTabClick('landing')}>
-               {/* We can leave this empty since logo is in sidebar, or show a breadcrumb */}
-               <div className="font-semibold text-brand-text/80 tracking-wide">QuantumCalc Dashboard</div>
+            <div className="hidden lg:flex items-center gap-2 text-sm">
+                <button onClick={() => onTabClick('landing')} className="text-brand-text-secondary hover:text-brand-text font-bold transition-colors">
+                  QuantumCalc
+                </button>
+                {activeTab !== 'landing' && (
+                  <>
+                    <span className="text-brand-text-secondary/50 font-mono">/</span>
+                    <span className="text-brand-primary font-bold capitalize tracking-wide">{activeTab.replace('-', ' ')}</span>
+                  </>
+                )}
             </div>
             
             <div className="lg:hidden" onClick={() => onTabClick('landing')}>

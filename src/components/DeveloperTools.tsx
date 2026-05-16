@@ -12,26 +12,13 @@ import {
     Copy,
     Check,
     Terminal,
-    Wand2,
     AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-// Reusable UI Components
-const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`flex-shrink-0 px-6 py-3.5 flex items-center gap-3 rounded-2xl font-black transition-all duration-300 text-xs tracking-widest uppercase ${
-            isActive 
-                ? 'bg-brand-primary text-brand-bg shadow-xl shadow-brand-primary/20 scale-105' 
-                : 'bg-brand-surface/40 border border-brand-border/40 text-brand-text-secondary hover:text-brand-text hover:border-brand-primary/30'
-        }`}
-    >
-        <Icon size={16} />
-        {label}
-    </button>
-);
+import SubNavButton from './common/SubNavButton';
 
+// Reusable UI Components
 const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     const [copied, setCopied] = useState(false);
     
@@ -703,15 +690,15 @@ const DeveloperTools: React.FC = () => {
     const [activeTool, setActiveTool] = useState('json');
 
     const tools = [
-        { id: 'json', label: 'Formatter', Icon: Braces },
-        { id: 'jwt', label: 'JWT', Icon: Key },
-        { id: 'encoder', label: 'Encoder', Icon: Layers },
-        { id: 'regex', label: 'Regex', Icon: Terminal },
-        { id: 'diff', label: 'Diff', Icon: Code },
-        { id: 'color', label: 'Color', Icon: Palette },
-        { id: 'hasher', label: 'Hasher', Icon: Lock },
-        { id: 'epoch', label: 'Epoch', Icon: Clock },
-        { id: 'case', label: 'Naming', Icon: CaseSensitive },
+        { id: 'json', label: 'JSON Formatter', Icon: Braces, desc: 'Format, minify, and validate JSON data.' },
+        { id: 'jwt', label: 'JWT Decoder', Icon: Key, desc: 'Decode JSON Web Tokens and inspect payloads.' },
+        { id: 'encoder', label: 'Encoders', Icon: Layers, desc: 'Base64, URL encoding, and HTML entities.' },
+        { id: 'regex', label: 'Regex Tester', Icon: Terminal, desc: 'Test regular expressions against practice text.' },
+        { id: 'diff', label: 'Text Diff', Icon: Code, desc: 'Compare strings and source code side-by-side.' },
+        { id: 'color', label: 'Color Suite', Icon: Palette, desc: 'Inspect colors and compute contrast ratios.' },
+        { id: 'hasher', label: 'Hash Generator', Icon: Lock, desc: 'Generate SHA-256 and SHA-512 checksums.' },
+        { id: 'epoch', label: 'Epoch Time', Icon: Clock, desc: 'Convert Unix timestamps to human-readable.' },
+        { id: 'case', label: 'String Case', Icon: CaseSensitive, desc: 'camelCase, snake_case, CONSTANT variables.' },
     ];
 
     const renderTool = () => {
@@ -729,63 +716,66 @@ const DeveloperTools: React.FC = () => {
         }
     };
 
+    const activeToolData = tools.find(t => t.id === activeTool);
+
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="mb-12 text-center relative">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-primary/5 rounded-full blur-[80px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+            <div className="mb-12 md:mb-16">
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-[0.3em] mb-6 border border-brand-primary/20"
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-mono mb-4 border border-brand-primary/20"
                 >
-                    <Code size={14} /> Engineering Protocol
+                    <Code size={14} /> Local Utilities
                 </motion.div>
-                <h2 className="text-5xl md:text-6xl font-black text-white mb-4 tracking-tight flex items-center justify-center gap-4">
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                     Developer Workspace
                 </h2>
-                <p className="text-brand-text-secondary max-w-2xl mx-auto font-mono text-lg opacity-80 decoration-brand-primary underline-offset-8">
-                    High-performance utilities for modern logic architectures.
+                <p className="text-brand-text-secondary mt-4 max-w-2xl font-mono text-sm leading-relaxed">
+                    A suite of high-performance tools for string manipulation, data formatting, and cryptographic operations. Data never leaves your browser.
                 </p>
             </div>
-            
-            <div className="sticky top-[80px] z-30 bg-brand-bg/95 backdrop-blur-xl pb-6 pt-2 mb-10 border-b border-brand-border/20 -mx-4 px-4 overflow-hidden">
-                <div className="flex overflow-x-auto no-scrollbar gap-4 py-2 px-2 mask-fade-edges justify-center">
-                    <div className="flex gap-3 min-w-max">
-                        {tools.map(tool => (
-                            <SubNavButton 
-                                key={tool.id}
-                                label={tool.label} 
-                                icon={tool.Icon}
-                                isActive={activeTool === tool.id} 
-                                onClick={() => setActiveTool(tool.id)} 
-                            />
-                        ))}
+
+            <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start">
+                {/* Sidebar Navigation */}
+                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 bg-brand-bg/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none pb-4 md:pb-0 border-b border-brand-border/20 md:border-none -mx-4 px-4 md:mx-0 md:px-0">
+                    <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-2 pb-2 md:pb-0 mask-fade-edges">
+                        <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
+                            {tools.map(tool => (
+                                <SubNavButton 
+                                    key={tool.id}
+                                    label={tool.label} 
+                                    icon={tool.Icon}
+                                    isActive={activeTool === tool.id} 
+                                    onClick={() => setActiveTool(tool.id)}
+                                    layoutId="devNavActive" 
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <motion.div 
-                key={activeTool}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="bg-brand-surface/20 p-6 md:p-12 rounded-[3.5rem] border border-brand-border/40 shadow-inner backdrop-blur-sm min-h-[40rem]"
-            >
-                {renderTool()}
-            </motion.div>
-            
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 opacity-60">
-                <div className="p-6 bg-brand-surface/30 rounded-3xl border border-brand-border/40 flex items-center gap-4">
-                    <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><Wand2 size={20} /></div>
-                    <div className="text-xs font-mono">Real-time local processing</div>
-                </div>
-                <div className="p-6 bg-brand-surface/30 rounded-3xl border border-brand-border/40 flex items-center gap-4">
-                    <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><Lock size={20} /></div>
-                    <div className="text-xs font-mono">Zero-data retention policy</div>
-                </div>
-                <div className="p-6 bg-brand-surface/30 rounded-3xl border border-brand-border/40 flex items-center gap-4">
-                    <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><RefreshCw size={20} /></div>
-                    <div className="text-xs font-mono">Multi-threaded algorithms</div>
+                {/* Main Content Area */}
+                <div className="flex-1 w-full min-w-0 pb-20">
+                    <div className="mb-8 pb-6 border-b border-brand-border/40">
+                        <h3 className="text-2xl font-black text-white flex items-center gap-3">
+                            {activeToolData?.Icon && React.createElement(activeToolData.Icon, { size: 28, className: "text-brand-primary" })}
+                            {activeToolData?.label}
+                        </h3>
+                        <p className="text-brand-text-secondary font-mono text-xs mt-2 opacity-80">
+                            {activeToolData?.desc}
+                        </p>
+                    </div>
+
+                    <motion.div 
+                        key={activeTool}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-brand-surface/20 p-6 md:p-10 rounded-[2.5rem] border border-brand-border/40 shadow-inner backdrop-blur-sm"
+                    >
+                        {renderTool()}
+                    </motion.div>
                 </div>
             </div>
         </div>

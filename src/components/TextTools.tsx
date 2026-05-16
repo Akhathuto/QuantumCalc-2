@@ -1,14 +1,27 @@
 import React, { useState, useMemo } from 'react';
-import { Hash, CaseSensitive, Replace, FileText } from 'lucide-react';
+import { Hash, CaseSensitive, Replace, FileText, Type } from 'lucide-react';
+import { motion } from 'motion/react';
 
 // Reusable UI Components
-const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
+const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void; layoutId?: string }> = ({ label, icon: Icon, isActive, onClick, layoutId }) => (
     <button
         onClick={onClick}
-        className={`px-3 py-2 flex items-center gap-2 rounded-md font-semibold transition-colors text-sm ${isActive ? 'bg-brand-primary text-white' : 'bg-brand-surface hover:bg-brand-border'}`}
+        className={`flex-shrink-0 px-4 py-3 md:py-4 md:justify-start justify-center flex items-center gap-3 rounded-xl font-bold transition-all duration-300 text-sm min-w-[140px] md:min-w-0 w-full relative ${
+            isActive 
+                ? 'text-brand-primary' 
+                : 'text-brand-text-secondary hover:text-white hover:bg-brand-surface/50'
+        }`}
     >
-        <Icon size={16} />
-        {label}
+        {isActive && (
+            <motion.div 
+                layoutId={layoutId}
+                className="absolute inset-0 bg-brand-primary/10 border border-brand-primary/20 rounded-xl"
+                initial={false}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+        )}
+        <Icon size={18} className="relative z-10" />
+        <span className="relative z-10">{label}</span>
     </button>
 );
 
@@ -260,23 +273,63 @@ const TextTools: React.FC = () => {
         }
     };
 
+    const activeToolData = tools.find(t => t.id === activeTool);
+
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary">Text Tools</h2>
-            
-            <div className="flex justify-center flex-wrap gap-2 mb-6">
-                {tools.map(tool => (
-                     <SubNavButton 
-                        key={tool.id}
-                        label={tool.label} 
-                        icon={tool.Icon}
-                        isActive={activeTool === tool.id} 
-                        onClick={() => setActiveTool(tool.id)} 
-                     />
-                ))}
+        <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+            <div className="mb-12 md:mb-16">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-mono mb-4 border border-brand-primary/20"
+                >
+                    <Type size={14} /> Text Protocol
+                </motion.div>
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                    Text Processing
+                </h2>
+                <p className="text-brand-text-secondary mt-4 max-w-2xl font-mono text-sm leading-relaxed">
+                    A suite of high-performance tools for string manipulation, data formatting, and textual operations. Data never leaves your browser.
+                </p>
             </div>
 
-            {renderTool()}
+            <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start">
+                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 bg-brand-bg/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none pb-4 md:pb-0 border-b border-brand-border/20 md:border-none -mx-4 px-4 md:mx-0 md:px-0">
+                    <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-2 pb-2 md:pb-0 mask-fade-edges">
+                        <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
+                            {tools.map(tool => (
+                                 <SubNavButton 
+                                    key={tool.id}
+                                    label={tool.label} 
+                                    icon={tool.Icon}
+                                    isActive={activeTool === tool.id} 
+                                    onClick={() => setActiveTool(tool.id)} 
+                                    layoutId="textNavActive"
+                                 />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 w-full min-w-0 pb-20">
+                    <div className="mb-8 pb-6 border-b border-brand-border/40">
+                        <h3 className="text-2xl font-black text-white flex items-center gap-3">
+                            {activeToolData?.Icon && React.createElement(activeToolData.Icon, { size: 28, className: "text-brand-primary" })}
+                            {activeToolData?.label}
+                        </h3>
+                    </div>
+
+                    <motion.div 
+                        key={activeTool}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-brand-surface/20 p-6 md:p-10 rounded-[2.5rem] border border-brand-border/40 shadow-inner backdrop-blur-sm"
+                    >
+                        {renderTool()}
+                    </motion.div>
+                </div>
+            </div>
         </div>
     );
 };

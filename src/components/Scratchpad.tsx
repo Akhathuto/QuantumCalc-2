@@ -76,7 +76,6 @@ const Scratchpad: React.FC = () => {
     });
 
     return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const activeNote = notes.find(n => n.id === activeNoteId);

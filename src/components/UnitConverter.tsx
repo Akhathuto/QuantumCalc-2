@@ -154,27 +154,35 @@ export const UnitConverter = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold mb-6 text-brand-primary">Unit Converter</h2>
+        <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-lg shadow-brand-primary/20">
+                <ArrowRightLeft size={24} />
+            </div>
+            <div>
+                <h2 className="text-3xl font-black text-brand-text uppercase tracking-widest leading-none">Unit Converter</h2>
+                <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black mt-1">Multi-dimensional variable translation</p>
+            </div>
+        </div>
         
         {/* Smart Assistant Bar */}
-        <div className="mb-8 relative">
-            <div className="flex gap-2 p-1 bg-brand-surface border border-brand-border rounded-2xl shadow-lg">
-                <div className="flex items-center pl-4 text-brand-primary">
-                    <Sparkles size={18} />
+        <div className="mb-8 relative max-w-4xl mx-auto">
+            <div className="flex gap-2 p-1.5 bg-brand-surface/80 border border-brand-border/50 rounded-2xl shadow-xl backdrop-blur-md">
+                <div className="flex items-center pl-5 text-brand-primary">
+                    <Sparkles size={20} className="animate-pulse" />
                 </div>
                 <input 
                     value={smartQuery}
                     onChange={e => setSmartQuery(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSmartConvert()}
                     placeholder="Ask Nolo Smart Converter: '150 mph to km/h' or 'distance to Moon in meters'..."
-                    className="flex-1 bg-transparent border-none outline-none p-3 text-sm text-brand-text"
+                    className="flex-1 bg-transparent border-none outline-none p-3 text-sm text-brand-text font-medium placeholder:text-brand-text-secondary/50 placeholder:italic"
                 />
                 <button 
                     onClick={handleSmartConvert}
                     disabled={isSmartLoading}
-                    className="bg-brand-primary hover:bg-brand-secondary text-white px-6 rounded-xl transition-all font-bold text-xs disabled:opacity-50"
+                    className="bg-brand-primary hover:bg-brand-primary/90 text-brand-bg px-8 rounded-xl transition-all shadow-md shadow-brand-primary/20 font-black text-[10px] uppercase tracking-widest disabled:opacity-50 flex items-center gap-2 active:scale-95"
                 >
-                    {isSmartLoading ? <Loader2 size={16} className="animate-spin" /> : 'CONVERT'}
+                    {isSmartLoading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : 'Compute'}
                 </button>
             </div>
             
@@ -207,58 +215,64 @@ export const UnitConverter = () => {
             </AnimatePresence>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end p-6 bg-brand-surface/50 rounded-2xl border border-brand-border shadow-inner">
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-brand-text-secondary mb-1">Category</label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => handleCategoryChange(e.target.value as Category)}
-              className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 focus:ring-brand-primary focus:border-brand-primary"
-            >
-              {Object.keys(CONVERSION_DATA).map(cat => <option key={cat}>{cat}</option>)}
-            </select>
+        <div className="bg-brand-surface border border-brand-border/50 p-8 md:p-12 rounded-[2.5rem] shadow-2xl backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+              <ArrowRightLeft size={160} />
           </div>
+          
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
+            <div>
+              <label htmlFor="category" className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] mb-2 px-1">Dimension</label>
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => handleCategoryChange(e.target.value as Category)}
+                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-4 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer shadow-inner"
+              >
+                {Object.keys(CONVERSION_DATA).map(cat => <option key={cat}>{cat}</option>)}
+              </select>
+            </div>
 
-          <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
-              <div className="sm:col-span-2">
-                  <label htmlFor="from-unit" className="block text-sm font-medium text-brand-text-secondary mb-1">From</label>
-                  <input
-                      type="number"
-                      value={inputValue}
-                      onChange={e => setInputValue(e.target.value)}
-                      className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
-                  />
-                  <select
-                      id="from-unit"
-                      value={fromUnit}
-                      onChange={e => setFromUnit(e.target.value)}
-                      className="w-full mt-2 bg-gray-900/70 border-gray-600 rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary"
-                  >
-                      {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
-                  </select>
-              </div>
+            <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-6 items-end">
+                <div className="w-full">
+                    <label htmlFor="from-unit" className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] mb-2 px-1">Source Value</label>
+                    <input
+                        type="number"
+                        value={inputValue}
+                        onChange={e => setInputValue(e.target.value)}
+                        className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-4 font-mono text-xl text-brand-text focus:ring-2 focus:ring-brand-primary transition-all outline-none shadow-inner"
+                    />
+                    <select
+                        id="from-unit"
+                        value={fromUnit}
+                        onChange={e => setFromUnit(e.target.value)}
+                        className="w-full mt-3 bg-brand-surface border border-brand-border rounded-xl p-3 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
+                    >
+                        {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
+                    </select>
+                </div>
 
-              <div className="flex items-center justify-center">
-                  <button onClick={swapUnits} className="p-3 bg-brand-primary/80 hover:bg-brand-primary rounded-full transition-transform transform hover:rotate-180">
-                      <ArrowRightLeft size={20} />
-                  </button>
-              </div>
+                <div className="flex items-center justify-center pb-12 sm:pb-3">
+                    <button onClick={swapUnits} className="p-4 bg-brand-primary text-brand-bg hover:bg-brand-secondary rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-brand-primary/20">
+                        <ArrowRightLeft size={24} />
+                    </button>
+                </div>
 
-              <div className="sm:col-span-2">
-                  <label htmlFor="to-unit" className="block text-sm font-medium text-brand-text-secondary mb-1">To</label>
-                  <div className="w-full bg-gray-900/50 border-gray-700 rounded-md p-3 font-mono text-lg min-h-[50px] flex items-center">
-                      {outputValue}
-                  </div>
-                  <select
-                      id="to-unit"
-                      value={toUnit}
-                      onChange={e => setToUnit(e.target.value)}
-                      className="w-full mt-2 bg-gray-900/70 border-gray-600 rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary"
-                  >
-                      {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
-                  </select>
-              </div>
+                <div className="w-full">
+                    <label htmlFor="to-unit" className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] mb-2 px-1">Target Derivation</label>
+                    <div className="w-full bg-brand-bg border border-brand-primary/30 rounded-xl p-4 font-mono text-xl text-brand-text min-h-[60px] flex items-center shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.1)]">
+                        {outputValue}
+                    </div>
+                    <select
+                        id="to-unit"
+                        value={toUnit}
+                        onChange={e => setToUnit(e.target.value)}
+                        className="w-full mt-3 bg-brand-surface border border-brand-border rounded-xl p-3 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
+                    >
+                        {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
+                    </select>
+                </div>
+            </div>
           </div>
         </div>
       </div>

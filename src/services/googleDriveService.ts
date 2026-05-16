@@ -13,8 +13,8 @@ export interface UserProfileData {
 
 export const googleDriveService = {
   async findProfileFile(accessToken: string): Promise<string | null> {
-    const query = encodeURIComponent(`name = '${FILE_NAME}' and trashed = false`);
-    const response = await fetch(`${DRIVE_API_URL}?q=${query}&fields=files(id, name)`, {
+    const query = encodeURIComponent(`name = '${FILE_NAME}' and trashed = false and 'appDataFolder' in parents`);
+    const response = await fetch(`${DRIVE_API_URL}?spaces=appDataFolder&q=${query}&fields=files(id, name)`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -52,6 +52,7 @@ export const googleDriveService = {
       const metadata = {
         name: FILE_NAME,
         mimeType: 'application/json',
+        parents: ['appDataFolder'],
       };
 
       const boundary = 'quantum_calc_boundary';

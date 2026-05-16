@@ -322,11 +322,25 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
 
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-6 text-brand-primary">Currency Converter</h2>
-      <div className="bg-brand-surface/50 p-6 rounded-lg">
-        <div className="text-center text-sm text-brand-text-secondary mb-4">
-          Last updated: {ratesData ? new Date(ratesData.time_last_update_utc).toLocaleString() : 'N/A'}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-lg shadow-brand-primary/20">
+            <ArrowRightLeft size={24} />
         </div>
+        <div>
+            <h2 className="text-3xl font-black text-brand-text uppercase tracking-widest leading-none">Currency Converter</h2>
+            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black mt-1">Live exchange rate terminal</p>
+        </div>
+      </div>
+      
+      <div className="bg-brand-surface border border-brand-border/50 p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-xl relative">
+        <div className="absolute top-0 left-0 p-12 opacity-5 pointer-events-none">
+            <ArrowRightLeft size={120} />
+        </div>
+        
+        <div className="relative z-10">
+            <div className="text-center font-mono text-[10px] text-brand-text-secondary uppercase tracking-widest mb-8 bg-brand-bg/40 py-2 rounded-xl border border-brand-border/30 w-fit mx-auto px-6">
+              LAST FETCH: {ratesData ? new Date(ratesData.time_last_update_utc).toLocaleString() : 'N/A'}
+            </div>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="md:col-span-2">
             <label htmlFor="amount-from" className="block text-sm font-medium text-brand-text-secondary mb-1">From</label>
@@ -336,12 +350,12 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
               inputMode="decimal"
               value={amountFrom}
               onChange={handleAmountFromChange}
-              className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
+              className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-4 font-mono text-xl text-brand-text focus:ring-2 focus:ring-brand-primary transition-all outline-none shadow-inner"
             />
             <select
               value={fromCurrency}
               onChange={(e) => setFromCurrency(e.target.value)}
-              className="w-full mt-2 bg-gray-900/70 border-gray-600 rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary"
+              className="w-full mt-3 bg-brand-surface border border-brand-border rounded-xl p-3 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
             >
               {currencyOptions.map(c => (
                 <option key={c} value={c}>
@@ -351,9 +365,9 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
             </select>
           </div>
 
-          <div className="flex justify-center">
-            <button onClick={swapCurrencies} className="p-3 bg-brand-primary/80 hover:bg-brand-primary rounded-full transition-transform transform hover:rotate-180">
-              <ArrowRightLeft size={20} />
+          <div className="flex justify-center mb-6 md:mb-0">
+            <button onClick={swapCurrencies} className="p-4 bg-brand-primary text-brand-bg hover:bg-brand-secondary rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-brand-primary/20">
+              <ArrowRightLeft size={24} />
             </button>
           </div>
 
@@ -365,12 +379,12 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
                 inputMode="decimal"
                 value={amountTo}
                 onChange={handleAmountToChange}
-                className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
+                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-4 font-mono text-xl text-brand-text focus:ring-2 focus:ring-brand-primary transition-all outline-none shadow-inner"
             />
             <select
               value={toCurrency}
               onChange={(e) => setToCurrency(e.target.value)}
-              className="w-full mt-2 bg-gray-900/70 border-gray-600 rounded-md p-2 focus:ring-brand-primary focus:border-brand-primary"
+              className="w-full mt-3 bg-brand-surface border border-brand-border rounded-xl p-3 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
             >
               {currencyOptions.map(c => (
                 <option key={c} value={c}>
@@ -380,14 +394,20 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
             </select>
           </div>
         </div>
-        <div className="text-center font-mono text-brand-accent mt-6">
-          {exchangeRateText}
+        
+        <div className="mt-10 p-6 bg-brand-bg/60 rounded-[2rem] border-2 border-brand-border text-center overflow-hidden relative group">
+          <div className="absolute top-0 inset-x-0 h-1 bg-brand-primary/50 group-hover:bg-brand-primary transition-colors" />
+          <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] mb-2">Live Exchange Rate</div>
+          <div className="font-mono text-3xl font-black text-brand-text tracking-tighter">
+            {exchangeRateText}
+          </div>
         </div>
-        <div className="mt-6 text-center">
+
+        <div className="mt-10 text-center">
           <button
             onClick={handleGetForecast}
             disabled={isForecastLoading}
-            className="flex items-center justify-center gap-2 mx-auto px-4 py-2 bg-brand-primary/20 text-brand-primary rounded-lg hover:bg-brand-primary/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center gap-3 mx-auto px-8 py-4 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] hover:bg-brand-primary hover:text-brand-bg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
           >
             {isForecastLoading ? (
               <>
@@ -418,6 +438,7 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
               )}
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

@@ -1,20 +1,32 @@
 import React, { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { Droplets, Scale, Pizza, Target, Timer, PersonStanding, GlassWater, Baby, Wine, AlertCircle, Dumbbell, Moon, Activity } from 'lucide-react';
+import { Droplets, Scale, Pizza, Target, Timer, PersonStanding, GlassWater, Baby, Wine, AlertCircle, Dumbbell, Moon, Activity, Stethoscope } from 'lucide-react';
+import { motion } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
-
 
 type HealthCalcType = 'bmi' | 'calorie-macro' | 'bodyfat' | 'idealweight' | 'heartrate' | 'pace' | 'lbm' | 'water' | 'pregnancy' | 'bac' | 'onerepmax' | 'sleep' | 'bloodpressure';
 type UnitSystem = 'metric' | 'imperial';
 
 // Reusable UI Components specific to Health Calculator
-const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
+const SubNavButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void; layoutId?: string }> = ({ label, icon: Icon, isActive, onClick, layoutId }) => (
     <button
         onClick={onClick}
-        className={`px-3 py-2 flex items-center gap-2 rounded-md font-semibold transition-colors text-sm ${isActive ? 'bg-brand-primary text-white' : 'bg-brand-surface hover:bg-brand-border'}`}
+        className={`flex-shrink-0 px-4 py-3 md:py-4 md:justify-start justify-center flex items-center gap-3 rounded-xl font-bold transition-all duration-300 text-sm min-w-[140px] md:min-w-0 w-full relative ${
+            isActive 
+                ? 'text-brand-primary' 
+                : 'text-brand-text-secondary hover:text-white hover:bg-brand-surface/50'
+        }`}
     >
-        <Icon size={16} />
-        {label}
+        {isActive && (
+            <motion.div 
+                layoutId={layoutId}
+                className="absolute inset-0 bg-brand-primary/10 border border-brand-primary/20 rounded-xl"
+                initial={false}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+        )}
+        <Icon size={18} className="relative z-10" />
+        <span className="relative z-10">{label}</span>
     </button>
 );
 
@@ -1011,33 +1023,68 @@ const HealthCalculator: React.FC = () => {
         }
     };
 
+    const activeCalcData = calculators.find(c => c.id === activeCalc);
+
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6 text-brand-primary">Health & Fitness Calculators</h2>
-            
-            <div className="flex justify-center flex-wrap gap-2 mb-6">
-                {calculators.map(calc => (
-                     <SubNavButton 
-                        key={calc.id}
-                        label={calc.label} 
-                        icon={calc.Icon}
-                        isActive={activeCalc === calc.id} 
-                        onClick={() => setActiveCalc(calc.id as HealthCalcType)} 
-                     />
-                ))}
+        <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+            <div className="mb-12 md:mb-16">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-mono mb-4 border border-brand-primary/20"
+                >
+                    <Stethoscope size={14} /> Health Protocol
+                </motion.div>
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                    Health & Fitness Metrics
+                </h2>
+                <p className="text-brand-text-secondary mt-4 max-w-2xl font-mono text-sm leading-relaxed">
+                    A suite of high-performance tools for biological tracking. All calculations run strictly client-side.
+                </p>
             </div>
 
-            <div className="bg-brand-surface/50 p-6 rounded-lg">
-                {calculatorHasUnits && (
-                    <div className="flex justify-end mb-4">
-                        <div className="flex items-center gap-2 p-1 bg-brand-bg rounded-full">
-                           <UnitToggleButton label="Metric" isActive={unitSystem === 'metric'} onClick={() => setUnitSystem('metric')} />
-                           <UnitToggleButton label="Imperial" isActive={unitSystem === 'imperial'} onClick={() => setUnitSystem('imperial')} />
+            <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start">
+                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 bg-brand-bg/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none pb-4 md:pb-0 border-b border-brand-border/20 md:border-none -mx-4 px-4 md:mx-0 md:px-0">
+                    <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-2 pb-2 md:pb-0 mask-fade-edges">
+                        <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
+                            {calculators.map(calc => (
+                                 <SubNavButton 
+                                    key={calc.id}
+                                    label={calc.label} 
+                                    icon={calc.Icon}
+                                    isActive={activeCalc === calc.id} 
+                                    onClick={() => setActiveCalc(calc.id as HealthCalcType)} 
+                                    layoutId="healthNavActive"
+                                 />
+                            ))}
                         </div>
                     </div>
-                )}
+                </div>
 
-                {renderCalculator()}
+                <div className="flex-1 w-full min-w-0 pb-20">
+                    <div className="mb-8 pb-6 border-b border-brand-border/40 flex items-center justify-between">
+                        <h3 className="text-2xl font-black text-white flex items-center gap-3">
+                            {activeCalcData?.Icon && React.createElement(activeCalcData.Icon, { size: 28, className: "text-brand-primary" })}
+                            {activeCalcData?.label}
+                        </h3>
+                        {calculatorHasUnits && (
+                            <div className="flex items-center gap-2 p-1 bg-brand-bg rounded-full scale-90 origin-right border border-brand-border/30">
+                               <UnitToggleButton label="Metric" isActive={unitSystem === 'metric'} onClick={() => setUnitSystem('metric')} />
+                               <UnitToggleButton label="Imperial" isActive={unitSystem === 'imperial'} onClick={() => setUnitSystem('imperial')} />
+                            </div>
+                        )}
+                    </div>
+
+                    <motion.div 
+                        key={`${activeCalc}-${unitSystem}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-brand-surface/20 p-6 md:p-10 rounded-[2.5rem] border border-brand-border/40 shadow-inner backdrop-blur-sm"
+                    >
+                        {renderCalculator()}
+                    </motion.div>
+                </div>
             </div>
         </div>
     );

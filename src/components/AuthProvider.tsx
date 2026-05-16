@@ -98,7 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    // Removed specific drive scope to avoid potential API permission friction during basic login
+    provider.addScope('https://www.googleapis.com/auth/drive.appdata');
+    provider.addScope('https://www.googleapis.com/auth/drive.file');
     
     setLoading(true);
     try {

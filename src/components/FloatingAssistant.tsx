@@ -22,6 +22,47 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
   // Speech Recognition Setup
   const recognitionRef = useRef<any>(null);
 
+  const askAi = async (query: string) => {
+    if (!query.trim()) return;
+    
+    setIsThinking(true);
+    setMessages(prev => [...prev, { role: 'user', text: query }]);
+    
+    try {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          text: "I need a Gemini API key to assist you. Please configure it in your Settings to unlock my abilities." 
+        }]);
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: query,
+        config: {
+          systemInstruction: `You are the QuantumCalc AI Research Assistant. You are currently helping the user in the "${activeTab}" section of the app. Provide clear, concise, and educational answers, formatted nicely using Markdown. If you provide steps or code or math, format it properly. If the user wants to solve a complex math problem, provide the answer directly and explain how to get more details in the 'Student Tools' tab. You help with navigation, quick math, tool explanations, and general knowledge.`,
+        }
+      });
+      
+      const text = response.text || "I'm sorry, I couldn't process that.";
+      setMessages(prev => [...prev, { role: 'assistant', text }]);
+    } catch (err: any) {
+      console.error("AI Error:", err);
+      let errorMsg = "Service temporarily unavailable.";
+      if (err?.message?.includes('API_KEY_INVALID')) {
+        errorMsg = "Your API key seems invalid. Please check your settings.";
+      } else if (err?.message?.includes('quota')) {
+        errorMsg = "API quota reached. You can add your own key in Settings to keep going!";
+      }
+      setMessages(prev => [...prev, { role: 'assistant', text: errorMsg }]);
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
   const handleVoiceCommand = (cmd: string) => {
     if (cmd.includes('calculator') || cmd.includes('calc')) setActiveTab('calculator');
     else if (cmd.includes('graph')) setActiveTab('graphing');
@@ -72,47 +113,6 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
       setTranscript('');
       recognitionRef.current?.start();
       setIsListening(true);
-    }
-  };
-
-  const askAi = async (query: string) => {
-    if (!query.trim()) return;
-    
-    setIsThinking(true);
-    setMessages(prev => [...prev, { role: 'user', text: query }]);
-    
-    try {
-      const apiKey = getApiKey();
-      if (!apiKey) {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          text: "I need a Gemini API key to assist you. Please configure it in your Settings to unlock my abilities." 
-        }]);
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
-        contents: query,
-        config: {
-          systemInstruction: `You are the QuantumCalc AI Research Assistant. You are currently helping the user in the "${activeTab}" section of the app. Provide clear, concise, and educational answers, formatted nicely using Markdown. If you provide steps or code or math, format it properly. If the user wants to solve a complex math problem, provide the answer directly and explain how to get more details in the 'Student Tools' tab. You help with navigation, quick math, tool explanations, and general knowledge.`,
-        }
-      });
-      
-      const text = response.text || "I'm sorry, I couldn't process that.";
-      setMessages(prev => [...prev, { role: 'assistant', text }]);
-    } catch (err: any) {
-      console.error("AI Error:", err);
-      let errorMsg = "Service temporarily unavailable.";
-      if (err?.message?.includes('API_KEY_INVALID')) {
-        errorMsg = "Your API key seems invalid. Please check your settings.";
-      } else if (err?.message?.includes('quota')) {
-        errorMsg = "API quota reached. You can add your own key in Settings to keep going!";
-      }
-      setMessages(prev => [...prev, { role: 'assistant', text: errorMsg }]);
-    } finally {
-      setIsThinking(false);
     }
   };
 
