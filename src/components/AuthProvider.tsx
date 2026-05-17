@@ -9,8 +9,10 @@ interface AuthContextType {
   userData: any | null;
   accessToken: string | null;
   loading: boolean;
+  error: string | null;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,8 +20,10 @@ const AuthContext = createContext<AuthContextType>({
   userData: null,
   accessToken: null,
   loading: true,
+  error: null,
   signInWithGoogle: async () => {},
   logout: async () => {},
+  clearError: () => {},
 });
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -36,7 +40,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const unsubscribeUserDocRef = useRef<(() => void) | null>(null);
+
+  const clearError = () => setError(null);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
@@ -69,14 +76,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await setDoc(userRef, initialData);
               setUserData(initialData);
               setLoading(false);
-            } catch (error) {
+            } catch (err: any) {
               setLoading(false);
-              handleFirestoreError(error, OperationType.WRITE, `users/${currentUser.uid}`);
+              setError(`Database initialization failed: ${err.message}`);
+              handleFirestoreError(err, OperationType.WRITE, `users/${currentUser.uid}`);
             }
           }
-        }, (error: any) => {
+        }, (err: any) => {
           setLoading(false);
-          handleFirestoreError(error, OperationType.GET, `users/${currentUser.uid}`);
+          setError(`Database connection failed: ${err.message}`);
+          handleFirestoreError(err, OperationType.GET, `users/${currentUser.uid}`);
         });
       } else {
         setUserData(null);
@@ -102,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     provider.addScope('https://www.googleapis.com/auth/drive.file');
     
     setLoading(true);
+    setError(null);
     try {
       const result = await signInWithPopup(auth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -113,12 +123,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Ignore error
         }
       }
-    } catch (error: any) {
+    } catch (err: any) {
       setLoading(false);
-      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         console.log("Sign-in cancelled by user.");
+      } else if (err.code === 'auth/popup-blocked') {
+        setError("Sign-in popup was blocked by your browser. Please allow popups for this site.");
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError("This domain is not authorized for Google Sign-in. Please contact support.");
+      } else if (err.code === 'auth/network-request-failed') {
+        setError("Network error: Please check your internet connection and ensure third-party cookies/data are allowed for this site. Some ad-blockers or tracking protection settings can also interfere with Google sign-in.");
       } else {
-        console.error("Error signing in with Google", error);
+        setError(err.message || "An unexpected error occurred during sign-in.");
+        console.error("Error signing in with Google", err);
       }
     }
   };
@@ -127,18 +144,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
       setAccessToken(null);
+      setError(null);
       try {
         localStorage.removeItem('google_access_token');
       } catch (e) {
         // Ignore error
       }
-    } catch (error) {
-      console.error("Error signing out", error);
+    } catch (err) {
+      console.error("Error signing out", err);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, userData, accessToken, loading, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, userData, accessToken, loading, error, signInWithGoogle, logout, clearError }}>
       {children}
     </AuthContext.Provider>
   );

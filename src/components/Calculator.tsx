@@ -47,6 +47,10 @@ const SCIENTIFIC_CONSTANTS = [
     { name: 'Avogadro Constant (Nₐ)', value: '6.02214076e23', symbol: 'Nₐ', unit: 'mol⁻¹' },
     { name: 'Boltzmann Constant (k)', value: '1.380649e-23', symbol: 'k', unit: 'J/K' },
     { name: 'Golden Ratio (φ)', value: '1.61803398875', symbol: 'φ', unit: '' },
+    { name: 'Vacuum Permittivity (ε₀)', value: '8.8541878128e-12', symbol: 'ε₀', unit: 'F/m' },
+    { name: 'Vacuum Permeability (μ₀)', value: '1.25663706212e-6', symbol: 'μ₀', unit: 'N/A²' },
+    { name: 'Gas Constant (R)', value: '8.314462618', symbol: 'R', unit: 'J/(mol·K)' },
+    { name: 'Faraday Constant (F)', value: '96485.33212', symbol: 'F', unit: 'C/mol' },
 ];
 
 import 'katex/dist/katex.min.css';
@@ -69,6 +73,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastAnswer, setLastAnswer] = useState<string>('0');
   const [angleMode, setAngleMode] = useState<AngleMode>(() => {
     try {
       const saved = localStorage.getItem('calc_angleMode');
@@ -79,7 +84,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   useEffect(() => {
     try {
       localStorage.setItem('calc_angleMode', angleMode);
-    } catch { console.error("Failed to save angle mode"); }
+    } catch { console.error("Failed to solve angle mode"); }
   }, [angleMode]);
   const [memory, setMemory] = useState<number | null>(null);
   const [isSecond, setIsSecond] = useState(false);
@@ -153,6 +158,16 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
     }
     return p;
   }, [angleMode]);
+
+  const applyAns = useCallback(() => {
+    if (isResultState) {
+        setExpression('');
+        setCurrentInput(lastAnswer);
+        setIsResultState(false);
+    } else {
+        setCurrentInput(prev => (prev === '0' ? lastAnswer : prev + lastAnswer));
+    }
+  }, [isResultState, lastAnswer]);
 
   const clear = useCallback(() => {
     setExpression('');
@@ -263,6 +278,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
       
       setExpression(fullExpression + ' =');
       setCurrentInput(resultStr);
+      setLastAnswer(resultStr);
       setIsResultState(true);
       
       setIsLoading(true);
@@ -319,6 +335,11 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
             return;
         }
 
+        // Allow some default browser shortcuts
+        if ((event.ctrlKey || event.metaKey) && (event.key === 'r' || event.key === 'c' || event.key === 'v')) {
+            return;
+        }
+
         event.preventDefault();
         const key = event.key;
 
@@ -346,6 +367,8 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
             clear();
         } else if (key.toLowerCase() === 'e') {
             handleInput('E');
+        } else if (key.toLowerCase() === 'a') {
+            applyAns();
         }
     };
 
@@ -353,7 +376,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleInput, handleOp, calculate, backspace, clear]);
+  }, [handleInput, handleOp, calculate, backspace, clear, applyAns]);
 
   const memoryClear = useCallback(() => { setMemory(null); showToast("Memory cleared"); }, [showToast]);
   const memoryRecall = useCallback(() => { if(memory !== null) { setCurrentInput(String(memory)); setIsResultState(false); } }, [memory]);
@@ -385,10 +408,10 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
           { label: 'MR', action: memoryRecall, variant: 'num', title: 'Memory Recall' },
           { label: 'M+', action: memoryAdd, variant: 'num', title: 'Memory Add' },
           { label: 'M-', action: memorySubtract, variant: 'num', title: 'Memory Subtract' },
-          { label: '+/-', action: () => {
+          { label: 'Ans', secondLabel: '±', action: applyAns, secondAction: () => {
               if (currentInput.startsWith('-')) setCurrentInput(currentInput.slice(1));
-              else if (currentInput !== '0') setCurrentInput('-' + currentInput);
-          }, variant: 'outline', title: 'Negate' },
+              else if (currentInput !== '0' && currentInput !== '') setCurrentInput('-' + currentInput);
+          }, variant: 'outline', title: 'Last Answer (A)', secondTitle: 'Negate (Plus/Minus)' },
       ],
       [
           { label: 'sin', secondLabel: 'asin', action: () => handleFunction('sin('), secondAction: () => handleFunction('asin('), variant: 'outline', title: 'Sine', secondTitle: 'Inverse Sine (arcsin)' },
@@ -416,7 +439,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
           { label: '8', action: () => handleInput('8'), variant: 'num' },
           { label: '9', action: () => handleInput('9'), variant: 'num' },
           { label: '÷', action: () => handleOp('÷'), variant: 'secondary', title: 'Divide' },
-          { label: 'rand', action: () => { setCurrentInput(String(Math.random())); setIsResultState(false); }, variant: 'outline', title: 'Random Number' },
+          { label: 'log₂', secondLabel: '2ˣ', action: () => handleFunction('log2('), secondAction: () => handleFunction('pow(2,'), variant: 'outline', title: 'Logarithm (base 2)', secondTitle: 'Power of 2' },
       ],
       [
           { label: '4', action: () => handleInput('4'), variant: 'num' },
@@ -436,9 +459,9 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
           { label: '0', action: () => handleInput('0'), variant: 'num', colSpan: 2 },
           { label: '.', action: () => handleInput('.'), variant: 'num', title: 'Decimal Point' },
           { label: '+', action: () => handleOp('+'), variant: 'secondary', title: 'Add' },
-          { label: 'abs', secondLabel: 'abs', action: () => handleFunction('abs('), secondAction: () => handleFunction('abs('), variant: 'outline', title: 'Absolute Value' },
+          { label: 'abs', secondLabel: 'Γ', action: () => handleFunction('abs('), secondAction: () => handleFunction('gamma('), variant: 'outline', title: 'Absolute Value', secondTitle: 'Gamma Function' },
       ]
-  ], [isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract, currentInput]);
+  ], [isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract, currentInput, applyAns]);
 
   const angleModes: { id: AngleMode, label: string }[] = [{ id: 'deg', label: 'DEG' }, { id: 'rad', label: 'RAD' }, { id: 'grad', label: 'GRAD' }];
 
