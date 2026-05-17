@@ -13,6 +13,7 @@ const math = create(all);
 math.import({
   nPr: (n: number, k: number) => math.permutations(n, k),
   nCr: (n: number, k: number) => math.combinations(n, k),
+  mod: (a: number, b: number) => a % b,
   pmt: (annualRatePercent: number, termYears: number, principal: number) => {
     const monthlyRate = annualRatePercent / 100 / 12;
     const numberOfPayments = termYears * 12;
@@ -131,6 +132,9 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
     p.evaluate('asin(x)=asin(x)');
     p.evaluate('acos(x)=acos(x)');
     p.evaluate('atan(x)=atan(x)');
+    p.evaluate('asinh(x)=asinh(x)');
+    p.evaluate('acosh(x)=acosh(x)');
+    p.evaluate('atanh(x)=atanh(x)');
 
     if (angleMode === 'deg') {
         p.evaluate('sin(x) = sin(degToRad(x))');
@@ -377,54 +381,64 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
           { label: 'del', action: backspace, variant: 'clear', title: 'Delete (Backspace)' },
       ],
       [
-          { label: 'x²', secondLabel: 'x³', action: () => handleInput('^2'), secondAction: () => handleInput('^3'), variant: 'outline', title: 'Square (x^2)', secondTitle: 'Cube (x^3)' },
-          { label: '1/x', secondLabel: 'rand', action: () => handleInput('^(-1)'), secondAction: () => { setCurrentInput(String(Math.random())); setIsResultState(false); }, variant: 'outline', title: 'Reciprocal (1/x)', secondTitle: 'Random Number' },
-          { label: '√', secondLabel: '∛', action: () => handleFunction('sqrt(', '√('), secondAction: () => handleFunction('cbrt(', '∛('), variant: 'outline', title: 'Square Root (sqrt)', secondTitle: 'Cube Root (cbrt)' },
-          { label: '(', action: () => handleInput('('), variant: 'outline', title: 'Open Parenthesis' },
-          { label: ')', action: () => handleInput(')'), variant: 'outline', title: 'Close Parenthesis' },
+          { label: 'MC', action: memoryClear, variant: 'num', title: 'Memory Clear' },
+          { label: 'MR', action: memoryRecall, variant: 'num', title: 'Memory Recall' },
+          { label: 'M+', action: memoryAdd, variant: 'num', title: 'Memory Add' },
+          { label: 'M-', action: memorySubtract, variant: 'num', title: 'Memory Subtract' },
+          { label: '+/-', action: () => {
+              if (currentInput.startsWith('-')) setCurrentInput(currentInput.slice(1));
+              else if (currentInput !== '0') setCurrentInput('-' + currentInput);
+          }, variant: 'outline', title: 'Negate' },
       ],
       [
           { label: 'sin', secondLabel: 'asin', action: () => handleFunction('sin('), secondAction: () => handleFunction('asin('), variant: 'outline', title: 'Sine', secondTitle: 'Inverse Sine (arcsin)' },
           { label: 'cos', secondLabel: 'acos', action: () => handleFunction('cos('), secondAction: () => handleFunction('acos('), variant: 'outline', title: 'Cosine', secondTitle: 'Inverse Cosine (arccos)' },
           { label: 'tan', secondLabel: 'atan', action: () => handleFunction('tan('), secondAction: () => handleFunction('atan('), variant: 'outline', title: 'Tangent', secondTitle: 'Inverse Tangent (arctan)' },
-          { label: 'log', secondLabel: 'log₂', action: () => handleFunction('log10('), secondAction: () => handleFunction('log2('), variant: 'outline', title: 'Logarithm (base 10)', secondTitle: 'Logarithm (base 2)' },
-          { label: 'ln', action: () => handleFunction('log('), variant: 'outline', title: 'Natural Logarithm (ln)' },
+          { label: 'sinh', secondLabel: 'asinh', action: () => handleFunction('sinh('), secondAction: () => handleFunction('asinh('), variant: 'outline', title: 'Hyperbolic Sine', secondTitle: 'Inverse Hyp. Sine' },
+          { label: 'cosh', secondLabel: 'acosh', action: () => handleFunction('cosh('), secondAction: () => handleFunction('acosh('), variant: 'outline', title: 'Hyperbolic Cosine', secondTitle: 'Inverse Hyp. Cosine' },
       ],
       [
-          { label: 'MC', action: memoryClear, variant: 'num', title: 'Memory Clear' },
-          { label: 'MR', action: memoryRecall, variant: 'num', title: 'Memory Recall' },
-          { label: 'M+', action: memoryAdd, variant: 'num', title: 'Memory Add' },
-          { label: 'M-', action: memorySubtract, variant: 'num', title: 'Memory Subtract' },
-          { label: 'EE', action: () => handleInput('E'), variant: 'outline', title: 'Exponent (e.g. 1.23E4)' },
+          { label: 'tanh', secondLabel: 'atanh', action: () => handleFunction('tanh('), secondAction: () => handleFunction('atanh('), variant: 'outline', title: 'Hyperbolic Tangent', secondTitle: 'Inverse Hyp. Tangent' },
+          { label: 'ln', secondLabel: 'eˣ', action: () => handleFunction('log('), secondAction: () => handleFunction('exp('), variant: 'outline', title: 'Natural Logarithm (ln)', secondTitle: 'Exponential (e^x)' },
+          { label: 'log', secondLabel: '10ˣ', action: () => handleFunction('log10('), secondAction: () => handleFunction('pow(10,'), variant: 'outline', title: 'Logarithm (base 10)', secondTitle: 'Power of 10' },
+          { label: 'xʸ', secondLabel: 'ʸ√x', action: () => handleInput('^'), secondAction: () => handleFunction('nthRoot('), variant: 'outline', title: 'Power (x^y)', secondTitle: 'N-th Root' },
+          { label: 'x²', secondLabel: '√x', action: () => handleInput('^2'), secondAction: () => handleFunction('sqrt('), variant: 'outline', title: 'Square', secondTitle: 'Square Root' },
       ],
-       [
+      [
+          { label: 'x³', secondLabel: '∛x', action: () => handleInput('^3'), secondAction: () => handleFunction('cbrt('), variant: 'outline', title: 'Cube', secondTitle: 'Cube Root' },
+          { label: '(', action: () => handleInput('('), variant: 'outline', title: 'Open Parenthesis' },
+          { label: ')', action: () => handleInput(')'), variant: 'outline', title: 'Close Parenthesis' },
+          { label: 'nCr', secondLabel: 'nPr', action: () => handleFunction('nCr('), secondAction: () => handleFunction('nPr('), variant: 'outline', title: 'Combinations', secondTitle: 'Permutations' },
+          { label: 'x!', secondLabel: 'mod', action: () => handleInput('!'), secondAction: () => handleFunction('mod('), variant: 'outline', title: 'Factorial', secondTitle: 'Modulo' },
+      ],
+      [
           { label: '7', action: () => handleInput('7'), variant: 'num' },
           { label: '8', action: () => handleInput('8'), variant: 'num' },
           { label: '9', action: () => handleInput('9'), variant: 'num' },
           { label: '÷', action: () => handleOp('÷'), variant: 'secondary', title: 'Divide' },
-          { label: '%', action: () => handleInput('%'), variant: 'outline', title: 'Percentage' },
+          { label: 'rand', action: () => { setCurrentInput(String(Math.random())); setIsResultState(false); }, variant: 'outline', title: 'Random Number' },
       ],
       [
           { label: '4', action: () => handleInput('4'), variant: 'num' },
           { label: '5', action: () => handleInput('5'), variant: 'num' },
           { label: '6', action: () => handleInput('6'), variant: 'num' },
           { label: '×', action: () => handleOp('×'), variant: 'secondary', title: 'Multiply' },
-          { label: '(', action: () => handleInput('('), variant: 'outline', title: 'Open Parenthesis' },
+          { label: 'EE', action: () => handleInput('E'), variant: 'outline', title: 'Exponent (1E3)' },
       ],
       [
           { label: '1', action: () => handleInput('1'), variant: 'num' },
           { label: '2', action: () => handleInput('2'), variant: 'num' },
           { label: '3', action: () => handleInput('3'), variant: 'num' },
           { label: '−', action: () => handleOp('−'), variant: 'secondary', title: 'Subtract' },
-          { label: ')', action: () => handleInput(')'), variant: 'outline', title: 'Close Parenthesis' },
+          { label: '=', action: calculate, variant: 'primary', colSpan: 1, title: 'Equals (Enter)' },
       ],
       [
           { label: '0', action: () => handleInput('0'), variant: 'num', colSpan: 2 },
           { label: '.', action: () => handleInput('.'), variant: 'num', title: 'Decimal Point' },
           { label: '+', action: () => handleOp('+'), variant: 'secondary', title: 'Add' },
-          { label: '=', action: calculate, variant: 'primary', title: 'Equals (Enter)' },
+          { label: 'abs', secondLabel: 'abs', action: () => handleFunction('abs('), secondAction: () => handleFunction('abs('), variant: 'outline', title: 'Absolute Value' },
       ]
-  ], [isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract]);
+  ], [isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract, currentInput]);
 
   const angleModes: { id: AngleMode, label: string }[] = [{ id: 'deg', label: 'DEG' }, { id: 'rad', label: 'RAD' }, { id: 'grad', label: 'GRAD' }];
 

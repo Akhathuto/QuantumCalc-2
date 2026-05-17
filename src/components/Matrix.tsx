@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react';
 import { create, all } from 'mathjs';
 import { Shuffle, Eye, Eraser, ArrowRightLeft, Copy, ShieldCheck, Table } from 'lucide-react';
