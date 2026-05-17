@@ -1,12 +1,12 @@
-
 import { useState, useMemo, useCallback } from 'react';
-import { ArrowRightLeft, Sparkles, Loader2, Info } from 'lucide-react';
+import { ArrowRightLeft, Sparkles, Loader2, Info, Ruler, Weight, Thermometer, Clock, Database, ChevronRight, Target } from 'lucide-react';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from 'motion/react';
 
 const CONVERSION_DATA = {
   Length: {
+    icon: Ruler,
     baseUnit: 'Meter',
     units: {
       Meter: 1,
@@ -20,6 +20,7 @@ const CONVERSION_DATA = {
     },
   },
   Mass: {
+    icon: Weight,
     baseUnit: 'Kilogram',
     units: {
       Kilogram: 1,
@@ -31,10 +32,12 @@ const CONVERSION_DATA = {
     },
   },
   Temperature: {
+    icon: Thermometer,
     // Special handling, no base unit factor
     units: ['Celsius', 'Fahrenheit', 'Kelvin'],
   },
   Time: {
+    icon: Clock,
     baseUnit: 'Second',
     units: {
       Second: 1,
@@ -47,6 +50,7 @@ const CONVERSION_DATA = {
     },
   },
   'Data Storage': {
+    icon: Database,
     baseUnit: 'Byte',
     units: {
         Byte: 1,
@@ -92,7 +96,7 @@ export const UnitConverter = () => {
 
   const outputValue = useMemo(() => {
     const inputNum = parseFloat(inputValue);
-    if (isNaN(inputNum)) return '';
+    if (isNaN(inputNum)) return '0.000000';
 
     if (category === 'Temperature') {
       if (fromUnit === toUnit) return inputNum.toPrecision(6);
@@ -109,7 +113,7 @@ export const UnitConverter = () => {
     }
     
     const categoryData = CONVERSION_DATA[category];
-    if (!('baseUnit' in categoryData)) return '';
+    if (!('baseUnit' in categoryData)) return '0.000000';
 
     const units = categoryData.units as Record<string, number>;
     const fromFactor = units[fromUnit];
@@ -152,128 +156,183 @@ export const UnitConverter = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-lg shadow-brand-primary/20">
+    <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+      <div className="mb-12">
+        <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-bg flex items-center justify-center shadow-lg shadow-brand-primary/20 transition-transform hover:scale-110 active:scale-95 duration-300">
                 <ArrowRightLeft size={24} />
             </div>
             <div>
-                <h2 className="text-3xl font-black text-brand-text uppercase tracking-widest leading-none">Unit Converter</h2>
-                <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black mt-1">Multi-dimensional variable translation</p>
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">Universal Converter</h2>
+                <div className="flex items-center gap-2 mt-2">
+                    <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
+                    <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.3em] font-black">Multi-dimensional translation protocol</p>
+                </div>
             </div>
         </div>
+      </div>
         
-        {/* Smart Assistant Bar */}
-        <div className="mb-8 relative max-w-4xl mx-auto">
-            <div className="flex gap-2 p-1.5 bg-brand-surface/80 border border-brand-border/50 rounded-2xl shadow-xl backdrop-blur-md">
-                <div className="flex items-center pl-5 text-brand-primary">
-                    <Sparkles size={20} className="animate-pulse" />
-                </div>
-                <input 
-                    value={smartQuery}
-                    onChange={e => setSmartQuery(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSmartConvert()}
-                    placeholder="Ask Nolo Smart Converter: '150 mph to km/h' or 'distance to Moon in meters'..."
-                    className="flex-1 bg-transparent border-none outline-none p-3 text-sm text-brand-text font-medium placeholder:text-brand-text-secondary/50 placeholder:italic"
-                />
-                <button 
-                    onClick={handleSmartConvert}
-                    disabled={isSmartLoading}
-                    className="bg-brand-primary hover:bg-brand-primary/90 text-brand-bg px-8 rounded-xl transition-all shadow-md shadow-brand-primary/20 font-black text-[10px] uppercase tracking-widest disabled:opacity-50 flex items-center gap-2 active:scale-95"
-                >
-                    {isSmartLoading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : 'Compute'}
-                </button>
-            </div>
-            
-            <AnimatePresence>
-                {smartResult && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute left-0 right-0 top-full mt-2 p-4 bg-brand-primary/10 border border-brand-primary/30 rounded-xl backdrop-blur-md z-10"
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Left Col: Categories */}
+        <div className="lg:col-span-3 space-y-6">
+            <h3 className="text-xs font-black text-brand-text-secondary uppercase tracking-[0.3em] px-2 flex items-center gap-2">
+                <ChevronRight size={14} className="text-brand-primary" />
+                Dimensions
+            </h3>
+            <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 no-scrollbar">
+                {(Object.entries(CONVERSION_DATA) as [Category, any][]).map(([cat, data]) => (
+                    <button
+                        key={cat}
+                        onClick={() => handleCategoryChange(cat)}
+                        className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all min-w-max text-left border relative group ${
+                            category === cat 
+                                ? 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary' 
+                                : 'bg-brand-surface/20 border-brand-border/20 text-brand-text-secondary hover:bg-brand-surface/40 hover:text-white'
+                        }`}
                     >
-                        <div className="flex items-start gap-3">
-                            <div className="mt-1 p-1 bg-brand-primary rounded-full text-white">
-                                <Info size={14} />
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold text-brand-primary">{smartResult.value}</p>
-                                {smartResult.note && <p className="text-xs text-brand-text-secondary mt-1">{smartResult.note}</p>}
-                                {smartResult.comparison && (
-                                    <div className="mt-2 pt-2 border-t border-brand-primary/20">
-                                        <p className="text-[10px] uppercase font-bold text-brand-primary tracking-widest">Real-world Comparison</p>
-                                        <p className="text-xs text-brand-text italic">{smartResult.comparison}</p>
-                                    </div>
-                                )}
-                            </div>
-                            <button onClick={() => setSmartResult(null)} className="ml-auto text-brand-text-secondary hover:text-brand-text">✕</button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        {category === cat && (
+                            <motion.div 
+                                layoutId="catActive"
+                                className="absolute inset-0 bg-brand-primary/5 rounded-2xl pointer-events-none"
+                                initial={false}
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            />
+                        )}
+                        <data.icon size={18} className="relative z-10" />
+                        <span className="text-sm relative z-10">{cat}</span>
+                    </button>
+                ))}
+            </div>
         </div>
 
-        <div className="bg-brand-surface border border-brand-border/50 p-8 md:p-12 rounded-[2.5rem] shadow-2xl backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-              <ArrowRightLeft size={160} />
-          </div>
-          
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-            <div>
-              <label htmlFor="category" className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] mb-2 px-1">Dimension</label>
-              <select
-                id="category"
-                value={category}
-                onChange={(e) => handleCategoryChange(e.target.value as Category)}
-                className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-4 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer shadow-inner"
-              >
-                {Object.keys(CONVERSION_DATA).map(cat => <option key={cat}>{cat}</option>)}
-              </select>
-            </div>
-
-            <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-6 items-end">
-                <div className="w-full">
-                    <label htmlFor="from-unit" className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] mb-2 px-1">Source Value</label>
-                    <input
-                        type="number"
-                        value={inputValue}
-                        onChange={e => setInputValue(e.target.value)}
-                        className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-4 font-mono text-xl text-brand-text focus:ring-2 focus:ring-brand-primary transition-all outline-none shadow-inner"
+        {/* Right Col: Interface */}
+        <div className="lg:col-span-9 space-y-8">
+            {/* Smart Assistant Bar */}
+            <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-brand-primary to-brand-accent rounded-2xl blur opacity-25 group-focus-within:opacity-50 transition-opacity" />
+                <div className="relative flex gap-2 p-2 bg-brand-bg/80 border border-brand-border/50 rounded-2xl shadow-2xl backdrop-blur-xl">
+                    <div className="flex items-center pl-4 text-brand-primary">
+                        <Sparkles size={20} className="animate-pulse" />
+                    </div>
+                    <input 
+                        value={smartQuery}
+                        onChange={e => setSmartQuery(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleSmartConvert()}
+                        placeholder="NLP Search: '150 mph to km/h' or 'distance to Moon in meters'..."
+                        className="flex-1 bg-transparent border-none outline-none p-4 text-sm text-brand-text font-bold placeholder:text-brand-text-secondary/50"
                     />
-                    <select
-                        id="from-unit"
-                        value={fromUnit}
-                        onChange={e => setFromUnit(e.target.value)}
-                        className="w-full mt-3 bg-brand-surface border border-brand-border rounded-xl p-3 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
+                    <button 
+                        onClick={handleSmartConvert}
+                        disabled={isSmartLoading}
+                        className="bg-brand-primary hover:bg-brand-primary/90 text-brand-bg px-8 rounded-xl transition-all shadow-lg shadow-brand-primary/20 font-black text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-2 active:scale-95"
                     >
-                        {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
-                    </select>
-                </div>
-
-                <div className="flex items-center justify-center pb-12 sm:pb-3">
-                    <button onClick={swapUnits} className="p-4 bg-brand-primary text-brand-bg hover:bg-brand-secondary rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-brand-primary/20">
-                        <ArrowRightLeft size={24} />
+                        {isSmartLoading ? <Loader2 size={16} className="animate-spin" /> : 'CONVERT'}
                     </button>
                 </div>
+                
+                <AnimatePresence>
+                    {smartResult && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="absolute left-0 right-0 top-full mt-4 p-6 bg-brand-bg border border-brand-primary/30 rounded-[2rem] shadow-2xl backdrop-blur-xl z-50 overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-brand-primary/5 pointer-events-none" />
+                            <div className="relative flex items-start gap-6">
+                                <div className="p-3 bg-brand-primary/10 rounded-2xl text-brand-primary border border-brand-primary/20">
+                                    <Info size={24} />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.3em]">AI Derivative Result</h4>
+                                        <button onClick={() => setSmartResult(null)} className="text-brand-text-secondary hover:text-white transition-colors">✕</button>
+                                    </div>
+                                    <p className="text-4xl font-black text-white font-glow tracking-tighter mb-2">{smartResult.value}</p>
+                                    {smartResult.note && <p className="text-sm text-brand-text-secondary leading-relaxed mb-4">{smartResult.note}</p>}
+                                    {smartResult.comparison && (
+                                        <div className="p-4 rounded-2xl bg-brand-surface/30 border border-brand-border/10">
+                                            <p className="text-[10px] uppercase font-bold text-brand-primary tracking-widest mb-1 flex items-center gap-2">
+                                                <Target size={12} /> Analytical context
+                                            </p>
+                                            <p className="text-xs text-brand-text leading-relaxed italic">{smartResult.comparison}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
-                <div className="w-full">
-                    <label htmlFor="to-unit" className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] mb-2 px-1">Target Derivation</label>
-                    <div className="w-full bg-brand-bg border border-brand-primary/30 rounded-xl p-4 font-mono text-xl text-brand-text min-h-[60px] flex items-center shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.1)]">
-                        {outputValue}
+            {/* Standard Interface */}
+            <div className="bg-brand-surface/20 border border-brand-border/40 p-8 md:p-12 rounded-[3.5rem] shadow-2xl backdrop-blur-sm relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-[3.5rem]" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+                    {/* Source */}
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest ml-1">Source Input</label>
+                            <input
+                                type="number"
+                                value={inputValue}
+                                onChange={e => setInputValue(e.target.value)}
+                                className="w-full bg-brand-bg/50 border border-brand-border/40 rounded-3xl p-6 font-mono text-4xl text-white focus:border-brand-primary/50 focus:ring-4 focus:ring-brand-primary/10 transition-all outline-none shadow-inner"
+                            />
+                        </div>
+                        <div className="relative">
+                            <select
+                                value={fromUnit}
+                                onChange={e => setFromUnit(e.target.value)}
+                                className="w-full bg-brand-surface border border-brand-border/20 rounded-2xl p-4 text-sm font-bold text-white focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer appearance-none pr-12"
+                            >
+                                {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
+                            </select>
+                            <ChevronRight size={18} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-brand-text-secondary pointer-events-none" />
+                        </div>
                     </div>
-                    <select
-                        id="to-unit"
-                        value={toUnit}
-                        onChange={e => setToUnit(e.target.value)}
-                        className="w-full mt-3 bg-brand-surface border border-brand-border rounded-xl p-3 text-sm font-bold text-brand-text focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer"
-                    >
-                        {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
-                    </select>
+
+                    {/* Swap Button (Absolute Center on Desktop, Inline on Mobile) */}
+                    <div className="flex items-center justify-center -my-6 md:my-0">
+                        <button 
+                            onClick={swapUnits} 
+                            className="w-16 h-16 bg-brand-primary text-brand-bg hover:bg-brand-accent rounded-2xl transition-all transform hover:rotate-180 active:scale-90 shadow-2xl shadow-brand-primary/30 flex items-center justify-center group"
+                        >
+                            <ArrowRightLeft size={28} className="group-active:scale-110" />
+                        </button>
+                    </div>
+
+                    {/* Target */}
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest ml-1">Computed Projection</label>
+                            <div className="w-full bg-brand-bg/50 border border-brand-border/30 rounded-3xl p-6 font-mono text-4xl text-brand-accent min-h-[92px] flex items-center overflow-hidden font-glow tracking-tighter shadow-[0_0_30px_rgba(var(--brand-primary-rgb),0.05)]">
+                                {outputValue}
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <select
+                                value={toUnit}
+                                onChange={e => setToUnit(e.target.value)}
+                                className="w-full bg-brand-surface border border-brand-border/20 rounded-2xl p-4 text-sm font-bold text-white focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer appearance-none pr-12"
+                            >
+                                {unitsForCategory.map(unit => <option key={unit}>{unit}</option>)}
+                            </select>
+                            <ChevronRight size={18} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-brand-text-secondary pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="mt-12 flex items-center justify-center gap-8">
+                    {/* Visual accents */}
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-brand-border/20 to-transparent" />
+                    <div className="flex gap-2">
+                        {[1, 2, 3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-brand-primary/20" />)}
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-brand-border/20 to-transparent" />
                 </div>
             </div>
-          </div>
         </div>
       </div>
     </div>

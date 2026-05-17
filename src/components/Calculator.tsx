@@ -368,72 +368,63 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
     }
   }, [currentInput, showToast]);
   
-  const styles = useMemo(() => ({
-    op: 'bg-brand-secondary hover:bg-orange-500 text-white font-black',
-    mem: 'bg-brand-surface border border-brand-border hover:bg-brand-border text-brand-text-secondary text-xs',
-    clear: 'bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20',
-    num: 'bg-brand-surface/40 hover:bg-brand-surface text-brand-text font-bold border border-brand-border/30',
-    func: 'bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-brand-bg font-bold border border-brand-primary/20',
-    active: 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20',
-  }), []);
-
-  const buttonGrid: { label: string, secondLabel?: string, action: () => void, secondAction?: () => void, className: string, colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = useMemo(() => [
+  const buttonGrid: { label: string, secondLabel?: string, action: () => void, secondAction?: () => void, variant: 'primary' | 'secondary' | 'outline' | 'ghost' | 'clear' | 'num', colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = useMemo(() => [
       [
-          { label: '2nd', action: () => setIsSecond(s => !s), className: styles.func, active: isSecond, title: 'Toggle Secondary Functions' },
-          { label: 'π', action: () => handleInput('π'), className: styles.func, title: 'Pi (3.141...)' },
-          { label: 'e', action: () => handleInput('e'), className: styles.func, title: "Euler's Number (2.718...)" },
-          { label: 'AC', action: clear, className: styles.clear, title: 'All Clear (Esc)' },
-          { label: 'del', action: backspace, className: styles.clear, title: 'Delete (Backspace)' },
+          { label: '2nd', action: () => setIsSecond(s => !s), variant: 'outline', active: isSecond, title: 'Toggle Secondary Functions' },
+          { label: 'π', action: () => handleInput('π'), variant: 'outline', title: 'Pi (3.141...)' },
+          { label: 'e', action: () => handleInput('e'), variant: 'outline', title: "Euler's Number (2.718...)" },
+          { label: 'AC', action: clear, variant: 'clear', title: 'All Clear (Esc)' },
+          { label: 'del', action: backspace, variant: 'clear', title: 'Delete (Backspace)' },
       ],
       [
-          { label: 'x²', secondLabel: 'x³', action: () => handleInput('^2'), secondAction: () => handleInput('^3'), className: styles.func, title: 'Square (x^2)', secondTitle: 'Cube (x^3)' },
-          { label: '1/x', secondLabel: 'rand', action: () => handleInput('^(-1)'), secondAction: () => { setCurrentInput(String(Math.random())); setIsResultState(false); }, className: styles.func, title: 'Reciprocal (1/x)', secondTitle: 'Random Number' },
-          { label: '√', secondLabel: '∛', action: () => handleFunction('sqrt(', '√('), secondAction: () => handleFunction('cbrt(', '∛('), className: styles.func, title: 'Square Root (sqrt)', secondTitle: 'Cube Root (cbrt)' },
-          { label: '(', action: () => handleInput('('), className: styles.func, title: 'Open Parenthesis' },
-          { label: ')', action: () => handleInput(')'), className: styles.func, title: 'Close Parenthesis' },
+          { label: 'x²', secondLabel: 'x³', action: () => handleInput('^2'), secondAction: () => handleInput('^3'), variant: 'outline', title: 'Square (x^2)', secondTitle: 'Cube (x^3)' },
+          { label: '1/x', secondLabel: 'rand', action: () => handleInput('^(-1)'), secondAction: () => { setCurrentInput(String(Math.random())); setIsResultState(false); }, variant: 'outline', title: 'Reciprocal (1/x)', secondTitle: 'Random Number' },
+          { label: '√', secondLabel: '∛', action: () => handleFunction('sqrt(', '√('), secondAction: () => handleFunction('cbrt(', '∛('), variant: 'outline', title: 'Square Root (sqrt)', secondTitle: 'Cube Root (cbrt)' },
+          { label: '(', action: () => handleInput('('), variant: 'outline', title: 'Open Parenthesis' },
+          { label: ')', action: () => handleInput(')'), variant: 'outline', title: 'Close Parenthesis' },
       ],
       [
-          { label: 'sin', secondLabel: 'asin', action: () => handleFunction('sin('), secondAction: () => handleFunction('asin('), className: styles.func, title: 'Sine', secondTitle: 'Inverse Sine (arcsin)' },
-          { label: 'cos', secondLabel: 'acos', action: () => handleFunction('cos('), secondAction: () => handleFunction('acos('), className: styles.func, title: 'Cosine', secondTitle: 'Inverse Cosine (arccos)' },
-          { label: 'tan', secondLabel: 'atan', action: () => handleFunction('tan('), secondAction: () => handleFunction('atan('), className: styles.func, title: 'Tangent', secondTitle: 'Inverse Tangent (arctan)' },
-          { label: 'log', secondLabel: 'log₂', action: () => handleFunction('log10('), secondAction: () => handleFunction('log2('), className: styles.func, title: 'Logarithm (base 10)', secondTitle: 'Logarithm (base 2)' },
-          { label: 'ln', action: () => handleFunction('log('), className: styles.func, title: 'Natural Logarithm (ln)' },
+          { label: 'sin', secondLabel: 'asin', action: () => handleFunction('sin('), secondAction: () => handleFunction('asin('), variant: 'outline', title: 'Sine', secondTitle: 'Inverse Sine (arcsin)' },
+          { label: 'cos', secondLabel: 'acos', action: () => handleFunction('cos('), secondAction: () => handleFunction('acos('), variant: 'outline', title: 'Cosine', secondTitle: 'Inverse Cosine (arccos)' },
+          { label: 'tan', secondLabel: 'atan', action: () => handleFunction('tan('), secondAction: () => handleFunction('atan('), variant: 'outline', title: 'Tangent', secondTitle: 'Inverse Tangent (arctan)' },
+          { label: 'log', secondLabel: 'log₂', action: () => handleFunction('log10('), secondAction: () => handleFunction('log2('), variant: 'outline', title: 'Logarithm (base 10)', secondTitle: 'Logarithm (base 2)' },
+          { label: 'ln', action: () => handleFunction('log('), variant: 'outline', title: 'Natural Logarithm (ln)' },
       ],
       [
-          { label: 'MC', action: memoryClear, className: styles.mem, title: 'Memory Clear' },
-          { label: 'MR', action: memoryRecall, className: styles.mem, title: 'Memory Recall' },
-          { label: 'M+', action: memoryAdd, className: styles.mem, title: 'Memory Add' },
-          { label: 'M-', action: memorySubtract, className: styles.mem, title: 'Memory Subtract' },
-          { label: 'EE', action: () => handleInput('E'), className: styles.func, title: 'Exponent (e.g. 1.23E4)' },
+          { label: 'MC', action: memoryClear, variant: 'num', title: 'Memory Clear' },
+          { label: 'MR', action: memoryRecall, variant: 'num', title: 'Memory Recall' },
+          { label: 'M+', action: memoryAdd, variant: 'num', title: 'Memory Add' },
+          { label: 'M-', action: memorySubtract, variant: 'num', title: 'Memory Subtract' },
+          { label: 'EE', action: () => handleInput('E'), variant: 'outline', title: 'Exponent (e.g. 1.23E4)' },
       ],
        [
-          { label: '7', action: () => handleInput('7'), className: styles.num },
-          { label: '8', action: () => handleInput('8'), className: styles.num },
-          { label: '9', action: () => handleInput('9'), className: styles.num },
-          { label: '÷', action: () => handleOp('÷'), className: styles.op, title: 'Divide' },
-          { label: '%', action: () => handleInput('%'), className: styles.func, title: 'Percentage' },
+          { label: '7', action: () => handleInput('7'), variant: 'num' },
+          { label: '8', action: () => handleInput('8'), variant: 'num' },
+          { label: '9', action: () => handleInput('9'), variant: 'num' },
+          { label: '÷', action: () => handleOp('÷'), variant: 'secondary', title: 'Divide' },
+          { label: '%', action: () => handleInput('%'), variant: 'outline', title: 'Percentage' },
       ],
       [
-          { label: '4', action: () => handleInput('4'), className: styles.num },
-          { label: '5', action: () => handleInput('5'), className: styles.num },
-          { label: '6', action: () => handleInput('6'), className: styles.num },
-          { label: '×', action: () => handleOp('×'), className: styles.op, title: 'Multiply' },
-          { label: '(', action: () => handleInput('('), className: styles.func, title: 'Open Parenthesis' },
+          { label: '4', action: () => handleInput('4'), variant: 'num' },
+          { label: '5', action: () => handleInput('5'), variant: 'num' },
+          { label: '6', action: () => handleInput('6'), variant: 'num' },
+          { label: '×', action: () => handleOp('×'), variant: 'secondary', title: 'Multiply' },
+          { label: '(', action: () => handleInput('('), variant: 'outline', title: 'Open Parenthesis' },
       ],
       [
-          { label: '1', action: () => handleInput('1'), className: styles.num },
-          { label: '2', action: () => handleInput('2'), className: styles.num },
-          { label: '3', action: () => handleInput('3'), className: styles.num },
-          { label: '−', action: () => handleOp('−'), className: styles.op, title: 'Subtract' },
-          { label: ')', action: () => handleInput(')'), className: styles.func, title: 'Close Parenthesis' },
+          { label: '1', action: () => handleInput('1'), variant: 'num' },
+          { label: '2', action: () => handleInput('2'), variant: 'num' },
+          { label: '3', action: () => handleInput('3'), variant: 'num' },
+          { label: '−', action: () => handleOp('−'), variant: 'secondary', title: 'Subtract' },
+          { label: ')', action: () => handleInput(')'), variant: 'outline', title: 'Close Parenthesis' },
       ],
       [
-          { label: '0', action: () => handleInput('0'), className: styles.num, colSpan: 2 },
-          { label: '.', action: () => handleInput('.'), className: styles.num, title: 'Decimal Point' },
-          { label: '+', action: () => handleOp('+'), className: styles.op, title: 'Add' },
-          { label: '=', action: calculate, className: styles.op, title: 'Equals (Enter)' },
+          { label: '0', action: () => handleInput('0'), variant: 'num', colSpan: 2 },
+          { label: '.', action: () => handleInput('.'), variant: 'num', title: 'Decimal Point' },
+          { label: '+', action: () => handleOp('+'), variant: 'secondary', title: 'Add' },
+          { label: '=', action: calculate, variant: 'primary', title: 'Equals (Enter)' },
       ]
-  ], [styles, isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract]);
+  ], [isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract]);
 
   const angleModes: { id: AngleMode, label: string }[] = [{ id: 'deg', label: 'DEG' }, { id: 'rad', label: 'RAD' }, { id: 'grad', label: 'GRAD' }];
 
@@ -452,7 +443,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                             key={item.timestamp + index} 
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="flex justify-end gap-2"
+                            className="flex justify-end gap-2 border-b border-brand-border/10 py-1 last:border-0"
                           >
                               <span className="opacity-50">{item.expression}</span>
                               <span className="text-brand-primary font-bold">{formatNumber(item.result)}</span>
@@ -462,34 +453,34 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                 </div>
 
                 {/* Main Display */}
-                <div className="relative pt-2">
-                    <div className="flex items-center justify-end gap-4 text-[10px] font-black tracking-widest mb-1">
-                        {isSecond && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-yellow-500 text-black px-1.5 py-0.5 rounded-sm">2ND</motion.span>}
-                        <span className="text-brand-primary opacity-80">{angleMode.toUpperCase()}</span>
-                        {memory !== null && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-cyan-400">MEM</motion.span>}
+                <div className="relative pt-4">
+                    <div className="flex items-center justify-end gap-3 text-[9px] font-black tracking-[0.3em] mb-2 uppercase">
+                        {isSecond && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-yellow-500 text-black px-2 py-0.5 rounded-full font-black">2ND</motion.span>}
+                        <span className="text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full">{angleMode}</span>
+                        {memory !== null && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded-full">MEM</motion.span>}
                     </div>
                     {/* Expression Line */}
-                    <div className="text-brand-text-secondary text-lg break-words h-7 overflow-x-auto text-right font-mono tracking-tighter opacity-70" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
+                    <div className="text-brand-text-secondary text-base md:text-xl break-words h-8 overflow-x-auto text-right font-mono tracking-tighter opacity-70 scrollbar-none" style={{ scrollbarWidth: 'none' }}>{expression || ' '}</div>
                     {/* Input/Result Line */}
-                    <div className="relative group">
-                        <div className="text-5xl font-black text-brand-text break-words min-h-[60px] overflow-x-auto text-right font-mono tracking-tighter leading-none pr-16">
+                    <div className="relative group mt-2">
+                        <div className="text-4xl md:text-6xl font-black text-brand-text break-words min-h-[60px] overflow-x-auto text-right font-mono tracking-tighter leading-none pr-12 scrollbar-none">
                             {isResultState ? formatNumber(currentInput) : currentInput}
                         </div>
                         {currentInput !== '0' && (
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                     onClick={handleShare}
-                                    className="p-1.5 rounded-lg hover:bg-brand-surface/40 transition-all text-brand-text-secondary hover:text-brand-primary"
+                                    className="p-2 rounded-xl bg-brand-surface border border-brand-border/30 hover:bg-brand-primary hover:text-brand-bg transition-all text-brand-text-secondary shadow-lg"
                                     title="Share calculation"
                                 >
-                                    <Share2 size={18} />
+                                    <Share2 size={16} />
                                 </button>
                                 <button
                                     onClick={handleCopy}
-                                    className="p-1.5 rounded-lg hover:bg-brand-surface/40 transition-all text-brand-text-secondary hover:text-brand-primary"
+                                    className="p-2 rounded-xl bg-brand-surface border border-brand-border/30 hover:bg-brand-primary hover:text-brand-bg transition-all text-brand-text-secondary shadow-lg"
                                     title="Copy to clipboard"
                                 >
-                                    {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                                    {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
                                 </button>
                             </div>
                          )}
@@ -501,13 +492,14 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                 </div>
             </div>
             
-             <div className="grid grid-cols-5 gap-2">
+             <div className="grid grid-cols-5 gap-2.5 mt-6">
               {buttonGrid.map((row, rowIndex) =>
                 row.map((b, colIndex) => (
                   <div key={`${rowIndex}-${colIndex}`} className={`col-span-${b.colSpan || 1}`}>
                     <Button
                       onClick={isSecond && b.secondAction ? b.secondAction : b.action}
-                      className={`${b.active ? styles.active : b.className} h-12 text-base w-full`}
+                      variant={b.active ? 'primary' : b.variant}
+                      className="h-14 md:h-16 text-xl w-full"
                       title={isSecond && b.secondTitle ? b.secondTitle : b.title}
                     >
                       {isSecond && b.secondLabel ? b.secondLabel : b.label}
@@ -517,9 +509,13 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
               )}
             </div>
             
-           <div className="flex justify-center gap-2 mt-4">
+           <div className="flex justify-center gap-2 mt-6 p-1.5 bg-brand-surface/30 rounded-full w-fit mx-auto border border-brand-border/30">
               {angleModes.map(mode => (
-                  <button key={mode.id} onClick={() => setAngleMode(mode.id)} className={`px-4 py-1 rounded-full text-sm font-semibold transition-colors ${angleMode === mode.id ? 'bg-brand-primary text-white' : 'bg-brand-surface hover:bg-gray-600'}`}>
+                  <button 
+                    key={mode.id} 
+                    onClick={() => setAngleMode(mode.id)} 
+                    className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${angleMode === mode.id ? 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20 scale-105' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                  >
                       {mode.label}
                   </button>
               ))}

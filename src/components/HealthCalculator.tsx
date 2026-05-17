@@ -39,11 +39,77 @@ const UnitToggleButton: React.FC<{ label: string; isActive: boolean; onClick: ()
     </button>
 );
 
-const Input = ({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) => (
-    <div>
-        <label className="block text-sm font-medium mb-1">{label}</label>
-        <input {...props} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border focus:ring-brand-primary focus:border-brand-primary" />
+const Input = ({ label, icon: Icon, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; icon?: React.ElementType }) => (
+    <div className="group space-y-2">
+        <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest ml-1 transition-colors group-focus-within:text-brand-primary flex items-center gap-2">
+            {Icon && <Icon size={12} />}
+            {label}
+        </label>
+        <div className="relative">
+            <input 
+                {...props} 
+                className="w-full bg-brand-surface/40 backdrop-blur-md px-4 py-4 rounded-2xl border border-brand-border/40 focus:border-brand-primary/50 focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all font-mono placeholder:text-brand-text-secondary/30" 
+            />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        </div>
     </div>
+);
+
+const Select = ({ label, icon: Icon, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string; icon?: React.ElementType }) => (
+    <div className="group space-y-2">
+        <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest ml-1 transition-colors group-focus-within:text-brand-primary flex items-center gap-2">
+            {Icon && <Icon size={12} />}
+            {label}
+        </label>
+        <div className="relative">
+            <select 
+                {...props} 
+                className="w-full bg-brand-surface/40 backdrop-blur-md px-4 py-4 rounded-2xl border border-brand-border/40 focus:border-brand-primary/50 focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all font-mono appearance-none"
+            >
+                {children}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand-text-secondary">
+                <Activity size={16} />
+            </div>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        </div>
+    </div>
+);
+
+const ResultCard = ({ title, value, unit, category, color, description, icon: Icon }: { title: string; value: string; unit?: string; category?: string; color?: string; description?: string; icon?: React.ElementType }) => (
+    <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="mt-8 overflow-hidden rounded-[2rem] border border-brand-border/40 bg-brand-bg relative group"
+    >
+        <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${color || 'from-brand-primary to-brand-accent'}`} />
+        <div className="relative p-8 text-center">
+            {Icon && (
+                <div className={`w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-brand-surface/80 border border-brand-border/30 ${color ? color.split(' ')[0] : 'text-brand-primary'}`}>
+                    <Icon size={24} />
+                </div>
+            )}
+            <p className="text-xs font-bold text-brand-text-secondary uppercase tracking-[0.2em] mb-2">{title}</p>
+            <div className="flex items-baseline justify-center gap-2 mb-2">
+                <span className={`text-6xl font-black tracking-tighter ${color ? color.split(' ')[0] : 'text-brand-accent font-glow'}`}>
+                    {value}
+                </span>
+                {unit && <span className="text-xl font-bold text-brand-text-secondary">{unit}</span>}
+            </div>
+            {category && (
+                <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-4 border ${color ? color.replace('text-', 'bg-').replace('text-', 'border-') + '/20' : 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary'}`}>
+                    <div className={`w-2 h-2 rounded-full animate-pulse ${color ? color.split(' ')[0].replace('text-', 'bg-') : 'bg-brand-primary'}`} />
+                    {category}
+                </div>
+            )}
+            {description && (
+                <p className="text-sm text-brand-text-secondary max-w-sm mx-auto leading-relaxed font-mono">
+                    {description}
+                </p>
+            )}
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-brand-primary/20 to-transparent" />
+    </motion.div>
 );
 
 
@@ -73,36 +139,57 @@ const BMICalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) => 
         if (isNaN(weightKg) || isNaN(heightM) || heightM <= 0 || weightKg <= 0) return null;
         
         const bmi = weightKg / (heightM * heightM);
-
+        const bmiValue = bmi;
         let category = '';
         let color = '';
-        if (bmi < 18.5) { category = 'Underweight'; color = 'text-blue-400'; }
-        else if (bmi < 25) { category = 'Normal weight'; color = 'text-green-400'; }
-        else if (bmi < 30) { category = 'Overweight'; color = 'text-yellow-400'; }
-        else { category = 'Obesity'; color = 'text-red-400'; }
+        let description = '';
+        
+        if (bmiValue < 18.5) { 
+            category = 'Underweight'; 
+            color = 'text-blue-400 from-blue-500 to-cyan-500'; 
+            description = 'High nutrient density recommended.';
+        }
+        else if (bmiValue < 25) { 
+            category = 'Normal weight'; 
+            color = 'text-green-400 from-green-500 to-emerald-500'; 
+            description = 'Optimal physiological balance achieved.';
+        }
+        else if (bmiValue < 30) { 
+            category = 'Overweight'; 
+            color = 'text-yellow-400 from-yellow-500 to-orange-500'; 
+            description = 'Metabolic optimization suggested.';
+        }
+        else { 
+            category = 'Obesity'; 
+            color = 'text-red-400 from-red-500 to-pink-500'; 
+            description = 'Medical consultation recommended.';
+        }
 
-        return { bmi: bmi.toFixed(1), category, color };
+        return { bmi: bmi.toFixed(1), category, color, description };
     }, [unitSystem, weight, heightCm, heightFt, heightIn]);
 
     return (
-        <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+        <div className="max-w-xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Input icon={Scale} label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
                 {unitSystem === 'metric' ? (
-                     <Input label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
+                     <Input icon={PersonStanding} label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
                 ) : (
                     <div className="grid grid-cols-2 gap-2">
-                        <Input label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
+                        <Input icon={PersonStanding} label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
                         <Input label="(in)" type="number" value={heightIn} onChange={e => setHeightIn(e.target.value)} />
                     </div>
                 )}
             </div>
             {result && (
-                <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg">
-                    <p className="text-brand-text-secondary">Your BMI is</p>
-                    <p className={`text-4xl font-bold my-2 ${result.color}`}>{formatNumber(result.bmi)}</p>
-                    <p className={`font-semibold ${result.color}`}>{result.category}</p>
-                </div>
+                <ResultCard 
+                    title="Computed BMI Index"
+                    value={formatNumber(result.bmi)}
+                    category={result.category}
+                    color={result.color}
+                    description={result.description}
+                    icon={Activity}
+                />
             )}
         </div>
     );
@@ -150,20 +237,17 @@ const BodyFatCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem })
     }, [unitSystem, gender, heightCm, heightFt, heightIn, waist, neck, hip]);
 
     return (
-        <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium mb-1">Gender</label>
-                    <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                </div>
+        <div className="max-w-xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Select label="Biological Gender" value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')}>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </Select>
                 {unitSystem === 'metric' ? (
-                    <Input label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
+                    <Input icon={PersonStanding} label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
                 ) : (
                     <div className="grid grid-cols-2 gap-2">
-                        <Input label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
+                        <Input icon={PersonStanding} label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
                         <Input label="(in)" type="number" value={heightIn} onChange={e => setHeightIn(e.target.value)} />
                     </div>
                 )}
@@ -172,11 +256,13 @@ const BodyFatCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem })
                 {gender === 'female' && <Input label={`Hip (${unitSystem === 'metric' ? 'cm' : 'in'})`} type="number" value={hip} onChange={e => setHip(e.target.value)} />}
             </div>
             {result && (
-                <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg">
-                    <p className="text-brand-text-secondary">Estimated Body Fat</p>
-                    <p className="text-4xl font-bold text-brand-accent my-2">{formatNumber(result.bfp)}%</p>
-                    <p className="text-xs text-brand-text-secondary">Based on the U.S. Navy method.</p>
-                </div>
+                <ResultCard 
+                    title="Computed Body Fat"
+                    value={formatNumber(result.bfp)}
+                    unit="%"
+                    description="Estimated via US Navy algorithm using anthropometric measurements."
+                    icon={Droplets}
+                />
             )}
         </div>
     );
@@ -238,33 +324,41 @@ const IdealWeightCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyste
     }, [unitSystem, gender, heightCm, heightFt, heightIn]);
 
     return (
-        <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div>
-                    <label className="block text-sm font-medium mb-1">Gender</label>
-                    <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                </div>
+        <div className="max-w-xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Select label="Biological Gender" value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')}>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </Select>
                 {unitSystem === 'metric' ? (
-                    <Input label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
+                    <Input icon={PersonStanding} label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
                 ) : (
                     <div className="grid grid-cols-2 gap-2">
-                        <Input label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
+                        <Input icon={PersonStanding} label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
                         <Input label="(in)" type="number" value={heightIn} onChange={e => setHeightIn(e.target.value)} />
                     </div>
                 )}
             </div>
             {result && (
-                <div className="mt-6 space-y-4">
-                    <div className="text-center bg-brand-bg p-4 rounded-lg">
-                        <p className="text-brand-text-secondary">Healthy BMI Weight Range</p>
-                        <p className="text-2xl font-bold text-brand-accent my-1">{result.healthyBmi}</p>
-                    </div>
-                    <div className="text-center bg-brand-bg p-4 rounded-lg">
-                        <p className="text-brand-text-secondary">Range from Popular Formulas</p>
-                        <p className="text-2xl font-bold text-brand-accent my-1">{result.avgRange}</p>
+                <div className="mt-8 space-y-6">
+                    <ResultCard 
+                        title="Healthy BMI Weight Range"
+                        value={result.healthyBmi.split(' ')[0]}
+                        unit={result.healthyBmi.split(' ')[2]}
+                        description="The weight range where your BMI is between 18.5 and 24.9."
+                        color="text-emerald-400 from-emerald-500 to-teal-500"
+                        icon={Activity}
+                    />
+                    <div className="bg-brand-bg/50 border border-brand-border/30 rounded-[2rem] p-6">
+                        <h4 className="text-xs font-bold text-brand-text-secondary uppercase tracking-[0.2em] mb-4 text-center">Estimation Consensus</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {result.ranges.map((r, i) => (
+                                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-brand-surface/30 border border-brand-border/10">
+                                    <span className="text-[10px] text-brand-text-secondary uppercase font-bold">{r.name.split(' (')[0]}</span>
+                                    <span className="font-mono font-bold text-brand-text">{r.value}{unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
@@ -293,47 +387,35 @@ const HeartRateCalculator: React.FC = () => {
     }, [age]);
 
     return (
-        <div>
-            <Input label="Age" type="number" value={age} onChange={e => setAge(e.target.value)} />
+        <div className="max-w-xl mx-auto">
+            <Input icon={Activity} label="Chronological Age" type="number" value={age} onChange={e => setAge(e.target.value)} />
             {result && (
-                <div className="mt-6 space-y-4">
-                    <div className="text-center bg-brand-bg p-4 rounded-lg">
-                        <p className="text-brand-text-secondary">Estimated Maximum Heart Rate</p>
-                        <p className="text-4xl font-bold text-brand-accent my-2">{result.maxHr}</p>
-                        <p>beats per minute (bpm)</p>
-                    </div>
-                    <div className="bg-brand-bg p-4 rounded-lg">
-                        <h4 className="font-semibold text-center mb-2">Target Heart Rate Zones (bpm)</h4>
-                        <div className="relative w-full h-8 my-4">
-                            <div className="flex w-full h-4 rounded-full overflow-hidden absolute top-0">
-                                {/* 50% gray area */}
-                                <div className="bg-gray-700" style={{ width: `50%` }} title="Below 50%"></div>
-                                {/* The 5 colored zones */}
-                                {result.zones.map(zone => (
-                                    <div key={zone.name} className={`${zone.color}`} style={{ width: `${zone.width}%` }} title={`${zone.name}: ${zone.range} bpm`}></div>
-                                ))}
-                            </div>
-                            <div className="absolute -bottom-1 w-full text-xs text-brand-text-secondary flex justify-between">
-                                <span className="transform -translate-x-1/2">{Math.round(result.maxHr * 0.5)}</span>
-                                <span className="transform -translate-x-1/2">{Math.round(result.maxHr * 0.6)}</span>
-                                <span className="transform -translate-x-1/2">{Math.round(result.maxHr * 0.7)}</span>
-                                <span className="transform -translate-x-1/2">{Math.round(result.maxHr * 0.8)}</span>
-                                <span className="transform -translate-x-1/2">{Math.round(result.maxHr * 0.9)}</span>
-                                <span className="transform -translate-x-1/2">{result.maxHr}</span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 mt-6">
+                <div className="mt-8 space-y-6">
+                    <ResultCard 
+                        title="Max Heart Rate"
+                        value={result.maxHr.toString()}
+                        unit="BPM"
+                        description="Estimated maximum cardiac capacity based on age."
+                        icon={Target}
+                    />
+                    
+                    <div className="bg-brand-bg/50 border border-brand-border/30 rounded-[2.5rem] p-8">
+                        <h4 className="text-xs font-bold text-brand-text-secondary uppercase tracking-[0.2em] mb-6 text-center">Neurometabolic Zones</h4>
+                        
+                        <div className="space-y-3">
                             {result.zones.map(zone => (
-                                <div key={zone.name} className="flex items-center justify-between p-2 rounded-md bg-brand-surface/50">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-4 h-4 rounded-full ${zone.color}`}></div>
+                                <div key={zone.name} className="group flex items-center justify-between p-4 rounded-2xl bg-brand-surface/30 border border-brand-border/10 hover:border-brand-primary/30 transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] ${zone.color} group-hover:scale-125 transition-transform`} />
                                         <div>
-                                            <span className="font-semibold">{zone.name}</span>
-                                            <span className="text-xs text-brand-text-secondary block">{zone.percentage} of Max HR</span>
+                                            <span className="font-bold text-sm block">{zone.name.split(': ')[1]}</span>
+                                            <span className="text-[10px] text-brand-text-secondary uppercase font-bold">{zone.percentage}</span>
                                         </div>
                                     </div>
-                                    <span className="font-mono font-semibold">{zone.range} bpm</span>
+                                    <div className="text-right">
+                                        <span className="font-mono text-lg font-black text-brand-text">{zone.range}</span>
+                                        <span className="text-[10px] text-brand-text-secondary font-bold block">BPM</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -429,89 +511,128 @@ const CalorieMacroCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyst
     const PIE_COLORS = ['#4299e1', '#48bb78', '#ed8936'];
     
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-4">
-                <h3 className="text-xl font-bold">1. Your Details</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <Input label="Age" type="number" value={age} onChange={e => setAge(e.target.value)} />
-                     <div>
-                        <label className="block text-sm font-medium mb-1">Gender</label>
-                        <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                        </select>
+        <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="space-y-8">
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-brand-text-secondary uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Activity size={14} className="text-brand-primary" />
+                            Biometric Parameters
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input label="Chronological Age" type="number" value={age} onChange={e => setAge(e.target.value)} />
+                            <Select label="Gender" value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')}>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </Select>
+                            <Input label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+                            {unitSystem === 'metric' ? (
+                                <Input label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
+                            ) : (
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Input label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
+                                    <Input label="(in)" type="number" value={heightIn} onChange={e => setHeightIn(e.target.value)} />
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <Input label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
-                    {unitSystem === 'metric' ? (
-                         <Input label="Height (cm)" type="number" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
-                    ) : (
-                        <div className="grid grid-cols-2 gap-2">
-                            <Input label="Height (ft)" type="number" value={heightFt} onChange={e => setHeightFt(e.target.value)} />
-                            <Input label="(in)" type="number" value={heightIn} onChange={e => setHeightIn(e.target.value)} />
+                    
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-brand-text-secondary uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Activity size={14} className="text-brand-primary" />
+                            Active Capacity
+                        </h3>
+                        <Select label="Metabolic Activity" value={activity} onChange={e => setActivity(parseFloat(e.target.value))}>
+                            {activityLevels.map(level => <option key={level.value} value={level.value}>{level.label}</option>)}
+                        </Select>
+                    </div>
+
+                    {calorieGoals && (
+                        <div className="bg-brand-bg/50 border border-brand-border/30 rounded-[2rem] p-6 space-y-4">
+                            <h4 className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.2em] text-center border-b border-brand-border/10 pb-4">Daily TDEE Projections</h4>
+                            <div className="grid gap-2">
+                                {Object.entries(calorieGoals).map(([key, value]) => (
+                                    <div key={key} className="flex justify-between items-center p-3 rounded-xl bg-brand-surface/20 border border-brand-border/5">
+                                        <span className="text-xs font-bold text-brand-text/80 capitalize">{key.replace('mild', 'Mild ').replace('loss', 'Loss').replace('gain', 'Gain')}</span>
+                                        <div className="text-right">
+                                            <span className="font-mono font-black text-brand-text">{value.toLocaleString()}</span>
+                                            <span className="text-[10px] text-brand-text-secondary font-bold ml-1">CAL/DAY</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
-                 <h3 className="text-xl font-bold pt-4">2. Activity Level</h3>
-                 <select value={activity} onChange={e => setActivity(parseFloat(e.target.value))} className="w-full bg-gray-900/70 p-2 rounded-md mb-6 border border-brand-border">
-                    {activityLevels.map(level => <option key={level.value} value={level.value}>{level.label}</option>)}
-                </select>
-                {calorieGoals && (
-                    <div className="bg-brand-bg p-4 rounded-lg">
-                        <h4 className="font-semibold text-center mb-2">Daily Calorie Needs</h4>
-                         <div className="space-y-2">
-                            {Object.entries(calorieGoals).map(([key, value]) => (
-                                <div key={key} className="flex justify-between p-2 rounded-md bg-brand-surface/50">
-                                    <span className="capitalize">{key.replace('loss', ' Loss').replace('gain', ' Gain')}</span>
-                                    <span className="font-mono font-semibold">{value.toLocaleString()} cal/day</span>
+
+                <div className="space-y-8">
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-brand-text-secondary uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Target size={14} className="text-brand-primary" />
+                            Optimization Targets
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Select label="Primary Objective" value={goal} onChange={e => setGoal(e.target.value)}>
+                                <option value="loss">Weight Loss</option>
+                                <option value="mildLoss">Mild Weight Loss</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="mildGain">Mild Weight Gain</option>
+                                <option value="gain">Weight Gain</option>
+                            </Select>
+                            <Select label="Nutrient Partitioning" value={plan} onChange={e => setPlan(e.target.value)}>
+                                <option value="balanced">Balanced</option>
+                                <option value="lowcarb">Low Carb</option>
+                                <option value="highprotein">High Protein</option>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {macroResult && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-brand-surface/30 backdrop-blur-xl border border-brand-border/40 rounded-[2.5rem] p-8 relative overflow-hidden group shadow-2xl"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 blur-3xl -mr-16 -mt-16 rounded-full" />
+                            
+                            <div className="text-center relative z-10">
+                                <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.3em] mb-2">Target Daily Intake</p>
+                                <div className="flex items-baseline justify-center gap-2 mb-6">
+                                    <span className="text-5xl font-black text-brand-accent font-glow tracking-tighter">
+                                        {macroResult.targetCalories.toLocaleString()}
+                                    </span>
+                                    <span className="text-sm font-bold text-brand-text-secondary">CALORIES</span>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-            <div className="space-y-4">
-                <h3 className="text-xl font-bold">3. Macronutrient Goals</h3>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium mb-1">My Goal Is</label>
-                        <select value={goal} onChange={e => setGoal(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
-                            <option value="loss">Weight Loss</option>
-                            <option value="mildLoss">Mild Weight Loss</option>
-                            <option value="maintenance">Maintenance</option>
-                            <option value="mildGain">Mild Weight Gain</option>
-                            <option value="gain">Weight Gain</option>
-                        </select>
-                    </div>
-                     <div>
-                        <label className="block text-sm font-medium mb-1">Diet Plan</label>
-                        <select value={plan} onChange={e => setPlan(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
-                            <option value="balanced">Balanced</option>
-                            <option value="lowcarb">Low Carb</option>
-                            <option value="highprotein">High Protein</option>
-                        </select>
-                    </div>
+
+                                <div className="h-48 w-full relative">
+                                    <ResponsiveContainer>
+                                        <PieChart>
+                                            <Pie data={macroResult.pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={5}>
+                                                {macroResult.pieData.map((_, index) => (
+                                                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="rgba(255,255,255,0.05)" strokeWidth={2} /> 
+                                                ))}
+                                            </Pie>
+                                            <Tooltip formatter={(value, name) => [`${value}g`, name]} contentStyle={{ backgroundColor: 'rgba(10,10,10,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span className="text-xs font-bold text-brand-text-secondary uppercase">Macros</span>
+                                        <Pizza size={14} className="text-brand-primary mt-1" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 mt-8">
+                                    {macroResult.pieData.map((macro, i) => (
+                                        <div key={macro.name} className="p-3 rounded-2xl bg-brand-bg/50 border border-brand-border/10">
+                                            <div className="text-[10px] font-bold text-brand-text-secondary uppercase mb-1">{macro.name}</div>
+                                            <div className="font-mono font-black text-lg" style={{ color: PIE_COLORS[i] }}>{macro.value}g</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
                 </div>
-                {macroResult && (
-                    <div className="bg-brand-bg p-4 rounded-lg text-center">
-                        <p className="text-brand-text-secondary">Your daily target is</p>
-                        <p className="text-3xl font-bold text-brand-accent my-1">{macroResult.targetCalories.toLocaleString()} calories</p>
-                        <div className="h-48 w-full mt-2">
-                            <ResponsiveContainer>
-                                <PieChart>
-                                    <Pie data={macroResult.pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60}>
-                                        {macroResult.pieData.map((_, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} /> )}
-                                    </Pie>
-                                    <Tooltip formatter={(value, name) => [`${value}g`, name]} contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                        <div className="flex justify-around text-sm">
-                            <div className="text-center"><span className="font-bold block" style={{color: PIE_COLORS[0]}}>{macroResult.pieData[0].value}g</span> Protein</div>
-                            <div className="text-center"><span className="font-bold block" style={{color: PIE_COLORS[1]}}>{macroResult.pieData[1].value}g</span> Carbs</div>
-                            <div className="text-center"><span className="font-bold block" style={{color: PIE_COLORS[2]}}>{macroResult.pieData[2].value}g</span> Fat</div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
@@ -561,38 +682,45 @@ const PaceCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) =>
     }, [distance, hours, minutes, seconds, paceMin, paceSec, unitSystem]);
 
     return (
-        <div className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium mb-1">Distance</label>
-                <div className="flex items-center gap-2">
-                    <input type="number" value={distance} onChange={e => setDistance(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" />
-                    <span className="font-semibold">{unitSystem === 'metric' ? 'km' : 'miles'}</span>
+        <div className="max-w-xl mx-auto space-y-8">
+            <div className="space-y-6">
+                <Input label="Exercise Distance" type="number" value={distance} onChange={e => setDistance(e.target.value)} />
+                
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <Timer size={12} />
+                        Duration (HH:MM:SS)
+                    </label>
+                    <div className="flex items-center gap-3">
+                        <input type="number" value={hours} onChange={e => setHours(e.target.value)} className="flex-1 bg-brand-surface/40 backdrop-blur-md px-4 py-4 rounded-2xl border border-brand-border/40 focus:border-brand-primary/50 outline-none transition-all font-mono text-center" placeholder="HH" />
+                        <span className="text-brand-text-secondary font-bold">:</span>
+                        <input type="number" value={minutes} onChange={e => setMinutes(e.target.value)} className="flex-1 bg-brand-surface/40 backdrop-blur-md px-4 py-4 rounded-2xl border border-brand-border/40 focus:border-brand-primary/50 outline-none transition-all font-mono text-center" placeholder="MM" />
+                        <span className="text-brand-text-secondary font-bold">:</span>
+                        <input type="number" value={seconds} onChange={e => setSeconds(e.target.value)} className="flex-1 bg-brand-surface/40 backdrop-blur-md px-4 py-4 rounded-2xl border border-brand-border/40 focus:border-brand-primary/50 outline-none transition-all font-mono text-center" placeholder="SS" />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-brand-text-secondary uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <Activity size={12} />
+                        Target Pace (MIN:SEC / {unitSystem === 'metric' ? 'KM' : 'MI'})
+                    </label>
+                    <div className="flex items-center gap-3">
+                        <input type="number" value={paceMin} onChange={e => setPaceMin(e.target.value)} className="flex-1 bg-brand-surface/40 backdrop-blur-md px-4 py-4 rounded-2xl border border-brand-border/40 focus:border-brand-primary/50 outline-none transition-all font-mono text-center" placeholder="MIN" />
+                        <span className="text-brand-text-secondary font-bold">:</span>
+                        <input type="number" value={paceSec} onChange={e => setPaceSec(e.target.value)} className="flex-1 bg-brand-surface/40 backdrop-blur-md px-4 py-4 rounded-2xl border border-brand-border/40 focus:border-brand-primary/50 outline-none transition-all font-mono text-center" placeholder="SEC" />
+                    </div>
                 </div>
             </div>
-            <div>
-                <label className="block text-sm font-medium mb-1">Time</label>
-                <div className="flex items-center gap-2">
-                    <input type="number" value={hours} onChange={e => setHours(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" placeholder="hh" />
-                    <span>:</span>
-                    <input type="number" value={minutes} onChange={e => setMinutes(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" placeholder="mm" />
-                    <span>:</span>
-                    <input type="number" value={seconds} onChange={e => setSeconds(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" placeholder="ss" />
-                </div>
-            </div>
-            <div>
-                <label className="block text-sm font-medium mb-1">Pace</label>
-                 <div className="flex items-center gap-2">
-                    <input type="number" value={paceMin} onChange={e => setPaceMin(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" placeholder="min" />
-                    <span>:</span>
-                    <input type="number" value={paceSec} onChange={e => setPaceSec(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" placeholder="sec" />
-                    <span className="font-semibold">/ {unitSystem === 'metric' ? 'km' : 'mi'}</span>
-                </div>
-            </div>
+
             {result && (
-                 <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg">
-                    <p className="text-brand-text-secondary">Calculated Result</p>
-                    <p className="text-2xl font-bold text-brand-accent my-2">{result}</p>
-                 </div>
+                 <ResultCard 
+                    title="Calculated Metric"
+                    value={result.split(': ')[1].split(' /')[0]}
+                    unit={result.split(' /')[1] || result.split(': ')[1].split(' ')[1]}
+                    category={result.split(': ')[0]}
+                    icon={Timer}
+                 />
             )}
         </div>
     );
@@ -614,18 +742,20 @@ const LeanBodyMassCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyst
     }, [weight, bfp]);
 
     return (
-        <div className="space-y-4">
-            <Input label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
-            <Input label="Body Fat Percentage (%)" type="number" value={bfp} onChange={e => setBfp(e.target.value)} />
+        <div className="max-w-xl mx-auto space-y-6">
+            <Input icon={Scale} label={`Current Body Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+            <Input icon={Droplets} label="Body Fat Percentage (%)" type="number" value={bfp} onChange={e => setBfp(e.target.value)} />
             {result && (
-                <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg flex justify-around">
-                    <div>
-                        <p className="text-brand-text-secondary">Lean Body Mass</p>
-                        <p className="text-2xl font-bold text-brand-accent my-2">{formatNumber(result.lbm)} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                    <div className="bg-brand-surface/30 border border-brand-border/40 p-6 rounded-[2rem] text-center">
+                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.2em] mb-2">Lean Mass</p>
+                        <p className="text-3xl font-black text-brand-primary">{formatNumber(result.lbm)}</p>
+                        <p className="text-xs font-bold text-brand-text-secondary mt-1">{unitSystem === 'metric' ? 'KG' : 'LBS'}</p>
                     </div>
-                    <div>
-                        <p className="text-brand-text-secondary">Fat Mass</p>
-                        <p className="text-2xl font-bold text-brand-secondary my-2">{formatNumber(result.fatMass)} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
+                    <div className="bg-brand-surface/30 border border-brand-border/40 p-6 rounded-[2rem] text-center">
+                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.2em] mb-2">Fat Mass</p>
+                        <p className="text-3xl font-black text-brand-secondary">{formatNumber(result.fatMass)}</p>
+                        <p className="text-xs font-bold text-brand-text-secondary mt-1">{unitSystem === 'metric' ? 'KG' : 'LBS'}</p>
                     </div>
                 </div>
             )}
@@ -658,15 +788,17 @@ const WaterIntakeCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSyste
     }, [weight, exercise, unitSystem]);
 
     return (
-        <div className="space-y-4">
-            <Input label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
-            <Input label="Daily Exercise (minutes)" type="number" value={exercise} onChange={e => setExercise(e.target.value)} />
+        <div className="max-w-xl mx-auto space-y-6">
+            <Input icon={Scale} label={`Body Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+            <Input icon={Timer} label="Daily Physical Activity (minutes)" type="number" value={exercise} onChange={e => setExercise(e.target.value)} />
             {result && (
-                 <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg">
-                    <p className="text-brand-text-secondary">Recommended Daily Water Intake</p>
-                    <p className="text-3xl font-bold text-brand-accent my-2">{result.liters} Liters</p>
-                    <p className="text-brand-text-secondary">{result.ounces} oz / {result.glasses} glasses</p>
-                 </div>
+                 <ResultCard 
+                    title="Objective Hydration Level"
+                    value={result.liters}
+                    unit="LITERS"
+                    description={`Equivalent to ~${result.ounces} oz or ${result.glasses} standard glasses.`}
+                    icon={GlassWater}
+                 />
             )}
         </div>
     );
@@ -707,22 +839,23 @@ const PregnancyCalculator: React.FC = () => {
     }, [method, date]);
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-center p-1 bg-brand-bg rounded-full">
-                <UnitToggleButton label="Last Menstrual Period" isActive={method === 'lmp'} onClick={() => setMethod('lmp')} />
-                <UnitToggleButton label="Conception Date" isActive={method === 'conception'} onClick={() => setMethod('conception')} />
+        <div className="max-w-xl mx-auto space-y-8">
+            <div className="flex justify-center p-1 bg-brand-bg rounded-2xl border border-brand-border/30">
+                <UnitToggleButton label="LMP Method" isActive={method === 'lmp'} onClick={() => setMethod('lmp')} />
+                <UnitToggleButton label="Conception Method" isActive={method === 'conception'} onClick={() => setMethod('conception')} />
             </div>
-            <Input label="Select Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <Input icon={Activity} label="Reference Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
             {result && (
-                <div className="mt-6 space-y-3">
-                    <div className="text-center bg-brand-bg p-4 rounded-lg">
-                        <p className="text-brand-text-secondary">Estimated Due Date</p>
-                        <p className="text-2xl font-bold text-brand-accent my-1">{result.dueDate}</p>
-                    </div>
-                     <div className="text-center bg-brand-bg p-4 rounded-lg">
-                        <p className="text-brand-text-secondary">Current Gestational Age</p>
-                        <p className="text-xl font-bold text-brand-text my-1">{result.gestationalAge} (Trimester {result.trimester})</p>
-                    </div>
+                <div className="space-y-6">
+                    <ResultCard 
+                        title="Estimated Delivery Date"
+                        value={result.dueDate.split(', ')[0]}
+                        unit={result.dueDate.split(', ')[1]}
+                        description={`Gestational Age: ${result.gestationalAge}`}
+                        category={`Trimester ${result.trimester}`}
+                        color="text-brand-primary from-brand-primary/20 to-brand-accent/20"
+                        icon={Baby}
+                    />
                 </div>
             )}
         </div>
@@ -762,29 +895,31 @@ const BACCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem }) => 
     }, [weight, gender, drinks, hours, unitSystem]);
     
     return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="max-w-xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Input label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
-                 <div>
-                    <label className="block text-sm font-medium mb-1">Gender</label>
-                    <select value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                </div>
-                <Input label="Number of Standard Drinks" type="number" value={drinks} onChange={e => setDrinks(e.target.value)} />
-                <Input label="Hours Since First Drink" type="number" value={hours} onChange={e => setHours(e.target.value)} />
+                <Select label="Biological Gender" value={gender} onChange={e => setGender(e.target.value as 'male' | 'female')}>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </Select>
+                <Input label="Standard Servings" type="number" value={drinks} onChange={e => setDrinks(e.target.value)} />
+                <Input label="Hours Elapsed" type="number" value={hours} onChange={e => setHours(e.target.value)} />
             </div>
-             <div className="mt-4 p-3 bg-yellow-900/50 text-yellow-300 rounded-lg text-xs flex gap-2">
-                <AlertCircle size={28} />
-                <span><strong>Disclaimer:</strong> This is an estimate only. Do not rely on this calculator to determine if it is safe to drive. Individual BAC can vary based on many factors.</span>
+             <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex gap-4">
+                <AlertCircle size={20} className="text-orange-500 shrink-0" />
+                <p className="text-[10px] text-orange-200/80 font-mono uppercase leading-relaxed">
+                    <strong>Critical Warning:</strong> Algorithmic derivation only. Do not rely for safety. Physiological variance is unpredictable.
+                </p>
             </div>
             {result && (
-                <div className="mt-6 text-center bg-brand-bg p-4 rounded-lg">
-                    <p className="text-brand-text-secondary">Estimated Blood Alcohol Content (BAC)</p>
-                    <p className="text-4xl font-bold text-brand-accent my-2">{result.bac}</p>
-                    <p className="font-semibold">{result.status}</p>
-                </div>
+                <ResultCard 
+                    title="Estimated BAC Index"
+                    value={result.bac}
+                    category={result.status}
+                    color={result.status === 'Sober' ? 'text-green-400' : 'text-red-400'}
+                    description="Calculated using Widmark formula with standard metabolism rates."
+                    icon={Wine}
+                />
             )}
         </div>
     )
@@ -820,25 +955,27 @@ const OneRepMaxCalculator: React.FC<{ unitSystem: UnitSystem }> = ({ unitSystem 
     }, [weight, reps]);
 
     return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label={`Weight Lifted (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
-                <Input label="Repetitions" type="number" value={reps} onChange={e => setReps(e.target.value)} />
+        <div className="max-w-xl mx-auto space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Input icon={Dumbbell} label={`Resistance (${unitSystem === 'metric' ? 'kg' : 'lbs'})`} type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+                <Input icon={Activity} label="Form Repetitions" type="number" value={reps} onChange={e => setReps(e.target.value)} />
             </div>
             {result && (
-                <div className="mt-6 space-y-4">
-                    <div className="text-center bg-brand-bg p-4 rounded-lg">
-                        <p className="text-brand-text-secondary">Estimated One Rep Max (1RM)</p>
-                        <p className="text-4xl font-bold text-brand-accent my-2">{result.oneRepMax} {unitSystem === 'metric' ? 'kg' : 'lbs'}</p>
-                        <p className="text-xs text-brand-text-secondary">Based on the Epley formula</p>
-                    </div>
-                    <div className="bg-brand-bg p-4 rounded-lg">
-                        <h4 className="font-semibold text-center mb-4">Percentages of 1RM</h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                <div className="space-y-8">
+                    <ResultCard 
+                        title="Estimated Absolute Max"
+                        value={result.oneRepMax}
+                        unit={unitSystem === 'metric' ? 'KG' : 'LBS'}
+                        description="Theoretical maximal performance capacity derived via Epley integration."
+                        icon={Target}
+                    />
+                    <div className="bg-brand-bg/50 border border-brand-border/30 rounded-[2.5rem] p-8">
+                        <h4 className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.2em] mb-6 text-center">Intensity Partitioning</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {result.percentages.map(p => (
-                                <div key={p.percent} className="bg-brand-surface/50 p-2 rounded text-center">
-                                    <div className="text-brand-text-secondary text-sm">{p.percent}%</div>
-                                    <div className="font-bold">{p.weight}</div>
+                                <div key={p.percent} className="bg-brand-surface/30 border border-brand-border/10 p-3 rounded-2xl text-center group hover:border-brand-primary/30 transition-all">
+                                    <div className="text-[10px] text-brand-text-secondary font-bold mb-1">{p.percent}%</div>
+                                    <div className="font-mono font-black text-brand-text group-hover:text-brand-primary transition-colors">{p.weight}</div>
                                 </div>
                             ))}
                         </div>
@@ -885,33 +1022,33 @@ const SleepCalculator: React.FC = () => {
     }, [mode, time]);
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-center p-1 bg-brand-bg rounded-full mb-4">
-                <UnitToggleButton label="I want to wake up at" isActive={mode === 'wake'} onClick={() => setMode('wake')} />
-                <UnitToggleButton label="I plan to sleep at" isActive={mode === 'sleep'} onClick={() => setMode('sleep')} />
+        <div className="max-w-xl mx-auto space-y-8">
+            <div className="flex justify-center p-1 bg-brand-bg rounded-2xl border border-brand-border/30">
+                <UnitToggleButton label="Wake Up Target" isActive={mode === 'wake'} onClick={() => setMode('wake')} />
+                <UnitToggleButton label="Sleep Onset Plan" isActive={mode === 'sleep'} onClick={() => setMode('sleep')} />
             </div>
-            <Input label="Time" type="time" value={time} onChange={e => setTime(e.target.value)} />
+            <Input icon={Moon} label="Target Timestamp" type="time" value={time} onChange={e => setTime(e.target.value)} />
             
             {result && (
-                <div className="mt-6 bg-brand-bg p-4 rounded-lg">
-                    <h4 className="font-semibold text-center mb-4">
-                        {mode === 'wake' ? 'You should try to fall asleep at one of these times:' : 'You should set your alarm for one of these times:'}
+                <div className="bg-brand-surface/20 border border-brand-border/40 rounded-[2.5rem] p-8 space-y-6">
+                    <h4 className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-[0.2em] text-center border-b border-brand-border/10 pb-6">
+                        {mode === 'wake' ? 'Optimal Onset Windows' : 'Optimal Awakening Intervals'}
                     </h4>
-                    <div className="space-y-3">
+                    <div className="grid gap-3">
                         {result.map((r, i) => (
-                            <div key={i} className="flex justify-between items-center p-3 bg-brand-surface/50 rounded-md">
+                            <div key={i} className="flex justify-between items-center p-4 bg-brand-bg/50 border border-brand-border/20 rounded-2xl group hover:border-brand-primary/40 transition-all">
                                 <div>
-                                    <span className="text-2xl font-bold text-brand-accent">{r.timeStr}</span>
+                                    <span className="text-3xl font-black text-brand-accent font-glow tracking-tighter group-hover:text-brand-primary transition-colors">{r.timeStr}</span>
                                 </div>
-                                <div className="text-right text-sm text-brand-text-secondary">
-                                    <div>{r.cycles} Cycles</div>
-                                    <div>{r.hours} Hours of sleep</div>
+                                <div className="text-right">
+                                    <div className="text-xs font-bold text-brand-text uppercase">{r.cycles} Neural Cycles</div>
+                                    <div className="text-[10px] text-brand-text-secondary font-bold uppercase">{r.hours}H Total Duration</div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <p className="text-xs text-brand-text-secondary text-center mt-4">
-                        * Calculations include 15 minutes to fall asleep. A good night's sleep consists of 5-6 complete sleep cycles.
+                    <p className="text-[10px] text-brand-text-secondary text-center uppercase font-bold tracking-widest bg-brand-surface/40 p-3 rounded-xl border border-brand-border/10">
+                        * Indexed with 15-minute neural transition buffer.
                     </p>
                 </div>
             )}
@@ -963,17 +1100,21 @@ const BloodPressureCalculator: React.FC = () => {
     }, [systolic, diastolic]);
 
     return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Systolic (upper number)" type="number" value={systolic} onChange={e => setSystolic(e.target.value)} />
-                <Input label="Diastolic (lower number)" type="number" value={diastolic} onChange={e => setDiastolic(e.target.value)} />
+        <div className="max-w-xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Input label="Systolic (Upper)" type="number" value={systolic} onChange={e => setSystolic(e.target.value)} />
+                <Input label="Diastolic (Lower)" type="number" value={diastolic} onChange={e => setDiastolic(e.target.value)} />
             </div>
             {result && (
-                <div className={`mt-6 text-center p-6 rounded-lg ${result.color.split(' ')[1]}`}>
-                    <p className="text-brand-text-secondary">Blood Pressure Category</p>
-                    <p className={`text-3xl font-bold my-2 ${result.color.split(' ')[0]}`}>{result.category}</p>
-                    <p className="text-sm">{result.description}</p>
-                </div>
+                <ResultCard 
+                    title="Computed BP Classification"
+                    value={`${systolic}/${diastolic}`}
+                    unit="mmHg"
+                    category={result.category}
+                    color={result.color}
+                    description={result.description}
+                    icon={Activity}
+                />
             )}
         </div>
     );

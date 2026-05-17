@@ -4,10 +4,11 @@
 
 *Your All-in-One Scientific & Utility Suite, Powered by Gemini.*
 
-[![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-18-blue?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-blue?logo=tailwindcss)](https://tailwindcss.com/)
 [![Gemini API](https://img.shields.io/badge/Gemini_API-Google-blue?logo=google)](https://ai.google.dev/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?logo=vercel)](https://qcalc.edgtec.co.za/)
 
 QuantumCalc is a comprehensive, web-based suite of calculators and tools designed for students, professionals, and anyone in need of powerful, accessible calculation capabilities. It combines a professional-grade scientific calculator with a wide range of specialized tools for data analysis, finance, health, and everyday conversions.
 
