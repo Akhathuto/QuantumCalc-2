@@ -3,6 +3,7 @@ import { LogOut, LogIn, Menu, Search } from 'lucide-react';
 import Logo from './Logo';
 import { AppTab } from '../../types';
 import { useAuth } from '../AuthProvider';
+import { ScholarCounter } from '../ScholarCounter';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -42,6 +43,10 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
                     <span className="text-brand-primary font-bold capitalize tracking-wide">{activeTab.replace('-', ' ')}</span>
                   </>
                 )}
+            </div>
+
+            <div className="hidden xl:block">
+              <ScholarCounter />
             </div>
             
             <div className="lg:hidden" onClick={() => onTabClick('landing')}>

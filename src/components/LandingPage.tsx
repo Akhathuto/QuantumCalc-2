@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
+import { ScholarCounter } from './ScholarCounter';
 
 interface LandingPageProps {
   onTabClick: (tabId: AppTab) => void;
@@ -65,7 +66,7 @@ const toolCategories = [
 ];
 
 const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) => {
-  const { user, userData } = useAuth();
+  const { user, userData, totalScholars } = useAuth();
   const [mathFact, setMathFact] = useState<string>('Loading a brain-teasing fact...');
   const [isLoadingFact, setIsLoadingFact] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -138,6 +139,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
           </span>
           <GraduationCap size={14} /> QuantumCalc Workspace
         </motion.div>
+
+        <div className="flex justify-center mb-4">
+          <ScholarCounter />
+        </div>
         
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
@@ -263,8 +268,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
               )}
             </AnimatePresence>
           </div>
-          <div className="mt-8 pt-6 border-t border-brand-border/30">
+          <div className="mt-8 pt-6 border-t border-brand-border/30 flex items-center justify-between">
              <p className="text-[10px] text-brand-text-secondary uppercase tracking-widest font-semibold">Fact of the moment</p>
+             <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse" />
+                <span className="text-[10px] font-mono font-bold text-brand-primary">{totalScholars?.toLocaleString()} Scholars Reading</span>
+             </div>
           </div>
         </motion.div>
 

@@ -2251,7 +2251,7 @@ const StudentTools: React.FC = () => {
                     <motion.div 
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        onClick={signInWithGoogle}
+                        onClick={() => signInWithGoogle()}
                         className="flex items-center gap-4 p-4 pr-6 bg-brand-surface/40 hover:bg-brand-surface/60 border border-brand-border/50 rounded-[2rem] group cursor-pointer transition-all backdrop-blur-md"
                     >
                         <div className="w-12 h-12 rounded-2xl bg-brand-primary flex items-center justify-center text-brand-bg shadow-lg shadow-brand-primary/20">
@@ -2324,7 +2324,7 @@ const StudentTools: React.FC = () => {
                                         <p className="text-brand-text-secondary text-lg font-light">Authenticated scholars save derivation logs, customized flashcard decks, and AI tutor conversation history across devices.</p>
                                     </div>
                                     <button 
-                                        onClick={signInWithGoogle}
+                                        onClick={() => signInWithGoogle()}
                                         className="w-full md:w-auto px-12 py-6 bg-brand-primary text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-primary/40"
                                     >
                                         Secure Workspace

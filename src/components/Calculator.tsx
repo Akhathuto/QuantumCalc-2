@@ -51,6 +51,12 @@ const SCIENTIFIC_CONSTANTS = [
     { name: 'Vacuum Permeability (μ₀)', value: '1.25663706212e-6', symbol: 'μ₀', unit: 'N/A²' },
     { name: 'Gas Constant (R)', value: '8.314462618', symbol: 'R', unit: 'J/(mol·K)' },
     { name: 'Faraday Constant (F)', value: '96485.33212', symbol: 'F', unit: 'C/mol' },
+    { name: 'Rydberg Constant (R∞)', value: '10973731.568', symbol: 'R∞', unit: 'm⁻¹' },
+    { name: 'Fine-structure Constant (α)', value: '7.2973525693e-3', symbol: 'α', unit: '' },
+    { name: 'Standard Gravity (g)', value: '9.80665', symbol: 'g', unit: 'm/s²' },
+    { name: 'Bohr Radius (a₀)', value: '5.291772109e-11', symbol: 'a₀', unit: 'm' },
+    { name: 'Stefan-Boltzmann (σ)', value: '5.670374419e-8', symbol: 'σ', unit: 'W/(m²·K⁴)' },
+    { name: 'Wien Constant (b)', value: '0.002897771955', symbol: 'b', unit: 'm·K' },
 ];
 
 import 'katex/dist/katex.min.css';
@@ -251,11 +257,16 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
     let fullExpression = (expression + currentInput).trim();
     if (!fullExpression) return;
     
-    // Auto-balance parentheses
+    // Auto-balance parentheses and brackets
     const openParen = (fullExpression.match(/\(/g) || []).length;
     const closeParen = (fullExpression.match(/\)/g) || []).length;
     if (openParen > closeParen) {
         fullExpression += ')'.repeat(openParen - closeParen);
+    }
+    const openBracket = (fullExpression.match(/\[/g) || []).length;
+    const closeBracket = (fullExpression.match(/\]/g) || []).length;
+    if (openBracket > closeBracket) {
+        fullExpression += ']'.repeat(openBracket - closeBracket);
     }
 
     setError(null);
@@ -355,10 +366,14 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
             handleOp('×');
         } else if (key === '/') {
             handleOp('÷');
-        } else if (key === '(') {
-            handleInput('(');
-        } else if (key === ')') {
-            handleInput(')');
+        } else if (key === '(' || key === '[') {
+            handleInput(key);
+        } else if (key === ')' || key === ']') {
+            handleInput(key);
+        } else if (key === ',') {
+            handleInput(',');
+        } else if (key === '%') {
+            handleInput('%');
         } else if (key === 'Enter' || key === '=') {
             calculate();
         } else if (key === 'Backspace') {
@@ -367,6 +382,8 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
             clear();
         } else if (key.toLowerCase() === 'e') {
             handleInput('E');
+        } else if (key.toLowerCase() === 'i') {
+            handleInput('i');
         } else if (key.toLowerCase() === 'a') {
             applyAns();
         }
@@ -398,8 +415,8 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   const buttonGrid: { label: string, secondLabel?: string, action: () => void, secondAction?: () => void, variant: 'primary' | 'secondary' | 'outline' | 'ghost' | 'clear' | 'num', colSpan?: number, active?: boolean, title?: string, secondTitle?: string }[][] = useMemo(() => [
       [
           { label: '2nd', action: () => setIsSecond(s => !s), variant: 'outline', active: isSecond, title: 'Toggle Secondary Functions' },
-          { label: 'π', action: () => handleInput('π'), variant: 'outline', title: 'Pi (3.141...)' },
-          { label: 'e', action: () => handleInput('e'), variant: 'outline', title: "Euler's Number (2.718...)" },
+          { label: 'π', secondLabel: 'i', action: () => handleInput('π'), secondAction: () => handleInput('i'), variant: 'outline', title: 'Pi (3.141...)', secondTitle: 'Imaginary Unit (i)' },
+          { label: 'e', secondLabel: '%', action: () => handleInput('e'), secondAction: () => handleInput('%'), variant: 'outline', title: "Euler's Number (2.718...)", secondTitle: 'Percentage' },
           { label: 'AC', action: clear, variant: 'clear', title: 'All Clear (Esc)' },
           { label: 'del', action: backspace, variant: 'clear', title: 'Delete (Backspace)' },
       ],
@@ -422,44 +439,58 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
       ],
       [
           { label: 'tanh', secondLabel: 'atanh', action: () => handleFunction('tanh('), secondAction: () => handleFunction('atanh('), variant: 'outline', title: 'Hyperbolic Tangent', secondTitle: 'Inverse Hyp. Tangent' },
+          { label: '1/x', secondLabel: 'rand', action: () => handleFunction('1/'), secondAction: () => { setCurrentInput(String(Math.random())); setIsResultState(false); }, variant: 'outline', title: 'Reciprocal', secondTitle: 'Random Number' },
+          { label: 'pmt', secondLabel: 'EE', action: () => handleFunction('pmt('), secondAction: () => handleInput('E'), variant: 'outline', title: 'Finance: PMT', secondTitle: 'Exponent (1E3)' },
+          { label: 'mean', secondLabel: 'std', action: () => handleFunction('mean(['), secondAction: () => handleFunction('std(['), variant: 'outline', title: 'Mean', secondTitle: 'Std Deviation' },
+          { label: 'var', secondLabel: '!', action: () => handleFunction('var(['), secondAction: () => handleInput('!'), variant: 'outline', title: 'Variance', secondTitle: 'Factorial' },
+      ],
+      [
+          { label: 'round', secondLabel: 'ceil', action: () => handleFunction('round('), secondAction: () => handleFunction('ceil('), variant: 'outline', title: 'Round', secondTitle: 'Ceiling' },
+          { label: 'floor', secondLabel: 'abs', action: () => handleFunction('floor('), secondAction: () => handleFunction('abs('), variant: 'outline', title: 'Floor', secondTitle: 'Absolute Value' },
+          { label: '[,]', secondLabel: '[]', action: () => handleInput(','), secondAction: () => handleFunction('['), variant: 'outline', title: 'Comma', secondTitle: 'Open Array' },
+          { label: '[', action: () => handleInput('['), variant: 'outline', title: 'Open Array' },
+          { label: ']', action: () => handleInput(']'), variant: 'outline', title: 'Close Array' },
+      ],
+      [
           { label: 'ln', secondLabel: 'eˣ', action: () => handleFunction('log('), secondAction: () => handleFunction('exp('), variant: 'outline', title: 'Natural Logarithm (ln)', secondTitle: 'Exponential (e^x)' },
           { label: 'log', secondLabel: '10ˣ', action: () => handleFunction('log10('), secondAction: () => handleFunction('pow(10,'), variant: 'outline', title: 'Logarithm (base 10)', secondTitle: 'Power of 10' },
           { label: 'xʸ', secondLabel: 'ʸ√x', action: () => handleInput('^'), secondAction: () => handleFunction('nthRoot('), variant: 'outline', title: 'Power (x^y)', secondTitle: 'N-th Root' },
           { label: 'x²', secondLabel: '√x', action: () => handleInput('^2'), secondAction: () => handleFunction('sqrt('), variant: 'outline', title: 'Square', secondTitle: 'Square Root' },
+          { label: 'x³', secondLabel: '∛x', action: () => handleInput('^3'), secondAction: () => handleFunction('cbrt('), variant: 'outline', title: 'Cube', secondTitle: 'Cube Root' },
       ],
       [
-          { label: 'x³', secondLabel: '∛x', action: () => handleInput('^3'), secondAction: () => handleFunction('cbrt('), variant: 'outline', title: 'Cube', secondTitle: 'Cube Root' },
           { label: '(', action: () => handleInput('('), variant: 'outline', title: 'Open Parenthesis' },
           { label: ')', action: () => handleInput(')'), variant: 'outline', title: 'Close Parenthesis' },
           { label: 'nCr', secondLabel: 'nPr', action: () => handleFunction('nCr('), secondAction: () => handleFunction('nPr('), variant: 'outline', title: 'Combinations', secondTitle: 'Permutations' },
-          { label: 'x!', secondLabel: 'mod', action: () => handleInput('!'), secondAction: () => handleFunction('mod('), variant: 'outline', title: 'Factorial', secondTitle: 'Modulo' },
+          { label: 'log₂', secondLabel: '2ˣ', action: () => handleFunction('log2('), secondAction: () => handleFunction('pow(2,'), variant: 'outline', title: 'Logarithm (base 2)', secondTitle: 'Power of 2' },
+          { label: 'Γ', action: () => handleFunction('gamma('), variant: 'outline', title: 'Gamma Function' },
       ],
       [
           { label: '7', action: () => handleInput('7'), variant: 'num' },
           { label: '8', action: () => handleInput('8'), variant: 'num' },
           { label: '9', action: () => handleInput('9'), variant: 'num' },
           { label: '÷', action: () => handleOp('÷'), variant: 'secondary', title: 'Divide' },
-          { label: 'log₂', secondLabel: '2ˣ', action: () => handleFunction('log2('), secondAction: () => handleFunction('pow(2,'), variant: 'outline', title: 'Logarithm (base 2)', secondTitle: 'Power of 2' },
+          { label: 'rnd', action: () => handleFunction('round('), variant: 'outline', title: 'Round to Integer' },
       ],
       [
           { label: '4', action: () => handleInput('4'), variant: 'num' },
           { label: '5', action: () => handleInput('5'), variant: 'num' },
           { label: '6', action: () => handleInput('6'), variant: 'num' },
           { label: '×', action: () => handleOp('×'), variant: 'secondary', title: 'Multiply' },
-          { label: 'EE', action: () => handleInput('E'), variant: 'outline', title: 'Exponent (1E3)' },
+          { label: 'abs', action: () => handleFunction('abs('), variant: 'outline', title: 'Absolute Value' },
       ],
       [
           { label: '1', action: () => handleInput('1'), variant: 'num' },
           { label: '2', action: () => handleInput('2'), variant: 'num' },
           { label: '3', action: () => handleInput('3'), variant: 'num' },
           { label: '−', action: () => handleOp('−'), variant: 'secondary', title: 'Subtract' },
-          { label: '=', action: calculate, variant: 'primary', colSpan: 1, title: 'Equals (Enter)' },
+          { label: '=', action: calculate, variant: 'primary', title: 'Equals (Enter)' },
       ],
       [
           { label: '0', action: () => handleInput('0'), variant: 'num', colSpan: 2 },
           { label: '.', action: () => handleInput('.'), variant: 'num', title: 'Decimal Point' },
           { label: '+', action: () => handleOp('+'), variant: 'secondary', title: 'Add' },
-          { label: 'abs', secondLabel: 'Γ', action: () => handleFunction('abs('), secondAction: () => handleFunction('gamma('), variant: 'outline', title: 'Absolute Value', secondTitle: 'Gamma Function' },
+          { label: 'mod', action: () => handleFunction('mod('), variant: 'outline', title: 'Modulo' },
       ]
   ], [isSecond, handleInput, handleOp, handleFunction, calculate, clear, backspace, memoryAdd, memoryClear, memoryRecall, memorySubtract, currentInput, applyAns]);
 

@@ -1308,7 +1308,7 @@ const MathTools: React.FC = () => {
                                         </p>
                                     </div>
                                     <button 
-                                        onClick={signInWithGoogle}
+                                        onClick={() => signInWithGoogle()}
                                         className="px-12 py-6 bg-brand-text text-brand-bg font-black uppercase tracking-[0.4em] text-[10px] rounded-full hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-text/20 flex items-center gap-4 group"
                                     >
                                         Establish Connection

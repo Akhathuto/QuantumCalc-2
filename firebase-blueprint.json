@@ -67,12 +67,26 @@
         "updatedAt": { "type": "timestamp" }
       },
       "required": ["title", "content", "userId", "updatedAt"]
+    },
+    "Stats": {
+      "title": "Stats",
+      "description": "Global application statistics",
+      "type": "object",
+      "properties": {
+        "totalScholars": { "type": "number", "description": "Total number of registered users" },
+        "lastUpdated": { "type": "timestamp" }
+      },
+      "required": ["totalScholars", "lastUpdated"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/User" },
       "description": "User profiles"
+    },
+    "/stats/globals": {
+      "schema": { "$ref": "#/entities/Stats" },
+      "description": "Global application stats"
     },
     "/history/{entryId}": {
       "schema": { "$ref": "#/entities/HistoryEntry" },

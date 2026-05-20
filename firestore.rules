@@ -88,9 +88,27 @@ service cloud.firestore {
              data.status in ['new', 'read', 'replied'];
     }
 
+    function isValidStats(data) {
+      return data.keys().hasAll(['totalScholars', 'lastUpdated']) &&
+             data.totalScholars is number &&
+             data.lastUpdated == request.time;
+    }
+
     // ===============================================================
     // Match Blocks (The Fortress)
     // ===============================================================
+
+    match /stats/globals {
+      allow read: if true; // Publicly readable
+      allow create: if isAdmin() || (isSignedIn() && isValidStats(incoming()) && incoming().totalScholars <= 100); 
+      allow update: if isAdmin() || (
+        isSignedIn() && 
+        isValidStats(incoming()) && 
+        incoming().totalScholars == existing().totalScholars + 1 &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['totalScholars', 'lastUpdated'])
+      );
+      allow delete: if isAdmin();
+    }
 
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
