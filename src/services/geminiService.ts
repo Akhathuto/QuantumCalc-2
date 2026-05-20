@@ -119,7 +119,7 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
 
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -174,7 +174,7 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-flash",
         contents: prompt,
     });
     
@@ -217,7 +217,7 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-flash",
         contents: prompt,
     });
     
@@ -231,9 +231,27 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
 
 export const getFinancialInsight = async (data: any, calculatorType: string): Promise<string> => {
   try {
+    // Safely stringify data, plucking only plain properties if it's a complex object
+    let safeData = '';
+    try {
+      safeData = JSON.stringify(data);
+    } catch (e) {
+      console.warn("Circular reference detected in financial insight data, using safe stringify");
+      const seen = new WeakSet();
+      safeData = JSON.stringify(data, (_, value) => {
+        if (typeof value === "object" && value !== null) {
+          if (seen.has(value)) {
+            return "[Circular]";
+          }
+          seen.add(value);
+        }
+        return value;
+      });
+    }
+
     const prompt = `
       Provide a brief, educational, and professional analysis for the following ${calculatorType} calculation results:
-      ${JSON.stringify(data)}
+      ${safeData}
       
       Focus on general financial principles. For example, explain why compound interest grows faster over longer terms, or the trade-off between monthly payments and total interest in a loan.
       
@@ -246,7 +264,7 @@ export const getFinancialInsight = async (data: any, calculatorType: string): Pr
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-flash",
         contents: prompt,
     });
     

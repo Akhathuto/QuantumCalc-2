@@ -88,6 +88,18 @@ service cloud.firestore {
              data.status in ['new', 'read', 'replied'];
     }
 
+    function isValidFeedback(data) {
+       return data.keys().hasAll(['rating', 'category', 'experience', 'usefulFeatures', 'improvement', 'missingTools', 'createdAt', 'userId']) &&
+              data.rating is number && data.rating >= 0 && data.rating <= 5 &&
+              data.category is string &&
+              data.experience is string &&
+              data.usefulFeatures is string &&
+              data.improvement is string &&
+              data.missingTools is string &&
+              data.createdAt == request.time &&
+              (data.userId == null || data.userId == request.auth.uid);
+    }
+
     function isValidStats(data) {
       return data.keys().hasAll(['totalScholars', 'lastUpdated']) &&
              data.totalScholars is number &&
@@ -108,6 +120,12 @@ service cloud.firestore {
         incoming().diff(existing()).affectedKeys().hasOnly(['totalScholars', 'lastUpdated'])
       );
       allow delete: if isAdmin();
+    }
+
+    match /feedback/{feedbackId} {
+      allow get, list: if isAdmin();
+      allow create: if isValidId(feedbackId) && isValidFeedback(incoming());
+      allow update, delete: if isAdmin();
     }
 
     match /users/{userId} {

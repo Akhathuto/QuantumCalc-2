@@ -21,7 +21,8 @@ import {
   X,
   Search,
   BookOpen,
-  Smartphone
+  Smartphone,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Logo from './Logo';
@@ -77,6 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
         { id: 'text', label: 'Text Tools', Icon: FileText },
         { id: 'developer', label: 'Developer', Icon: Code },
         { id: 'student', label: 'Academic', Icon: GraduationCap },
+        { id: 'exercises', label: 'Exercises', Icon: BookOpen },
       ]
     },
     {
@@ -222,6 +224,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
                    <SettingsIcon size={14} /> Settings
                </button>
            </div>
+           <button onClick={() => handleTabClick('feedback')} className={`w-full mt-2 flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:text-brand-text hover:bg-brand-surface ${activeTab === 'feedback' ? 'bg-brand-surface text-brand-text' : ''}`}>
+               <MessageSquare size={14} /> Feedback
+           </button>
         </div>
       </motion.aside>
     </>

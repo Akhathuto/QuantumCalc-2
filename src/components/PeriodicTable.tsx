@@ -499,7 +499,7 @@ const PeriodicTable = () => {
         try {
             const ai = new GoogleGenAI({ apiKey: getApiKey() });
             const response = await ai.models.generateContent({
-                model: "gemini-3.1-pro-preview",
+                model: "gemini-1.5-flash",
                 contents: `Provide a deep scientific insight about the element ${selected.name} (${selected.symbol}). Include its historical significance, modern industrial applications, and one fun fact. Format with markdown.`,
                 config: {
                     systemInstruction: "You are the QuantumCalc Chemical Intelligence System. Provide expert, high-level but accessible briefings on chemical elements.",

@@ -43,7 +43,22 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     },
     operationType,
     path
+  };
+
+  let jsonError: string;
+  try {
+    jsonError = JSON.stringify(errInfo);
+  } catch (stringifyError) {
+    console.error('Failed to stringify Firestore error info:', stringifyError);
+    // Fallback to a simpler, guaranteed safe structure
+    jsonError = JSON.stringify({
+      error: errInfo.error,
+      operationType: errInfo.operationType,
+      path: errInfo.path,
+      message: 'Full error details could not be serialized'
+    });
   }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+
+  console.error('Firestore Error Details: ', jsonError);
+  throw new Error(jsonError);
 }

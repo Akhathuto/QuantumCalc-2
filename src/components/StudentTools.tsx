@@ -827,6 +827,24 @@ const FormulaReference = () => {
                 { name: 'Gravitational Force', eq: 'F = G \\frac{m_1 m_2}{r^2}' },
                 { name: 'Centripetal Accel.', eq: 'a_c = \\frac{v^2}{r}' },
             ]
+        },
+        {
+            name: 'Geometry // Analytical',
+            formulas: [
+                { name: 'Equation of Circle', eq: '(x-h)^2 + (y-k)^2 = r^2' },
+                { name: 'Law of Cosines', eq: 'c^2 = a^2 + b^2 - 2ab \\cos(y)' },
+                { name: 'Area of Ellipse', eq: 'A = \\pi a b' },
+                { name: 'Euler\'s Formula', eq: 'V - E + F = 2' },
+            ]
+        },
+        {
+            name: 'Statistics // Probabilistic',
+            formulas: [
+                { name: 'Standard Deviation', eq: '\\sigma = \\sqrt{\\frac{\\sum(x_i - \\mu)^2}{N}}' },
+                { name: 'Bayes\' Theorem', eq: 'P(A|B) = \\frac{P(B|A)P(A)}{P(B)}' },
+                { name: 'Normal Distribution', eq: 'f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{1}{2}(\\frac{x-\\mu}{\\sigma})^2}' },
+                { name: 'Binomial Coeff.', eq: '\\binom{n}{k} = \\frac{n!}{k!(n-k)!}' },
+            ]
         }
     ];
 
@@ -841,7 +859,7 @@ const FormulaReference = () => {
         try {
             const ai = new GoogleGenAI({ apiKey: getApiKey() });
             const result = await ai.models.generateContent({
-                model: "gemini-3.1-pro-preview",
+                model: "gemini-1.5-flash",
                 contents: `Explain the formula for "${searchTerm}". Provide the name, the equation in LaTeX format (use standard LaTeX, surround with $), and a 2-sentence explanation. Return as JSON: {"name": "...", "eq": "...", "explanation": "..."}`,
                 config: { responseMimeType: "application/json" }
             });
@@ -1241,15 +1259,22 @@ const Flashcards = () => {
 
 // --- 8. Assignment Tracker ---
 const AssignmentTracker = () => {
-    const [assignments, setAssignments] = useState<{id: number, title: string, subject: string, date: string, done: boolean}[]>([]);
+    const [assignments, setAssignments] = useState<{id: number, title: string, subject: string, date: string, priority: 'low' | 'medium' | 'high', done: boolean}[]>(() => {
+        try { return JSON.parse(localStorage.getItem('academic_assignments') || '[]'); } catch { return []; }
+    });
     const [title, setTitle] = useState('');
     const [subject, setSubject] = useState('');
     const [date, setDate] = useState('');
+    const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+
+    useEffect(() => {
+        localStorage.setItem('academic_assignments', JSON.stringify(assignments));
+    }, [assignments]);
 
     const addAssignment = () => {
         if (!title.trim()) return;
-        setAssignments([...assignments, { id: Date.now(), title, subject, date, done: false }]);
-        setTitle(''); setSubject(''); setDate('');
+        setAssignments([...assignments, { id: Date.now(), title, subject, date, priority, done: false }]);
+        setTitle(''); setSubject(''); setDate(''); setPriority('medium');
     };
 
     const toggleDone = (id: number) => {
@@ -1262,6 +1287,10 @@ const AssignmentTracker = () => {
 
     const sortedAssignments = [...assignments].sort((a, b) => {
         if (a.done === b.done) {
+            const priorityMap = { high: 3, medium: 2, low: 1 };
+            if (priorityMap[a.priority] !== priorityMap[b.priority]) {
+                return priorityMap[b.priority] - priorityMap[a.priority];
+            }
             if (!a.date) return 1;
             if (!b.date) return -1;
             return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -1285,12 +1314,24 @@ const AssignmentTracker = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 bg-brand-bg/30 p-10 rounded-[3rem] border border-brand-border/20 shadow-inner">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 bg-brand-bg/30 p-10 rounded-[3rem] border border-brand-border/20 shadow-inner">
                     <Input label="Objective Designation" id="as_title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Master Thesis Beta" className="bg-brand-bg/60" />
                     <Input label="Discipline Core" id="as_subject" type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Astrophysics" className="bg-brand-bg/60" />
                     <div className="space-y-2">
                         <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Terminal Deadline</label>
                         <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-brand-bg/60 border border-brand-border rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all text-brand-text placeholder:opacity-30" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Priority Level</label>
+                        <select 
+                            value={priority} 
+                            onChange={e => setPriority(e.target.value as any)}
+                            className="w-full bg-brand-bg/60 border border-brand-border rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all text-brand-text"
+                        >
+                            <option value="low">Low Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -1337,7 +1378,16 @@ const AssignmentTracker = () => {
                                         <Check size={32} strokeWidth={4} />
                                     </motion.button>
                                     <div>
-                                        <div className={`text-2xl font-black tracking-tightest leading-none mb-3 ${a.done ? 'line-through text-brand-text-secondary/50' : 'text-brand-text'}`}>{a.title}</div>
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <div className={`text-2xl font-black tracking-tightest leading-none ${a.done ? 'line-through text-brand-text-secondary/50' : 'text-brand-text'}`}>{a.title}</div>
+                                            <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                                                a.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/30' :
+                                                a.priority === 'medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' :
+                                                'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                                            }`}>
+                                                {a.priority}
+                                            </div>
+                                        </div>
                                         <div className="flex flex-wrap items-center gap-4">
                                             {a.subject && (
                                                 <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-primary/10 border border-brand-primary/30 text-[9px] font-black uppercase tracking-[0.2em] text-brand-primary">
@@ -1377,6 +1427,7 @@ const NotesTool = () => {
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState<'vault' | 'scratchpad'>('vault');
     const [quickNotes, setQuickNotes] = useState<string>(() => localStorage.getItem('quick_notes') || '');
+    const [selectedNote, setSelectedNote] = useState<number | null>(null);
 
     useEffect(() => {
         localStorage.setItem('academic_notes', JSON.stringify(notes));
@@ -1402,6 +1453,7 @@ const NotesTool = () => {
 
     const deleteNote = (id: number) => {
         setNotes(notes.filter(n => n.id !== id));
+        if (selectedNote === id) setSelectedNote(null);
     };
 
     const filteredNotes = notes.filter(n => 
@@ -1410,18 +1462,20 @@ const NotesTool = () => {
         n.category.toLowerCase().includes(search.toLowerCase())
     );
 
+    const activeNote = notes.find(n => n.id === selectedNote);
+
     return (
         <div className="max-w-7xl mx-auto space-y-16">
             <div className="flex justify-center">
                 <div className="flex bg-brand-surface/40 p-2 rounded-[2.5rem] border border-brand-border/30 backdrop-blur-md shadow-2xl">
                     <button 
-                        onClick={() => setActiveTab('vault')}
+                        onClick={() => { setActiveTab('vault'); setSelectedNote(null); }}
                         className={`px-10 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${activeTab === 'vault' ? 'bg-brand-primary text-brand-bg shadow-[0_15px_40px_rgba(var(--brand-primary-rgb),0.3)] scale-105' : 'text-brand-text-secondary hover:text-brand-text'}`}
                     >
                         Long-Term Vaults
                     </button>
                     <button 
-                        onClick={() => setActiveTab('scratchpad')}
+                        onClick={() => { setActiveTab('scratchpad'); setSelectedNote(null); }}
                         className={`px-10 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${activeTab === 'scratchpad' ? 'bg-brand-primary text-brand-bg shadow-[0_15px_40px_rgba(var(--brand-primary-rgb),0.3)] scale-105' : 'text-brand-text-secondary hover:text-brand-text'}`}
                     >
                         Volatile Scratchpad
@@ -1466,7 +1520,7 @@ const NotesTool = () => {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Encoded Logic (Content)</label>
+                                            <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.4em] ml-2 mb-2">Encoded Logic (Markdown Supported)</label>
                                             <textarea 
                                                 value={content} 
                                                 onChange={e => setContent(e.target.value)} 
@@ -1488,54 +1542,95 @@ const NotesTool = () => {
                         </div>
 
                         <div className="lg:col-span-8 space-y-8">
-                            <div className="relative group/search">
-                                <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-brand-text-secondary/40 group-focus-within/search:text-brand-primary transition-colors" size={24} />
-                                <input 
-                                    type="text" 
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    placeholder="Search archive nodes by title, content, or tag classification..."
-                                    className="w-full bg-brand-surface/40 border border-brand-border/50 rounded-[2.5rem] pl-20 pr-10 py-6 text-lg font-bold text-brand-text focus:ring-8 focus:ring-brand-primary/5 outline-none backdrop-blur-md transition-all shadow-xl placeholder:opacity-20"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
-                                <AnimatePresence mode="popLayout" initial={false}>
-                                    {filteredNotes.map((note, idx) => (
-                                        <motion.div 
-                                            layout
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            key={note.id} 
-                                            className="bg-brand-surface/40 p-10 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md group/note relative hover:border-brand-primary/50 transition-all duration-500 flex flex-col shadow-2xl"
+                            {selectedNote !== null && activeNote ? (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="bg-brand-surface/60 border border-brand-primary/30 rounded-[4rem] p-16 shadow-2xl min-h-[600px] flex flex-col backdrop-blur-3xl"
+                                >
+                                    <div className="flex items-center justify-between mb-12">
+                                        <button 
+                                            onClick={() => setSelectedNote(null)}
+                                            className="flex items-center gap-2 text-brand-text-secondary hover:text-brand-primary transition-colors group"
                                         >
-                                            <div className="flex justify-between items-start mb-8">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-lg text-[9px] font-black text-brand-primary uppercase tracking-[0.3em] font-mono">
-                                                        {note.category}
+                                            <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Back to Library</span>
+                                        </button>
+                                        <div className="flex gap-4">
+                                            <div className="px-4 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">{activeNote.category}</div>
+                                            <button onClick={() => deleteNote(activeNote.id)} className="p-2 text-red-400 hover:bg-red-400/10 rounded-xl transition-all">
+                                                <Trash2 size={20} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <h2 className="text-4xl font-black text-brand-text tracking-tight border-l-8 border-brand-primary pl-8 mb-10">{activeNote.title}</h2>
+                                    <div className="markdown-body prose prose-invert prose-brand max-w-none flex-1">
+                                        <ReactMarkdown>{activeNote.content}</ReactMarkdown>
+                                    </div>
+                                    <div className="mt-12 pt-8 border-t border-brand-border/20 text-[10px] font-mono text-brand-text-secondary opacity-30 flex justify-between uppercase tracking-widest">
+                                        <div>// Timestamp: {activeNote.date}</div>
+                                        <div>// Hash: {activeNote.id.toString(16).toUpperCase()}</div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <>
+                                    <div className="relative group/search">
+                                        <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-brand-text-secondary/40 group-focus-within/search:text-brand-primary transition-colors" size={24} />
+                                        <input 
+                                            type="text" 
+                                            value={search}
+                                            onChange={e => setSearch(e.target.value)}
+                                            placeholder="Search archive nodes by title, content, or tag classification..."
+                                            className="w-full bg-brand-surface/40 border border-brand-border/50 rounded-[2.5rem] pl-20 pr-10 py-6 text-lg font-bold text-brand-text focus:ring-8 focus:ring-brand-primary/5 outline-none backdrop-blur-md transition-all shadow-xl placeholder:opacity-20"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
+                                        <AnimatePresence mode="popLayout" initial={false}>
+                                            {filteredNotes.map((note, idx) => (
+                                                <motion.div 
+                                                    layout
+                                                    initial={{ opacity: 0, scale: 0.95 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                    transition={{ delay: idx * 0.05 }}
+                                                    key={note.id} 
+                                                    onClick={() => setSelectedNote(note.id)}
+                                                    className="bg-brand-surface/40 p-10 rounded-[3.5rem] border border-brand-border/50 backdrop-blur-md group/note relative hover:border-brand-primary/50 transition-all duration-500 cursor-pointer flex flex-col shadow-2xl hover:scale-[1.02]"
+                                                >
+                                                    <div className="flex justify-between items-start mb-8">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 rounded-lg text-[9px] font-black text-brand-primary uppercase tracking-[0.3em] font-mono">
+                                                                {note.category}
+                                                            </div>
+                                                            <div className="text-[8px] font-mono text-brand-text-secondary/30 uppercase tracking-widest">{note.date}</div>
+                                                        </div>
+                                                        <div onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }} className="w-10 h-10 flex items-center justify-center text-brand-text-secondary/20 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all">
+                                                            <Trash2 size={18} />
+                                                        </div>
                                                     </div>
-                                                    <div className="text-[8px] font-mono text-brand-text-secondary/30 uppercase tracking-widest">{note.date}</div>
-                                                </div>
-                                                <button onClick={() => deleteNote(note.id)} className="w-10 h-10 flex items-center justify-center text-brand-text-secondary/20 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all">
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                    <h4 className="text-2xl font-black text-brand-text mb-6 tracking-tight group-hover/note:text-brand-primary transition-colors leading-none">{note.title}</h4>
+                                                    <p className="text-brand-text-secondary text-sm leading-relaxed line-clamp-4 mb-10 italic flex-1">{note.content}</p>
+                                                    <div className="pt-6 border-t border-brand-border/20 flex gap-2 overflow-hidden items-center justify-between">
+                                                        <div className="flex items-center gap-2 opacity-20 uppercase font-mono text-[8px] tracking-[0.3em] font-black">
+                                                            // Read full archive node
+                                                        </div>
+                                                        <div className="p-3 bg-brand-primary text-brand-bg rounded-xl shadow-lg">
+                                                            <ChevronRight size={14} />
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </AnimatePresence>
+                                        {filteredNotes.length === 0 && (
+                                            <div className="col-span-full py-32 text-center">
+                                                <Layers size={64} className="mx-auto text-brand-text-secondary/10 mb-8" />
+                                                <div className="text-[10px] font-black uppercase tracking-[0.6em] text-brand-text-secondary/40">Zero resultants found for search query.</div>
                                             </div>
-                                            <h4 className="text-2xl font-black text-brand-text mb-6 tracking-tight group-hover/note:text-brand-primary transition-colors leading-none">{note.title}</h4>
-                                            <p className="text-brand-text-secondary text-sm leading-relaxed line-clamp-6 mb-10 italic flex-1">{note.content}</p>
-                                            <div className="pt-6 border-t border-brand-border/20 flex gap-2 overflow-hidden items-center justify-between">
-                                                <div className="flex items-center gap-2 opacity-20 uppercase font-mono text-[8px] tracking-[0.3em] font-black">
-                                                    // Node Hash: {note.id.toString(16).slice(-6).toUpperCase()}
-                                                </div>
-                                                <motion.button whileHover={{ scale: 1.1 }} className="p-3 bg-brand-bg rounded-xl text-brand-text-secondary hover:text-brand-primary transition-all shadow-lg border border-brand-border">
-                                                    <BookOpen size={14} />
-                                                </motion.button>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </AnimatePresence>
-                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 ) : (
@@ -1639,7 +1734,7 @@ const AITutor = () => {
             }));
 
             const response = await ai.models.generateContent({
-                model: "gemini-3.1-pro-preview",
+                model: "gemini-1.5-flash",
                 contents: [...historyParts, { role: 'user', parts: [{ text: userText }] }],
                 config: {
                     systemInstruction: systemPrompt,
@@ -2090,7 +2185,7 @@ const EquationSolver = () => {
         try {
             const ai = new GoogleGenAI({ apiKey: getApiKey() });
             const resp = await ai.models.generateContent({
-                model: "gemini-3.1-pro-preview",
+                model: "gemini-1.5-flash",
                 contents: `Solve this math equation: "${equation}". Provide the final answer and a list of 3-5 logical steps. Return as JSON: {"answer": "x = ...", "steps": ["step 1", "step 2", ...]}`,
                 config: { responseMimeType: "application/json" }
             });
@@ -2200,17 +2295,262 @@ const EquationSolver = () => {
     );
 };
 
+// --- 13. Practice Bench (Dynamic Problem Sets) ---
+const PracticeBench = () => {
+    const [subject, setSubject] = useState('Math');
+    const [level, setLevel] = useState('High School');
+    const [topic, setTopic] = useState('');
+    const [batchSize, setBatchSize] = useState(3);
+    const [problems, setProblems] = useState<{q: string, a: string, show: boolean}[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const generateProblems = async () => {
+        setIsLoading(true);
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error("Gemini API key is not configured.");
+            const ai = new GoogleGenAI({ apiKey });
+            
+            const prompt = `Generate ${batchSize} practice problems for ${subject} ${topic ? `(specifically focusing on ${topic})` : ''} at ${level} level. 
+            Formatting: Return a JSON array of objects, each with 'q' (the question in markdown) and 'a' (the concise answer/explanation). 
+            Use LaTeX for math. Keep descriptions scholarly and rigorous.
+            Example format: [{"q": "Evaluate $\\int x^2 dx$", "a": "$\\frac{1}{3}x^3 + C$"}]`;
+
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                config: { responseMimeType: "application/json" }
+            });
+            
+            const raw = response.text || '[]';
+            const parsed = JSON.parse(raw);
+            setProblems(parsed.map((p: any) => ({ ...p, show: false })));
+        } catch (error: any) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const SAMPLES: Record<string, {q: string, a: string}[]> = {
+        'Math': [
+            { q: 'Find the derivative of $f(x) = e^{2x} \\sin(x)$', a: '$f\'(x) = 2e^{2x}\\sin(x) + e^{2x}\\cos(x) = e^{2x}(2\\sin(x) + \\cos(x))$' },
+            { q: 'Solve for $x$: $\\log_2(x) + \\log_2(x-2) = 3$', a: '$\\log_2(x(x-2)) = 3 \\Rightarrow x^2-2x = 8 \\Rightarrow x^2-2x-8=0 \\Rightarrow (x-4)(x+2)=0$. Since $x>2$, $x=4$.' },
+            { q: 'Evaluate the integral: $\\int x \\cos(x) dx$', a: 'Using integration by parts: $\\int u dv = uv - \\int v du$. Let $u=x, dv=\\cos(x)dx$. Then $du=dx, v=\\sin(x)$. $\\int x \\cos(x) dx = x\\sin(x) - \\int \\sin(x) dx = x\\sin(x) + \\cos(x) + C$.' },
+            { q: 'Calculate the cross product of $\\vec{u} = (1, 2, 3)$ and $\\vec{v} = (4, 5, 6)$', a: '$\\vec{u} \\times \\vec{v} = (2(6)-3(5), 3(4)-1(6), 1(5)-2(4)) = (12-15, 12-6, 5-8) = (-3, 6, -3)$.' },
+            { q: 'Expand $e^x$ as a Taylor series centered at $x=0$', a: '$e^x = \\sum_{n=0}^{\\infty} \\frac{x^n}{n!} = 1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} + \\dots$' }
+        ],
+        'Physics': [
+            { q: 'A 2kg mass is attached to a spring with $k=50N/m$. What is the period of oscillation?', a: '$T = 2\\pi\\sqrt{m/k} = 2\\pi\\sqrt{2/50} = 2\\pi\\sqrt{1/25} = 2\\pi/5 \\approx 1.26s$' },
+            { q: 'Calculate the total work done by a force $F=20N$ moving an object $5m$ at an angle of $60^\\circ$ to the displacement.', a: '$W = F d \\cos(\\theta) = 20(5)\\cos(60^\\circ) = 100(0.5) = 50J$.' },
+            { q: 'Find the energy stored in a $10\\mu F$ capacitor charged to $50V$.', a: '$U = \\frac{1}{2}CV^2 = \\frac{1}{2}(10 \\times 10^{-6})(50^2) = 5 \\times 10^{-6} \\times 2500 = 0.0125J$.' },
+            { q: 'Determine the angle of refraction for light entering water ($n=1.33$) from air ($n=1.00$) at an incidence angle of $30^\\circ$.', a: '$n_1 \\sin(\\theta_1) = n_2 \\sin(\\theta_2) \\Rightarrow 1.00 \\sin(30^\\circ) = 1.33 \\sin(\\theta_2) \\Rightarrow \\sin(\\theta_2) = 0.5/1.33 \\approx 0.376 \\Rightarrow \\theta_2 \\approx 22.1^\\circ$.' }
+        ],
+        'Chemistry': [
+            { q: 'What is the pH of a 0.01M solution of HCl?', a: '$pH = -\\log[H^+] = -\\log(0.01) = 2$' },
+            { q: 'How many grams of NaOH are needed to make 500mL of a 0.1M solution?', a: '$n = M \\times V = 0.1 \\times 0.5 = 0.05$ mol. Mass = $n \\times MW = 0.05 \\times 40.0 = 2.0g$.' },
+            { q: 'Balance the dry combustion of Propane ($C_3H_8$).', a: '$C_3H_8 + 5O_2 \\rightarrow 3CO_2 + 4H_2O$.' },
+            { q: 'Calculate the volume of 2 moles of an ideal gas at STP.', a: '$V = nRT/P = (2)(0.08206)(273.15)/1.0 = 44.8L$ (or simply $2 \\times 22.4L/mol$).' }
+        ]
+    };
+
+    const loadSample = (s: string) => {
+        const sampleSet = SAMPLES[s] || [];
+        setProblems(sampleSet.map(p => ({ ...p, show: false })));
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto space-y-12">
+            <div className="bg-brand-surface/40 p-12 rounded-[4rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-16 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Target size={200} />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-6 mb-12">
+                        <div className="w-16 h-16 rounded-[2rem] bg-brand-primary text-brand-bg flex items-center justify-center shadow-2xl shadow-brand-primary/30">
+                            <Zap size={32} />
+                        </div>
+                        <div>
+                            <h3 className="text-3xl font-black text-brand-text uppercase tracking-widest">Exercise Bench</h3>
+                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.4em] font-black">Dynamic Problem Generation Suite [Gemini-Powered]</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10">
+                        <div className="space-y-8">
+                            <div className="space-y-4">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Discipline Field</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['Math', 'Physics', 'Biology', 'Chemistry', 'CS', 'Economics', 'History', 'Literature', 'Psychology'].map(s => (
+                                        <button 
+                                            key={s} 
+                                            onClick={() => setSubject(s)}
+                                            className={`p-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${subject === s ? 'bg-brand-primary text-brand-bg border-brand-primary shadow-xl' : 'bg-brand-bg/40 border-brand-border/30 text-brand-text-secondary hover:text-brand-text'}`}
+                                        >
+                                            {s}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Contextual Topic (Optional)</label>
+                                <input 
+                                    type="text" 
+                                    value={topic}
+                                    onChange={e => setTopic(e.target.value)}
+                                    placeholder="e.g. Thermodynamics, Organic Synthesis..."
+                                    className="w-full bg-brand-bg/40 border border-brand-border rounded-2xl p-4 text-xs font-bold focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all text-brand-text placeholder:opacity-20"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="space-y-4">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Academic Intensity</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['High School', 'Undergraduate', 'Graduate', 'Doctorate'].map(l => (
+                                        <button 
+                                            key={l} 
+                                            onClick={() => setLevel(l)}
+                                            className={`p-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${level === l ? 'bg-brand-text text-brand-bg border-brand-text' : 'bg-brand-bg/40 border-brand-border/30 text-brand-text-secondary hover:text-brand-text'}`}
+                                        >
+                                            {l}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Problem Batch Size</label>
+                                <div className="flex gap-2">
+                                    {[3, 5, 10].map(n => (
+                                        <button 
+                                            key={n}
+                                            onClick={() => setBatchSize(n)}
+                                            className={`flex-1 p-4 rounded-xl text-xs font-black transition-all border ${batchSize === n ? 'bg-brand-primary/20 border-brand-primary text-brand-primary' : 'bg-brand-bg/40 border-brand-border text-brand-text-secondary'}`}
+                                        >
+                                            {n}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={generateProblems}
+                            disabled={isLoading}
+                            className="flex-[2] py-6 bg-brand-primary text-brand-bg rounded-[2.5rem] font-black uppercase tracking-[0.5em] text-xs shadow-2xl flex items-center justify-center gap-4 disabled:opacity-50"
+                        >
+                            {isLoading ? <Loader2 size={24} className="animate-spin" /> : <Sparkles size={24} />}
+                            {isLoading ? 'Synthesizing Problems...' : 'Generate New Problem Set'}
+                        </motion.button>
+                        <button 
+                            onClick={() => loadSample(subject)}
+                            className="flex-1 py-6 bg-brand-surface border border-brand-border text-brand-text-secondary rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-[9px] hover:text-brand-text transition-all"
+                        >
+                            Load Classic Samples
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <AnimatePresence mode="popLayout" initial={false}>
+                    {problems.map((p, idx) => (
+                        <motion.div
+                            layout
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            key={idx}
+                            className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative group/problem"
+                        >
+                            <div className="flex justify-between items-start mb-8">
+                                <div className="px-4 py-1.5 bg-brand-bg/50 border border-brand-border rounded-full text-[9px] font-black text-brand-text-secondary uppercase tracking-widest">
+                                    Challenge 0{idx + 1}
+                                </div>
+                                <div className="text-[8px] font-mono text-brand-text-secondary/20 uppercase tracking-[0.3em]">
+                                    Source: nolo_core_practice_v2 // {subject}
+                                </div>
+                            </div>
+                            <div className="markdown-body prose prose-invert prose-brand max-w-none text-lg font-medium leading-relaxed mb-10">
+                                <ReactMarkdown>{p.q}</ReactMarkdown>
+                            </div>
+                            
+                            <div className="border-t border-brand-border/20 pt-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+                                <button 
+                                    onClick={() => setProblems(problems.map((prob, i) => i === idx ? { ...prob, show: !prob.show } : prob))}
+                                    className="flex items-center gap-3 text-brand-primary hover:text-brand-secondary transition-colors group/reveal"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 group-hover/reveal:bg-brand-primary group-hover/reveal:text-brand-bg transition-all">
+                                        <Layers size={18} />
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{p.show ? 'Collapse Theoretical Solution' : 'Disclose Theoretical Solution'}</span>
+                                </button>
+                                
+                                <div className="flex gap-2">
+                                    <button className="p-4 bg-brand-bg/40 rounded-2xl text-brand-text-secondary hover:text-brand-primary border border-brand-border/50 transition-all">
+                                        <Plus size={18} />
+                                    </button>
+                                    <button className="p-4 bg-brand-bg/40 rounded-2xl text-brand-text-secondary hover:text-brand-primary border border-brand-border/50 transition-all">
+                                        <Send size={18} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <AnimatePresence>
+                                {p.show && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="mt-10 p-10 bg-emerald-500/5 border-2 border-emerald-500/20 rounded-[2.5rem] relative">
+                                            <div className="absolute top-0 right-0 p-6 opacity-30 text-emerald-500">
+                                                <ShieldCheck size={32} />
+                                            </div>
+                                            <div className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                                Verified Synthesis Response
+                                            </div>
+                                            <div className="markdown-body prose prose-invert prose-emerald text-brand-text max-w-none font-medium italic leading-relaxed">
+                                                <ReactMarkdown>{p.a}</ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+                {problems.length === 0 && !isLoading && (
+                    <div className="py-24 text-center border-2 border-dashed border-brand-border/30 rounded-[4rem] bg-brand-surface/10">
+                        <Target size={48} className="mx-auto text-brand-text-secondary/10 mb-6" />
+                        <div className="text-[10px] font-black text-brand-text-secondary/30 uppercase tracking-[0.8em]">Idle State // Awaiting Field Parameters</div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 // --- Main Student Tools Component ---
 const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) => {
     const { user, userData } = useAuth();
-    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit';
+    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises';
     const [activeTool, setActiveTool] = useState<ToolID>('gpa');
 
     const categories = [
         { id: 'productivity', label: 'Productivity', icon: Activity, types: ['pomodoro', 'assignments', 'notes', 'flashcards'] },
+        { id: 'practice', label: 'Practice Bench', icon: Target, types: ['exercises', 'tutor'] },
         { id: 'math', label: 'Advanced Math', icon: Zap, types: ['equation', 'geometry', 'gpa'] },
         { id: 'science', label: 'Science Core', icon: Atom, types: ['science', 'physics', 'elements', 'unit'] },
-        { id: 'research', label: 'Research', icon: BookOpen, types: ['tutor', 'formulas', 'citations'] }
+        { id: 'research', label: 'Research', icon: BookOpen, types: ['formulas', 'citations'] }
     ];
 
     const renderTool = () => {
@@ -2229,6 +2569,7 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
             case 'tutor': return <AITutor />;
             case 'equation': return <EquationSolver />;
             case 'unit': return <ScientificUnitConverter />;
+            case 'exercises': return <PracticeBench />;
             default: return null;
         }
     };

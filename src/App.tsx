@@ -36,6 +36,8 @@ const Scratchpad = lazy(() => import('./components/Scratchpad'));
 const CommandPalette = lazy(() => import('./components/CommandPalette'));
 const PeriodicTable = lazy(() => import('./components/PeriodicTable'));
 const ProfileOnboarding = lazy(() => import('./components/ProfileOnboarding'));
+const FeedbackPage = lazy(() => import('./components/FeedbackPage'));
+const ExerciseReference = lazy(() => import('./components/ExerciseReference'));
 
 const PrivacyProtocol = lazy(() => import('./components/PrivacyProtocol'));
 const CoreLicense = lazy(() => import('./components/CoreLicense'));
@@ -242,6 +244,12 @@ const App = () => {
         break;
       case 'student':
         TabComponent = <StudentTools onLoginClick={() => setIsAuthModalOpen(true)} />;
+        break;
+      case 'feedback':
+        TabComponent = <FeedbackPage />;
+        break;
+      case 'exercises':
+        TabComponent = <ExerciseReference />;
         break;
       case 'history':
         TabComponent = <History history={history} loadFromHistory={loadFromHistory} clearHistory={clearHistory} toggleFavorite={toggleFavorite} />;
