@@ -205,13 +205,13 @@ const App = () => {
         TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} setActiveTab={setActiveTab} />;
         break;
       case 'graphing':
-        TabComponent = <Graph />;
+        TabComponent = <Graph onLoginClick={() => setIsAuthModalOpen(true)} />;
         break;
       case 'periodic':
         TabComponent = <PeriodicTable />;
         break;
       case 'math-tools':
-        TabComponent = <MathTools />;
+        TabComponent = <MathTools onLoginClick={() => setIsAuthModalOpen(true)} />;
         break;
       case 'programmer':
         TabComponent = <ProgrammerCalculator />;
@@ -241,7 +241,7 @@ const App = () => {
         TabComponent = <DeveloperTools />;
         break;
       case 'student':
-        TabComponent = <StudentTools />;
+        TabComponent = <StudentTools onLoginClick={() => setIsAuthModalOpen(true)} />;
         break;
       case 'history':
         TabComponent = <History history={history} loadFromHistory={loadFromHistory} clearHistory={clearHistory} toggleFavorite={toggleFavorite} />;

@@ -207,17 +207,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: any) {
       setLoading(false);
+      console.group("Sign-in Failure Diagnostics");
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      console.error("Current Hostname:", window.location.hostname);
+      console.groupEnd();
+
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         console.log("Sign-in cancelled by user.");
       } else if (err.code === 'auth/popup-blocked') {
-        setError("Sign-in popup was blocked by your browser. Please allow popups for this site.");
+        setError("Sign-in popup was blocked by your browser. Please allow popups for this site or use the Redirect method.");
       } else if (err.code === 'auth/unauthorized-domain') {
-        setError(`This domain (${window.location.hostname}) is not authorized for Google Sign-in in your Firebase Console. Please add it to "Authorized domains" under Authentication > Settings > Authorized domains.`);
+        setError(`CRITICAL: Domain "${window.location.hostname}" is NOT authorized in Firebase Console. Please go to Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
       } else if (err.code === 'auth/network-request-failed') {
-        setError("Network error: The browser couldn't reach the authentication service. This usually happens if the domain is not authorized in Firebase Console or if an ad-blocker is too aggressive. Try the 'Redirect' method below.");
+        setError("Network error: This can be caused by ad-blockers, browser privacy settings, or missing Authorized Domains in Firebase. Please try the 'Redirect Method' to bypass common popup restrictions.");
+      } else if (err.code === 'auth/internal-error' && err.message?.includes('popup')) {
+        setError("Internal error during popup initialization. Your browser settings might be restricting the authentication frame. Switching to Redirect Method is recommended.");
       } else {
-        setError(err.message || "An unexpected error occurred during sign-in.");
-        console.error("Error signing in with Google", err);
+        setError(`Authentication Error: ${err.message || "An unexpected error occurred"}. (Code: ${err.code})`);
       }
     }
   };

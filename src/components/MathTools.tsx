@@ -1094,8 +1094,8 @@ const LogarithmsCalculator = () => {
 };
 
 // --- Main Component ---
-const MathTools: React.FC = () => {
-    const { user, signInWithGoogle } = useAuth();
+const MathTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) => {
+    const { user } = useAuth();
     const [activeCalc, setActiveCalc] = useState('dashboard');
 
     const calculatorList = useMemo(() => [
@@ -1308,7 +1308,7 @@ const MathTools: React.FC = () => {
                                         </p>
                                     </div>
                                     <button 
-                                        onClick={() => signInWithGoogle()}
+                                        onClick={onLoginClick}
                                         className="px-12 py-6 bg-brand-text text-brand-bg font-black uppercase tracking-[0.4em] text-[10px] rounded-full hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-text/20 flex items-center gap-4 group"
                                     >
                                         Establish Connection

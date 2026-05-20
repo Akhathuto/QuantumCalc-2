@@ -1452,8 +1452,8 @@ const StreamtubePlotter = () => {
     );
 };
 
-const Graph = () => {
-    const { user, signInWithGoogle } = useAuth();
+const Graph = ({ onLoginClick }: { onLoginClick: () => void }) => {
+    const { user } = useAuth();
     type ChartType = 'function' | 'scatter' | 'scatter3d' | 'radar' | 'bar' | 'histogram' | 'pie' | 'surface3d' | 'polar' | 'contour' | 'vector' | 'heatmap' | 'mesh3d' | 'parametric3d' | 'ribbon' | 'waterfall' | 'vector3d' | 'isosurface' | 'streamtube';
     
     const [chartType, setChartType] = useState<ChartType>(() => {
@@ -1517,7 +1517,7 @@ const Graph = () => {
                     <motion.div 
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        onClick={() => signInWithGoogle()}
+                        onClick={onLoginClick}
                         className="flex items-center gap-5 p-5 pr-8 bg-brand-surface/40 hover:bg-brand-surface/60 border border-brand-border/50 rounded-[2.5rem] group cursor-pointer transition-all backdrop-blur-md shadow-2xl"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-brand-primary flex items-center justify-center text-brand-bg shadow-lg shadow-brand-primary/20 transition-transform group-hover:scale-110">
@@ -1603,7 +1603,7 @@ const Graph = () => {
                                     <p className="text-brand-text-secondary text-xl font-light leading-relaxed">Join the global research network to save complex parameter sets, export ultra-high resolution assets, and collaborate on shared computational models.</p>
                                 </div>
                                 <button 
-                                    onClick={() => signInWithGoogle()}
+                                    onClick={onLoginClick}
                                     className="w-full md:w-auto relative z-10 px-14 py-7 bg-brand-primary text-white rounded-[2rem] font-black text-base uppercase tracking-[0.2em] hover:scale-105 hover:shadow-[0_0_50px_rgba(var(--brand-primary-rgb),0.5)] active:scale-95 transition-all shadow-2xl shadow-brand-primary/40 group/btn"
                                 >
                                     Activate Credentials
