@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import LessonsHub from './LessonsHub';
+import WolframHub from './WolframHub';
+import MathExercises from './MathExercises';
+import K5Worksheets from './K5Worksheets';
 import { 
   GraduationCap, 
   Triangle, 
@@ -3348,13 +3351,13 @@ const PracticeBench = () => {
 // --- Main Student Tools Component ---
 const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) => {
     const { user, userData } = useAuth();
-    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises' | 'lessons';
+    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises' | 'lessons' | 'wolfram' | 'mathexercises' | 'k5worksheets';
     const [activeTool, setActiveTool] = useState<ToolID>('lessons');
 
     const categories = [
         { id: 'productivity', label: 'Productivity', icon: Activity, types: ['pomodoro', 'assignments', 'notes', 'flashcards'] },
-        { id: 'practice', label: 'Practice Bench', icon: Target, types: ['lessons', 'exercises', 'tutor'] },
-        { id: 'math', label: 'Advanced Math', icon: Zap, types: ['equation', 'geometry', 'gpa'] },
+        { id: 'practice', label: 'Practice Bench', icon: Target, types: ['lessons', 'exercises', 'mathexercises', 'k5worksheets', 'tutor'] },
+        { id: 'math', label: 'Advanced Math', icon: Zap, types: ['wolfram', 'equation', 'geometry', 'gpa'] },
         { id: 'science', label: 'Science Core', icon: Atom, types: ['science', 'physics', 'elements', 'unit'] },
         { id: 'research', label: 'Research', icon: BookOpen, types: ['formulas', 'citations'] }
     ];
@@ -3377,6 +3380,9 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
             case 'unit': return <ScientificUnitConverter />;
             case 'exercises': return <PracticeBench />;
             case 'lessons': return <LessonsHub onLoginClick={onLoginClick} />;
+            case 'wolfram': return <WolframHub />;
+            case 'mathexercises': return <MathExercises />;
+            case 'k5worksheets': return <K5Worksheets />;
             default: return null;
         }
     };
@@ -3425,7 +3431,14 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                                 </div>
                                 <div className="flex flex-col">
                                     {cat.types.map(type => {
-                                        const toolLabel = type.charAt(0).toUpperCase() + type.slice(1).replace('gpa', 'GPA').replace('elements', 'Periodic Table').replace('tutor', 'AI Tutor').replace('equation', 'Equation Solver');
+                                        const toolLabel = type === 'gpa' ? 'GPA Calculator'
+                                            : type === 'elements' ? 'Periodic Table'
+                                            : type === 'tutor' ? 'AI Tutor'
+                                            : type === 'equation' ? 'Equation Solver'
+                                            : type === 'wolfram' ? 'Wolfram Computational'
+                                            : type === 'mathexercises' ? 'Math Drills'
+                                            : type === 'k5worksheets' ? 'K5 Worksheets'
+                                            : type.charAt(0).toUpperCase() + type.slice(1);
                                         return (
                                             <SubNavButton
                                                 key={type}
