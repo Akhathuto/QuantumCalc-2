@@ -9,6 +9,8 @@ export interface UserProfileData {
   school?: string;
   onboarded: boolean;
   lastSynced?: string;
+  calcHistory?: string;
+  quantum_notes?: string;
 }
 
 export const googleDriveService = {

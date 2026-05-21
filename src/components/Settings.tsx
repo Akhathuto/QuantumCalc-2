@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info, Cpu, Sparkles, Clipboard, Activity } from 'lucide-react';
+import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info, Cpu, Sparkles, Clipboard, Activity, Upload } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -135,6 +135,38 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
             console.error("Export failed", error);
             showToast("Failed to export data.");
         }
+    };
+
+    const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const content = event.target?.result as string;
+                const json = JSON.parse(content);
+                if (typeof json !== 'object' || json === null) {
+                    throw new Error("Invalid structure. Active payload must be secure JSON map.");
+                }
+
+                let keysRestored = 0;
+                Object.entries(json).forEach(([key, value]) => {
+                    if (typeof value === 'string') {
+                        localStorage.setItem(key, value);
+                        keysRestored++;
+                    }
+                });
+
+                showToast(`Restored ${keysRestored} active partitions! Resetting interface...`);
+                loadStorageUsage();
+                setTimeout(() => window.location.reload(), 1500);
+            } catch (err: any) {
+                console.error("Import failed:", err);
+                showToast(`Import aborted: ${err?.message || 'Invalid sandbox JSON formatting.'}`);
+            }
+        };
+        reader.readAsText(file);
     };
 
     const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -355,11 +387,16 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
             const userRef = doc(db, 'users', user.uid);
             await updateDoc(userRef, profileData);
 
-            // 2. Sync to Google Drive
+            // 2. Sync to Google Drive (including calculations & scratchpad notes cache)
             if (accessToken) {
                 try {
-                    await googleDriveService.saveProfile(accessToken, profileData);
-                    showToast("Profile updated and synced to Drive!");
+                    const fullBackupData = {
+                        ...profileData,
+                        calcHistory: localStorage.getItem('calcHistory') || '',
+                        quantum_notes: localStorage.getItem('quantum_notes') || ''
+                    };
+                    await googleDriveService.saveProfile(accessToken, fullBackupData);
+                    showToast("Profile, History and Notes successfully synced to Google Drive!");
                 } catch (driveError: any) {
                     if (driveError.message?.includes('401') || driveError.message?.includes('invalid_grant')) {
                         showToast("Drive Access Expired. Please log out and sign back in to re-link Drive.");
@@ -393,7 +430,28 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                     school: driveProfile.school,
                     onboarded: driveProfile.onboarded
                 });
-                showToast("Profile restored from Google Drive!");
+
+                // Restore calculation history & scratchpad notes if they are present in the backup file
+                let dataRecoveredMessage = "Profile successfully restored from Google Drive!";
+                let countRestored = 0;
+                if (driveProfile.calcHistory) {
+                    localStorage.setItem('calcHistory', driveProfile.calcHistory);
+                    countRestored++;
+                }
+                if (driveProfile.quantum_notes) {
+                    localStorage.setItem('quantum_notes', driveProfile.quantum_notes);
+                    countRestored++;
+                }
+
+                if (countRestored > 0) {
+                    dataRecoveredMessage = "Profile, History, and Notes fully restored from Google Drive! Reloading...";
+                }
+
+                showToast(dataRecoveredMessage);
+                loadStorageUsage();
+                if (countRestored > 0) {
+                    setTimeout(() => window.location.reload(), 2000);
+                }
             } else {
                 showToast("No profile found on your Google Drive.");
             }
@@ -971,7 +1029,7 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-brand-border/40">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 border-t border-brand-border/40">
                     <div className="flex flex-col p-6 bg-brand-bg/60 border border-brand-border/40 rounded-2xl">
                         <div className="flex-1">
                             <h4 className="font-bold text-brand-text mb-2 flex items-center gap-2"><Download size={18} className="text-blue-500" /> Export Data Structure</h4>
@@ -979,10 +1037,26 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                         </div>
                         <button
                             onClick={handleExportData}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-surface hover:bg-brand-border border border-brand-border text-brand-text rounded-xl font-bold transition-all text-sm"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-surface hover:bg-brand-border border border-brand-border text-brand-text rounded-xl font-bold transition-all text-sm shadow-sm"
                         >
                             <Download size={16} /> Execute Export
                         </button>
+                    </div>
+
+                    <div className="flex flex-col p-6 bg-brand-bg/60 border border-brand-border/40 rounded-2xl">
+                        <div className="flex-1">
+                            <h4 className="font-bold text-brand-text mb-2 flex items-center gap-2"><Upload size={18} className="text-purple-500" /> Import Local Backup</h4>
+                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed mb-6">Choose or drop a saved `.json` snapshot file to completely overlay themes, history, and workspace scratchpads.</p>
+                        </div>
+                        <label className="w-full h-[46px] flex items-center justify-center gap-2 px-4 py-3 bg-brand-surface hover:bg-brand-primary/10 hover:border-brand-primary/50 text-brand-text border border-brand-border rounded-xl font-bold transition-all text-sm cursor-pointer shadow-sm text-center">
+                            <Upload size={16} className="text-purple-400" /> Upload JSON File
+                            <input
+                                type="file"
+                                accept=".json"
+                                onChange={handleImportData}
+                                className="hidden"
+                            />
+                        </label>
                     </div>
 
                     <div className="flex flex-col p-6 bg-red-500/5 border border-red-500/10 rounded-2xl relative z-10">
