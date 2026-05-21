@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
+import LessonsHub from './LessonsHub';
 import { 
   GraduationCap, 
   Triangle, 
@@ -2542,12 +2543,12 @@ const PracticeBench = () => {
 // --- Main Student Tools Component ---
 const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) => {
     const { user, userData } = useAuth();
-    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises';
-    const [activeTool, setActiveTool] = useState<ToolID>('gpa');
+    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises' | 'lessons';
+    const [activeTool, setActiveTool] = useState<ToolID>('lessons');
 
     const categories = [
         { id: 'productivity', label: 'Productivity', icon: Activity, types: ['pomodoro', 'assignments', 'notes', 'flashcards'] },
-        { id: 'practice', label: 'Practice Bench', icon: Target, types: ['exercises', 'tutor'] },
+        { id: 'practice', label: 'Practice Bench', icon: Target, types: ['lessons', 'exercises', 'tutor'] },
         { id: 'math', label: 'Advanced Math', icon: Zap, types: ['equation', 'geometry', 'gpa'] },
         { id: 'science', label: 'Science Core', icon: Atom, types: ['science', 'physics', 'elements', 'unit'] },
         { id: 'research', label: 'Research', icon: BookOpen, types: ['formulas', 'citations'] }
@@ -2570,6 +2571,7 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
             case 'equation': return <EquationSolver />;
             case 'unit': return <ScientificUnitConverter />;
             case 'exercises': return <PracticeBench />;
+            case 'lessons': return <LessonsHub onLoginClick={onLoginClick} />;
             default: return null;
         }
     };

@@ -24,40 +24,150 @@ const ACADEMIC_CATEGORIES = [
 
 const FORMULAS = {
     math: [
+        { name: 'Fractions Basics', formula: '\\text{Fraction} = \\frac{\\text{Numerator (Parts)}}{\\text{Denominator (Whole)}}', description: 'Helps share slices of cake or pizza' },
+        { name: 'Area of Rectangle', formula: 'A = L \\times W', description: 'Finds the total flat space inside a box' },
         { name: 'Quadratic Formula', formula: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', description: 'Solves quadratic equations of the form ax² + bx + c = 0' },
         { name: 'Pythagorean Theorem', formula: 'a^2 + b^2 = c^2', description: 'Relation between sides of a right-angled triangle' },
-        { name: 'Area of Circle', formula: 'A = \\pi r^2', description: 'Total space enclosed by a circle' },
-        { name: 'Euler\'s Identity', formula: 'e^{i\\pi} + 1 = 0', description: 'The most beautiful equation in mathematics' }
+        { name: 'Area of Circle', formula: 'A = \\pi r^2', description: 'Total space enclosed by a circle' }
     ],
     physics: [
+        { name: 'Moon Weight Law', formula: 'W_{\\text{Moon}} = \\frac{1}{6} W_{\\text{Earth}}', description: 'Calculates how light you will feel on the Moon!' },
+        { name: 'Newton\'s Force Law', formula: 'F = m \\times a', description: 'Force equals mass times acceleration' },
         { name: 'Einstein\'s Energy', formula: 'E = mc^2', description: 'Mass-energy equivalence' },
-        { name: 'Newton\'s Second Law', formula: 'F = ma', description: 'Force equals mass times acceleration' },
-        { name: 'Ideal Gas Law', formula: 'PV = nRT', description: 'Equation of state for a hypothetical ideal gas' },
-        { name: 'Uncertainty Principle', formula: '\\Delta x \\Delta p \\geq \\frac{\\hbar}{2}', description: 'Fundamental limit to precision of measurements' }
+        { name: 'Ideal Gas Law', formula: 'PV = nRT', description: 'Equation of state for a hypothetical ideal gas' }
     ],
     chemistry: [
+        { name: 'Water Molecules', formula: 'H_2O = 2 \\text{ Hydrogen} + 1 \\text{ Oxygen}', description: 'Chemical formula of clean pure water' },
         { name: 'Molarity', formula: 'M = \\frac{n}{V}', description: 'Moles of solute per liter of solution' },
-        { name: 'pH Calculation', formula: 'pH = -\\log[H^+]', description: 'Measures the acidity or basicity of a solution' },
-        { name: 'Gibbs Free Energy', formula: '\\Delta G = \\Delta H - T\\Delta S', description: 'Predicts the spontaneity of a reaction' }
+        { name: 'pH Calculation', formula: 'pH = -\\log[H^+]', description: 'Measures the acidity or basicity of a solution' }
+    ],
+    biology: [
+        { name: 'Photosynthesis Cycle', formula: '\\text{CO}_2 + \\text{Water} + \\text{Sun} \\rightarrow \\text{Sugar} + \\text{Oxygen}', description: 'How green tree leaves create fresh air and food' }
+    ],
+    cs: [
+        { name: 'Binary Bit Scale', formula: '1 \\text{ Byte} = 8 \\text{ Bits}', description: 'Scale structure of digital memory storage' }
+    ],
+    history: [
+        { name: 'Scale Factor representation', formula: '\\text{Map Ratio} = 1 : 100,000', description: 'Translates ocean and land dimensions onto flat maps' }
     ]
 };
 
 const EXERCISES = {
     math: [
-        { q: "Find the roots of x² - 5x + 6 = 0", a: "x = 2, x = 3", difficulty: 'Easy' },
+        { q: "If you cut a sweet cake into 6 equal slices and eat 2, what fraction of the cake did you eat? Simplify it!", a: "2/6 which simplifies to 1/3 of the cake", difficulty: 'Kids / Easy' },
+        { q: "A square has a side length of 5 cm. What is its Perimeter and its Area?", a: "Perimeter = 20 cm, Area = 25 cm²", difficulty: 'Kids / Easy' },
+        { q: "Find the roots of x² - 5x + 6 = 0", a: "x = 2, x = 3", difficulty: 'Medium' },
         { q: "Calculate the derivative of f(x) = x³ + 2x", a: "f'(x) = 3x² + 2", difficulty: 'Medium' },
         { q: "Integrate ∫(2x) dx", a: "x² + C", difficulty: 'Easy' }
     ],
     physics: [
+        { q: "Why do we weigh less on the Moon than on the Earth?", a: "Because the Moon has much less mass and pulls with only 1/6th of Earth's gravity force.", difficulty: 'Kids / Easy' },
         { q: "A car travels 100m in 5s. Find velocity.", a: "20 m/s", difficulty: 'Easy' },
         { q: "Calculate gravitational force between two 1kg masses at 1m.", a: "6.67 × 10⁻¹¹ N", difficulty: 'Hard' }
+    ],
+    chemistry: [
+        { q: "What are the three core states of water, and how do we get them?", a: "Ice (Solid, freeze below 0°C), Water (Liquid, average temperature), Steam (Gas, heat up above 100°C).", difficulty: 'Kids / Easy' },
+        { q: "Which three particles make up an atom?", a: "Protons (positive charge), Neutrons (neutral charge), and Electrons (negative charge).", difficulty: 'Kids / Easy' }
+    ],
+    biology: [
+        { q: "What is green pigment in leaves called, and what does it do?", a: "Chlorophyll. It absorbs sunlight to power food production (Photosynthesis).", difficulty: 'Kids / Easy' },
+        { q: "Why do human bodies need red blood cells?", a: "To carry oxygen from your lungs to the rest of your body.", difficulty: 'Kids / Easy' }
+    ],
+    cs: [
+        { q: "How do you write the normal number 5 in computer binary code?", a: "0101 (Fours column + Ones column = 4 + 1 = 5)", difficulty: 'Kids / Easy' },
+        { q: "What is the difference between an If-Else decider and a Loop?", a: "A loop repeats an action multiple times, while If-Else makes a single choice.", difficulty: 'Kids / Easy' }
+    ],
+    history: [
+        { q: "Name the planet in our solar system that is famous for its bright outer rings.", a: "Saturn", difficulty: 'Kids / Easy' },
+        { q: "How many oceans are on the planet Earth, and which one is the largest?", a: "There are 5 oceans in total, and the Pacific Ocean is the largest.", difficulty: 'Kids / Easy' }
+    ]
+};
+
+const STUDY_NOTES = {
+    math: [
+        { title: 'Fractions Made Simple', points: [
+            'Numerator: The top number. It shows how many pieces you have (e.g., 2 in 2/5).',
+            'Denominator: The bottom number. It shows how many pieces the whole is cut into (e.g., 5 in 2/5).',
+            'Equivalent Fractions: Fractions that look different but have the same value (e.g., 1/2 is the same as 2/4 and 4/8).',
+            'Adding Fractions: If the bottom numbers are the same, just add the top numbers. If they are different, make them the same first!'
+        ], tip: 'Always reduce/simplify your final fraction by dividing the top and bottom by their largest common factor!' },
+        { title: 'Geometry Shortcuts', points: [
+            'Perimeter: The total boundary distance around a shape. Just add all outer side lengths together!',
+            'Area of a Rectangle: Length × Width.',
+            'Area of a Triangle: 1/2 × Base × Height.',
+            'Angles of a Triangle: All three angles in ANY triangle will always add up to exactly 180°.'
+        ], tip: 'Think of area as the number of little 1x1 squares that can fit inside the shape.' }
+    ],
+    physics: [
+        { title: 'Newton\'s Force Laws', points: [
+            'First Law (Inertia): Objects keep doing what they are doing (resting or moving) unless a force pushes or pulls them.',
+            'Second Law (F=ma): Pushing an object harder makes it speed up faster. Heavier things need more force to move.',
+            'Third Law (Action & Reaction): For every push, there is an equal and opposite push back (like blowing a balloon and releasing it).'
+        ], tip: 'Force is measured in Newtons (N), named after Sir Isaac Newton!' },
+        { title: 'Light & Rainbows', points: [
+            'Refraction: White light bends when it passes through glass or water, splitting into colors.',
+            'The Rainbow Code (ROYGBIV): Red, Orange, Yellow, Green, Blue, Indigo, Violet.',
+            'Speed of Light: Light is the fastest thing in the universe, traveling at 300,000 kilometers per second!'
+        ], tip: 'Raindrops act as tiny prisms to split sunshine into beautiful rainbows.' }
+    ],
+    chemistry: [
+        { title: 'What is an Atom?', points: [
+            'Protons: Positively charged particles in the center (nucleus) of the atom.',
+            'Neutrons: Neutral particles (no charge) in the nucleus alongside protons.',
+            'Electrons: Tiny negatively charged particles buzzing around the nucleus in shells.',
+            'Elements: Materials made of only one kind of atom (like pure Gold, Oxygen, or Carbon).'
+        ], tip: 'Everything in the universe (including you!) is made of atoms.' },
+        { title: 'States of Matter', points: [
+            'Solid: Atoms packed tightly together. Keeps its own shape (like ice or a wooden brick).',
+            'Liquid: Atoms can slide around. Takes the shape of the cup/container (like water).',
+            'Gas: Atoms zoom around with lots of space. Fills any room completely (like oxygen or steam).'
+        ], tip: 'Heating or cooling matter is what changes it from one state to another!' }
+    ],
+    biology: [
+        { title: 'The Tree of Life (Five Kingdoms)', points: [
+            'Plants (Plantae): Make their own food using sunlight (Photosynthesis) and have green chlorophyll.',
+            'Animals (Animalia): Multicellular creatures that move around and eat other living things.',
+            'Fungi: Includes mushrooms, yeasts, and molds. They absorb nutrients from soil or decaying matter.',
+            'Protists: Single-celled micro-critters with a nucleus, like amoebas.',
+            'Monera (Bacteria): Single-celled microbes without a nucleus. Some are helpful, some cause colds!'
+        ], tip: 'Fungi are not plants! They cannot create food from sunlight.' },
+        { title: 'Photosynthesis Formula', points: [
+            'Plants take in Carbon Dioxide from the air + Water from the roots.',
+            'Sunlight acts as the power source inside the green leaves.',
+            'The plant creates Sugar (glucose) for food + Oxygen which it releases into the air.',
+            'Equation: Carbon Dioxide + Water + Sunlight ➔ Glucose + Oxygen.'
+        ], tip: 'This is why trees are so important for humans—they make the oxygen we breathe!' }
+    ],
+    cs: [
+        { title: 'Coding Basics for Kids', points: [
+            'Variables: Tiny storage boxes in memory where we hold information (like player_score = 10).',
+            'Conditionals (If-Else): Decisions. IF score > 100, show "You Win!", ELSE show "Keep trying!".',
+            'Loops: Repeat tasks. REPEAT 5 times to draw a beautiful star shape.',
+            'Functions: Saved packages of code we can use over and over by just calling its name.'
+        ], tip: 'Programming is just giving a super-detailed recipe to a computer!' },
+        { title: 'Binary: Power of 2', points: [
+            'Computers only speak in 1s (ON) and 0s (OFF). This is Binary.',
+            'Bit: Short for Binary Digit. It is a single 1 or 0.',
+            'Byte: A collection of exactly 8 bits. It represents 1 letter or number.',
+            'Kilobyte (KB): About 1,000 bytes. Megabyte (MB) is 1,000 KB. Gigabyte (GB) is 1,000 MB.'
+        ], tip: 'A text message uses only a few hundred bytes, while a video uses gigabytes!' }
+    ],
+    history: [
+        { title: 'Planets of our Solar System', points: [
+            'Inner Rocky Planets: Mercury (closest to Sun), Venus (hottest), Earth (our home), Mars (the red planet).',
+            'Outer Gas Giants: Jupiter (largest planet with the red spot), Saturn (has beautiful rings), Uranus (rolls on its side), Neptune (cold and windy).'
+        ], tip: 'Use the phrase "My Very Educated Mother Just Served Us Noodles" to remember the order!' },
+        { title: 'Continents & Oceans', points: [
+            'The Seven Continents: Asia (largest), Africa, North America, South America, Antarctica (coldest), Europe, Australia.',
+            'The Five Oceans: Pacific (deepest & largest), Atlantic, Indian, Southern (polar cold), Arctic (smallest).'
+        ], tip: 'Over 70% of the Earth is covered in salt water oceans!' }
     ]
 };
 
 const ExerciseReference = () => {
     const [selectedCat, setSelectedCat] = useState('math');
     const [search, setSearch] = useState('');
-    const [activeTab, setActiveTab] = useState<'formulas' | 'exercises'>('formulas');
+    const [activeTab, setActiveTab] = useState<'formulas' | 'exercises' | 'notes'>('formulas');
 
     const filteredFormulas = (FORMULAS[selectedCat as keyof typeof FORMULAS] || []).filter(f => 
         f.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -66,6 +176,11 @@ const ExerciseReference = () => {
 
     const filteredExercises = (EXERCISES[selectedCat as keyof typeof EXERCISES] || []).filter(e => 
         e.q.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const filteredNotes = (STUDY_NOTES[selectedCat as keyof typeof STUDY_NOTES] || []).filter(n => 
+        n.title.toLowerCase().includes(search.toLowerCase()) ||
+        n.points.some(p => p.toLowerCase().includes(search.toLowerCase()))
     );
 
     return (
@@ -135,7 +250,7 @@ const ExerciseReference = () => {
                 <div className="lg:col-span-9 space-y-8">
                     {/* Top Controls */}
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div className="flex bg-brand-surface/40 p-1.5 rounded-2xl border border-brand-border/50 w-full md:w-auto">
+                        <div className="flex bg-brand-surface/40 p-1.5 rounded-2xl border border-brand-border/50 w-full md:w-auto overflow-x-auto">
                             <button
                                 onClick={() => setActiveTab('formulas')}
                                 className={`flex-1 md:w-40 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'formulas' ? 'bg-brand-primary text-brand-bg shadow-lg' : 'text-brand-text-secondary hover:text-brand-text'}`}
@@ -147,6 +262,12 @@ const ExerciseReference = () => {
                                 className={`flex-1 md:w-40 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'exercises' ? 'bg-brand-primary text-brand-bg shadow-lg' : 'text-brand-text-secondary hover:text-brand-text'}`}
                             >
                                 Practice Modules
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('notes')}
+                                className={`flex-1 md:w-40 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'notes' ? 'bg-brand-primary text-brand-bg shadow-lg' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                            >
+                                Syllabus Notes
                             </button>
                         </div>
 
@@ -198,7 +319,7 @@ const ExerciseReference = () => {
                                         <div className="text-[10px] font-black uppercase tracking-[0.6em]">Zero matches in current domain</div>
                                     </div>
                                 )
-                            ) : (
+                            ) : activeTab === 'exercises' ? (
                                 filteredExercises.length > 0 ? (
                                     filteredExercises.map((e, i) => (
                                         <motion.div
@@ -229,6 +350,50 @@ const ExerciseReference = () => {
                                     <div className="col-span-full py-40 text-center opacity-20">
                                         <GraduationCap size={64} className="mx-auto mb-6" />
                                         <div className="text-[10px] font-black uppercase tracking-[0.6em]">Modular content currently offline</div>
+                                    </div>
+                                )
+                            ) : (
+                                filteredNotes.length > 0 ? (
+                                    filteredNotes.map((n, i) => (
+                                        <motion.div
+                                            key={i}
+                                            className="bg-brand-surface/40 p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl space-y-6 flex flex-col justify-between"
+                                        >
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2.5 bg-brand-primary/10 rounded-xl text-brand-primary shadow-sm">
+                                                        <Book size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-sm font-black text-brand-primary uppercase tracking-widest">Syllabus Study Card</h4>
+                                                        <p className="text-[9px] text-brand-text-secondary font-mono tracking-widest uppercase mt-0.5">Reference Sheet</p>
+                                                    </div>
+                                                </div>
+
+                                                <h3 className="text-lg font-black text-brand-text leading-tight tracking-tight border-b border-brand-border/20 pb-2">{n.title}</h3>
+
+                                                <ul className="space-y-3.5">
+                                                    {n.points.map((pt, pIdx) => (
+                                                        <li key={pIdx} className="flex gap-3 text-xs text-brand-text-secondary leading-relaxed font-medium">
+                                                            <span className="font-mono text-[10px] text-brand-primary font-black pt-0.5">0{pIdx + 1}</span>
+                                                            <p>{pt}</p>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+                                            <div className="mt-4 p-4 rounded-xl bg-brand-primary/5 border border-brand-primary/10">
+                                                <div className="flex items-center gap-2 mb-1.5 font-mono text-[9px] uppercase tracking-widest text-brand-primary font-bold">
+                                                    <Lightbulb size={12} /> Expert Revision Tip
+                                                </div>
+                                                <p className="text-[11px] text-brand-text-secondary font-light italic leading-relaxed">{n.tip}</p>
+                                            </div>
+                                        </motion.div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full py-40 text-center opacity-20">
+                                        <Book size={64} className="mx-auto mb-6 text-brand-primary/60" />
+                                        <div className="text-[10px] font-black uppercase tracking-[0.6em]">Zero Study notes found</div>
                                     </div>
                                 )
                             )}

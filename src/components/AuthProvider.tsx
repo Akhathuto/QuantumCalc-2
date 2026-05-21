@@ -6,7 +6,10 @@ import {
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider, 
-  signOut 
+  signOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { 
@@ -29,6 +32,8 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   signInWithGoogle: (useRedirect?: boolean) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -41,6 +46,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   error: null,
   signInWithGoogle: async (_useRedirect?: boolean) => {},
+  signUpWithEmail: async (_email: string, _password: string, _displayName: string) => {},
+  signInWithEmail: async (_email: string, _password: string) => {},
   logout: async () => {},
   clearError: () => {},
 });
@@ -244,8 +251,90 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update display name on the auth user
+      await updateProfile(userCredential.user, { displayName });
+      
+      // Create/set the user doc to make sure displayName is populated immediately
+      const userRef = doc(db, 'users', userCredential.user.uid);
+      const initialData: any = {
+        uid: userCredential.user.uid,
+        email: email,
+        displayName: displayName,
+        onboarded: false,
+        createdAt: serverTimestamp()
+      };
+      await setDoc(userRef, initialData);
+
+      // Increment global scholar count
+      const statsRef = doc(db, 'stats', 'globals');
+      const statsSnap = await getDoc(statsRef);
+      if (statsSnap.exists()) {
+        await updateDoc(statsRef, {
+          totalScholars: increment(1),
+          lastUpdated: serverTimestamp()
+        });
+      } else {
+        await setDoc(statsRef, {
+          totalScholars: 1,
+          lastUpdated: serverTimestamp()
+        });
+      }
+      
+      setUserData(initialData);
+    } catch (err: any) {
+      setLoading(false);
+      console.group("Sign-up Failure Diagnostics");
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      console.groupEnd();
+
+      if (err.code === 'auth/email-already-in-use') {
+        setError("This email address is already registered.");
+      } else if (err.code === 'auth/weak-password') {
+        setError("Your password should contain at least 6 characters.");
+      } else if (err.code === 'auth/invalid-email') {
+        setError("Please enter a valid email address.");
+      } else {
+        setError(err.message || "An unexpected error occurred during registration.");
+      }
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithEmail = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err: any) {
+      setLoading(false);
+      console.group("Sign-in Failure Diagnostics");
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      console.groupEnd();
+
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        setError("Incorrect email or password. Please try again.");
+      } else if (err.code === 'auth/invalid-email') {
+        setError("Please enter a valid email address.");
+      } else {
+        setError(err.message || "An unexpected error occurred during sign-in.");
+      }
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, logout, clearError }}>
+    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, logout, clearError }}>
       {children}
     </AuthContext.Provider>
   );
