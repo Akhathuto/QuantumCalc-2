@@ -31,6 +31,7 @@ const HealthCalculator = lazy(() => import('./components/HealthCalculator'));
 const TextTools = lazy(() => import('./components/TextTools'));
 const DeveloperTools = lazy(() => import('./components/DeveloperTools'));
 const StudentTools = lazy(() => import('./components/StudentTools'));
+const K5Worksheets = lazy(() => import('./components/K5Worksheets'));
 const FloatingAssistant = lazy(() => import('./components/FloatingAssistant'));
 const Scratchpad = lazy(() => import('./components/Scratchpad'));
 const CommandPalette = lazy(() => import('./components/CommandPalette'));
@@ -245,6 +246,9 @@ const App = () => {
       case 'student':
         TabComponent = <StudentTools onLoginClick={() => setIsAuthModalOpen(true)} />;
         break;
+      case 'k5worksheets':
+        TabComponent = <K5Worksheets />;
+        break;
       case 'feedback':
         TabComponent = <FeedbackPage />;
         break;
@@ -255,7 +259,7 @@ const App = () => {
         TabComponent = <History history={history} loadFromHistory={loadFromHistory} clearHistory={clearHistory} toggleFavorite={toggleFavorite} />;
         break;
       case 'help':
-        TabComponent = <Help />;
+        TabComponent = <Help canInstall={!!deferredPrompt} onInstall={installApp} setActiveTab={setActiveTab} />;
         break;
       case 'about':
         TabComponent = <About />;

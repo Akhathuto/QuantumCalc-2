@@ -34,6 +34,7 @@ export type AppTab =
   | 'text'
   | 'developer'
   | 'student'
+  | 'k5worksheets'
   | 'exercises'
   | 'history'
   | 'about'

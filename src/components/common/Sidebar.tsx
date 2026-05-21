@@ -22,7 +22,8 @@ import {
   Search,
   BookOpen,
   Smartphone,
-  MessageSquare
+  MessageSquare,
+  Smile
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Logo from './Logo';
@@ -78,6 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
         { id: 'text', label: 'Text Tools', Icon: FileText },
         { id: 'developer', label: 'Developer', Icon: Code },
         { id: 'student', label: 'Academic', Icon: GraduationCap },
+        { id: 'k5worksheets', label: 'K-5 Math Lab', Icon: Smile },
         { id: 'exercises', label: 'Exercises', Icon: BookOpen },
       ]
     },

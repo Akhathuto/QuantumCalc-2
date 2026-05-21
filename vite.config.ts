@@ -14,6 +14,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      disable: true,
       registerType: 'autoUpdate',
       includeAssets: [],
       manifest: {
@@ -33,8 +34,40 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024 // 10MB
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB maximum
+        globIgnores: ['**/plotly-*.js', '**/mathjs-*.js', '**/vendor-*.js']
       }
     })
   ],
+  build: {
+    reportCompressedSize: false,
+    sourcemap: false,
+    cssMinify: false,
+    minify: false,
+    rollupOptions: {
+      maxParallelFileOps: 1,
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('plotly.js') || id.includes('react-plotly.js')) {
+              return 'plotly';
+            }
+            if (id.includes('recharts') || id.includes('d3') || id.includes('victory') || id.includes('react-resize-detector')) {
+              return 'recharts';
+            }
+            if (id.includes('mathjs')) {
+              return 'mathjs';
+            }
+            if (id.includes('katex')) {
+              return 'katex';
+            }
+            if (id.includes('firebase')) {
+              return 'firebase';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
+  }
 });

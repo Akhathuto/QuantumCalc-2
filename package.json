@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "NODE_OPTIONS=--max-old-space-size=2048 tsc && NODE_OPTIONS=--max-old-space-size=2048 vite build",
     "lint": "eslint src --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
     "@google/genai": "^2.3.0",
     "firebase": "^10.12.0",
     "framer-motion": "^11.11.0",
@@ -26,6 +28,7 @@
     "recharts": "^2.12.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.3.4",
     "@firebase/eslint-plugin-security-rules": "^0.0.2",
     "@tailwindcss/typography": "^0.5.19",
     "@types/react": "^18.2.66",

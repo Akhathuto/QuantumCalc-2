@@ -2308,6 +2308,7 @@ interface PracticeProblem {
     answerKey?: string;
     keywords?: string[];
     show?: boolean;
+    choices?: string[];
 }
 
 const OFFLINE_SAMPLES: Record<string, PracticeProblem[]> = {
@@ -2597,6 +2598,126 @@ $$\\text{Sensory Input} \\rightarrow \\text{Short-Term (Working Memory Case)} \\
     }
 };
 
+// --- Equations Whiteboard Sketchpad Canvas Component ---
+const ScratchpadCanvas: React.FC = () => {
+    const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [color, setColor] = useState('#3b82f6'); // Royal blue default
+    const [brushSize, setBrushSize] = useState(3);
+    const lastX = React.useRef(0);
+    const lastY = React.useRef(0);
+
+    const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { x: 0, y: 0 };
+        const rect = canvas.getBoundingClientRect();
+        
+        if ('touches' in e) {
+            if (e.touches.length === 0) return { x: 0, y: 0 };
+            return {
+                x: e.touches[0].clientX - rect.left,
+                y: e.touches[0].clientY - rect.top
+            };
+        } else {
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+    };
+
+    const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        const { x, y } = getCoordinates(e);
+        lastX.current = x;
+        lastY.current = y;
+        setIsDrawing(true);
+    };
+
+    const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        if (!isDrawing) return;
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+
+        const { x, y } = getCoordinates(e);
+
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = brushSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.moveTo(lastX.current, lastY.current);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lastX.current = x;
+        lastY.current = y;
+    };
+
+    const stopDrawing = () => {
+        setIsDrawing(false);
+    };
+
+    const clearCanvas = () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (canvas && ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    };
+
+    return (
+        <div className="p-4 bg-zinc-950/60 border border-brand-border/40 rounded-2xl space-y-3 print:hidden animate-fade-in">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-[10px] font-black uppercase text-brand-primary tracking-widest flex items-center gap-1.5">
+                    ✏️ Problem Scratchpad & Derivation Board
+                </span>
+                <div className="flex items-center gap-2">
+                    {/* Active colors */}
+                    {['#3b82f6', '#10b981', '#ef4444', '#eab308', '#ffffff'].map(c => (
+                        <button
+                            key={c}
+                            onClick={() => setColor(c)}
+                            className={`w-4.5 h-4.5 rounded-full border transition-transform hover:scale-110 ${color === c ? 'border-brand-primary ring-2 ring-brand-primary/30' : 'border-white/10'}`}
+                            style={{ backgroundColor: c }}
+                        />
+                    ))}
+                    <div className="h-4 w-px bg-brand-border/40 mx-1" />
+                    <select
+                        value={brushSize}
+                        onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                        className="bg-brand-bg text-[10px] text-brand-text border border-brand-border/40 rounded px-1 cursor-pointer outline-none"
+                    >
+                        <option value={2}>Thin Brush</option>
+                        <option value={4}>Medium Brush</option>
+                        <option value={8}>Bold Marker</option>
+                    </select>
+                    <button
+                        onClick={clearCanvas}
+                        className="px-2.5 py-1 bg-brand-surface border border-brand-border/40 text-brand-text-secondary hover:text-brand-text rounded text-[9px] font-bold uppercase transition-colors"
+                    >
+                        Reset Canvas
+                    </button>
+                </div>
+            </div>
+            
+            <canvas
+                ref={canvasRef}
+                width={720}
+                height={160}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                className="w-full h-[150px] bg-black/60 border border-brand-border/25 rounded-xl cursor-crosshair touch-none shadow-inner"
+            />
+        </div>
+    );
+};
+
 const PracticeBench = () => {
     const [subject, setSubject] = useState('Math');
     const [level, setLevel] = useState('High School');
@@ -2604,6 +2725,9 @@ const PracticeBench = () => {
     const [batchSize, setBatchSize] = useState(3);
     const [problems, setProblems] = useState<PracticeProblem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // MCQ vs Open-Ended mode toggle
+    const [isMcqMode, setIsMcqMode] = useState(false);
 
     // MODE states: 'practice' (tutoring + immediate hints) vs 'exam' (graded testing)
     const [mode, setMode] = useState<'practice' | 'exam'>('practice');
@@ -2614,7 +2738,14 @@ const PracticeBench = () => {
     const [revealedHintsCount, setRevealedHintsCount] = useState<Record<number, number>>({});
     const [gradeResult, setGradeResult] = useState<Record<number, { checked: boolean; isCorrect: boolean; matchedTerm?: string; feedback: string }>>({});
     const [confidenceGrades, setConfidenceGrades] = useState<Record<number, 'correct' | 'partial' | 'review'>>({});
-    const [aiTutorReview, setAiTutorReview] = useState<Record<number, { generating: boolean; response: string }>>({});
+
+    // Whiteboard Scratchpad displays toggled per indices
+    const [scratchpadOpend, setScratchpadOpend] = useState<Record<number, boolean>>({});
+
+    // Conversational Quick-Ask logs per problem index
+    const [chatInputs, setChatInputs] = useState<Record<number, string>>({});
+    const [aiChatLogs, setAiChatLogs] = useState<Record<number, { role: 'user' | 'model'; text: string }[]>>({});
+    const [chatLoading, setChatLoading] = useState<Record<number, boolean>>({});
 
     // Exam-specific states
     const [examTimer, setExamTimer] = useState(0);
@@ -2645,7 +2776,10 @@ const PracticeBench = () => {
         setRevealedHintsCount({});
         setGradeResult({});
         setConfidenceGrades({});
-        setAiTutorReview({});
+        setScratchpadOpend({});
+        setChatInputs({});
+        setAiChatLogs({});
+        setChatLoading({});
         setExamTimer(0);
         setExamSubmitted(false);
         setExamScorecard(null);
@@ -2666,8 +2800,9 @@ const PracticeBench = () => {
             'answerKey': a single word or extremely brief exact key answer.
             'keywords': an array of 3-4 lowercase scientific key phrases / words found in the solution.
             'hints': an array of exactly 3 sequential educational scaffolding cues, without giving the final answer away.
+            ${isMcqMode ? `Additionally, include a 'choices' array of exactly 4 strings: option answers labeled as 'A. ...', 'B. ...', 'C. ...', 'D. ...', and make the 'answerKey' string exactly the correct choice option letter: 'A', 'B', 'C', or 'D'.` : ''}
             Keep descriptions extremely academic, detailed and clear for both kids and high school learners too.
-            Example envelope: [{"q": "Calculate...", "a": "Let...", "answerKey": "50", "keywords": ["work", "joules"], "hints": ["Recall...", "Plug..."]}]`;
+            Example envelope: [{"q": "Calculate...", "a": "Let...", "answerKey": "${isMcqMode ? 'B' : '50'}", "keywords": ["work", "joules"], "hints": ["Recall...", "Plug..."]${isMcqMode ? ', "choices": ["A. 20", "B. 50", "C. 80", "D. 120"]' : ''}}]`;
 
             const response = await ai.models.generateContent({
                 model: "gemini-1.5-flash",
@@ -2690,12 +2825,27 @@ const PracticeBench = () => {
     const loadSample = (s: string) => {
         resetInteractiveStates();
         const baseSet = OFFLINE_SAMPLES[s] || OFFLINE_SAMPLES['Math'];
-        // Slice according to batch size or pad if size exceeds
         let list = [...baseSet];
         if (list.length > batchSize) {
             list = list.slice(0, batchSize);
         }
-        setProblems(list.map(p => ({ ...p, show: false })));
+        
+        const processed = list.map(p => {
+            const item = { ...p, show: false };
+            if (isMcqMode) {
+                const keyVal = p.answerKey || '4';
+                item.choices = [
+                    `A. ${keyVal} (Analytical Target Output)`,
+                    `B. Complementary mathematical boundary fallback`,
+                    `C. Diverging coordinate extraneous solution`,
+                    `D. Discharged standard coefficient error`
+                ];
+                item.answerKey = 'A';
+            }
+            return item;
+        });
+
+        setProblems(processed);
     };
 
     const handleIncrementHint = (idx: number) => {
@@ -2705,6 +2855,51 @@ const PracticeBench = () => {
                 ...revealedHintsCount,
                 [idx]: currentCount + 1
             });
+        }
+    };
+
+    // Multi-turn contextual AI Coaching Chat assistant
+    const executeQuickAsk = async (idx: number) => {
+        const query = chatInputs[idx] || '';
+        if (!query.trim()) return;
+
+        setChatInputs({ ...chatInputs, [idx]: '' });
+
+        const currentChat = aiChatLogs[idx] || [];
+        const updatedWithUser = [...currentChat, { role: 'user' as const, text: query }];
+        setAiChatLogs(prev => ({ ...prev, [idx]: updatedWithUser }));
+        setChatLoading(prev => ({ ...prev, [idx]: true }));
+
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error("Key offline.");
+            const ai = new GoogleGenAI({ apiKey });
+
+            const problem = problems[idx];
+            const chatPrompt = `You are a friendly, highly intelligent academic coach helping a student on a specific problem card in real time.
+            
+            Problem Context Question: "${problem.q}"
+            Verified Reference Solution Manual: "${problem.a}"
+            Student's Followup Question: "${query}"
+            
+            Deliver a highly precise, exceptionally direct, supportive, and motivating response. Suggest step-by-step formula explanations or LaTeX. Keep it under 2 scannable paragraphs. Encourage their growth!`;
+
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: [{ role: 'user', parts: [{ text: chatPrompt }] }]
+            });
+            
+            setAiChatLogs(prev => ({
+                ...prev,
+                [idx]: [...updatedWithUser, { role: 'model' as const, text: response.text || 'Coaching connection timed out. Please retry!' }]
+            }));
+        } catch (e) {
+            setAiChatLogs(prev => ({
+                ...prev,
+                [idx]: [...updatedWithUser, { role: 'model' as const, text: 'Coaching AI is currently offline. Review the verified reference solution manual step details below!' }]
+            }));
+        } finally {
+            setChatLoading(prev => ({ ...prev, [idx]: false }));
         }
     };
 
@@ -2724,7 +2919,7 @@ const PracticeBench = () => {
         const keywords = prob.keywords || [];
 
         // Exact match of overall key
-        if (key && ans.includes(key)) {
+        if (key && (ans === key || ans.includes(key))) {
             setGradeResult({
                 ...gradeResult,
                 [idx]: { checked: true, isCorrect: true, feedback: 'Superb! Your solution matched the target benchmark key exactly. Keep on keeping on!' }
@@ -2767,46 +2962,6 @@ const PracticeBench = () => {
                 }
             });
             setConfidenceGrades({ ...confidenceGrades, [idx]: 'review' });
-        }
-    };
-
-    const executeAiTutorReview = async (idx: number) => {
-        const studentAns = userAnswers[idx] || '';
-        if (!studentAns.trim()) return;
-
-        setAiTutorReview(prev => ({
-            ...prev,
-            [idx]: { generating: true, response: '' }
-        }));
-
-        try {
-            const apiKey = getApiKey();
-            if (!apiKey) throw new Error("Key offline.");
-            const ai = new GoogleGenAI({ apiKey });
-
-            const targetProb = problems[idx];
-            const tutorPrompt = `Review the following student response for grading and education.
-            
-            Exercise Question: "${targetProb.q}"
-            Official Solution Key: "${targetProb.a}"
-            Student Typed Response: "${studentAns}"
-            
-            Evaluate if the student has correct logic, correct values, and formulas. Explain errors beautifully, constructively, and give encouraging suggestions. Keep under 3 brief paragraphs. Use markdown & LaTeX. Encourage their work as a scholar!`;
-
-            const response = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
-                contents: [{ role: 'user', parts: [{ text: tutorPrompt }] }]
-            });
-
-            setAiTutorReview(prev => ({
-                ...prev,
-                [idx]: { generating: false, response: response.text || 'Error obtaining tutor analysis.' }
-            }));
-        } catch (err: any) {
-            setAiTutorReview(prev => ({
-                ...prev,
-                [idx]: { generating: false, response: `AI Coaching is offline, read the step-by-step corrections manual.` }
-            }));
         }
     };
 
@@ -2894,6 +3049,17 @@ const PracticeBench = () => {
 
                         {/* Top controls: Practice/Exam mode toggle & Cheatsheet */}
                         <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={() => {
+                                    setIsMcqMode(!isMcqMode);
+                                    resetInteractiveStates();
+                                }}
+                                className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${isMcqMode ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-brand-bg/40 border-brand-border/30 text-brand-text-secondary'}`}
+                            >
+                                <span className={`w-2 h-2 rounded-full ${isMcqMode ? 'bg-indigo-500' : 'bg-zinc-500'}`} />
+                                Problem Format: {isMcqMode ? 'Multiple Choice' : 'Open Ended'}
+                            </button>
+
                             <button
                                 onClick={() => {
                                     setMode(mode === 'practice' ? 'exam' : 'practice');
@@ -3118,7 +3284,6 @@ const PracticeBench = () => {
                         const hintsCount = revealedHintsCount[idx] || 0;
                         const gradeVal = gradeResult[idx];
                         const answerDraft = userAnswers[idx] || '';
-                        const hasAiReview = aiTutorReview[idx];
 
                         return (
                             <motion.div
@@ -3126,20 +3291,25 @@ const PracticeBench = () => {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 key={idx}
-                                className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative group/problem space-y-6"
+                                className="bg-brand-surface/40 p-10 rounded-[4rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative group/problem space-y-6"
                             >
                                 <div className="flex justify-between items-start">
                                     <div className="px-4 py-1.5 bg-brand-bg/50 border border-brand-border rounded-full text-[9px] font-black text-brand-text-secondary uppercase tracking-widest flex items-center gap-2">
                                         <Target size={12} /> Challenge 0{idx + 1}
                                     </div>
                                     <div className="text-[8px] font-mono text-brand-text-secondary/20 uppercase tracking-[0.3em]">
-                                        Method: {p.answerKey ? 'OFFLINE MANUAL' : 'DYNAMIC SYNTHESIS'}
+                                        Format: {p.choices ? 'MCQ OPTIONS (A-D)' : 'OPEN RESPONSE'}
                                     </div>
                                 </div>
 
                                 <div className="markdown-body prose prose-invert prose-brand max-w-none text-base font-medium leading-relaxed">
                                     <ReactMarkdown>{p.q}</ReactMarkdown>
                                 </div>
+
+                                {/* Active Scratchpad whiteboard component drawer */}
+                                {scratchpadOpend[idx] && (
+                                    <ScratchpadCanvas />
+                                )}
 
                                 {/* Tutoring hints (Practice mode only) */}
                                 {mode === 'practice' && p.hints && p.hints.length > 0 && (
@@ -3171,17 +3341,46 @@ const PracticeBench = () => {
                                     </div>
                                 )}
 
-                                {/* Typing entry workspace (Both modes) */}
+                                {/* Typing entry workspace / MCQ option button tiles */}
                                 {!examSubmitted && (
                                     <div className="space-y-3">
-                                        <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Write your mathematical steps or answers here:</label>
-                                        <textarea
-                                            value={answerDraft}
-                                            onChange={(e) => setUserAnswers({ ...userAnswers, [idx]: e.target.value })}
-                                            placeholder="Introduce formulas, numbers, or logic to check."
-                                            rows={3}
-                                            className="w-full bg-brand-bg/60 border border-brand-border rounded-xl p-4 text-xs font-medium focus:ring-2 focus:ring-brand-primary text-brand-text outline-none transition-all placeholder:opacity-20"
-                                        />
+                                        {p.choices && p.choices.length > 0 ? (
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">
+                                                    Select the Correct Option Answer:
+                                                </label>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                                                    {p.choices.map(choice => {
+                                                        const letter = choice.trim().charAt(0).toUpperCase();
+                                                        const isSelected = userAnswers[idx] === letter;
+                                                        return (
+                                                            <button
+                                                                key={choice}
+                                                                onClick={() => setUserAnswers({ ...userAnswers, [idx]: letter })}
+                                                                className={`p-4.5 rounded-2xl text-left text-xs font-bold border transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-brand-primary/15 border-brand-primary text-brand-primary shadow-xl shadow-brand-primary/5 font-extrabold'
+                                                                        : 'bg-brand-bg/40 border-brand-border/50 text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/70'
+                                                                }`}
+                                                            >
+                                                                {choice}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Write your mathematical steps or answers here:</label>
+                                                <textarea
+                                                    value={answerDraft}
+                                                    onChange={(e) => setUserAnswers({ ...userAnswers, [idx]: e.target.value })}
+                                                    placeholder="Introduce formulas, numbers, or logic to check."
+                                                    rows={3}
+                                                    className="w-full bg-brand-bg/60 border border-brand-border rounded-xl p-4 text-xs font-medium focus:ring-2 focus:ring-brand-primary text-brand-text outline-none transition-all placeholder:opacity-20"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -3198,40 +3397,64 @@ const PracticeBench = () => {
                                                 Check Answer
                                             </button>
 
-                                            {getApiKey() && (
+                                            <button
+                                                onClick={() => setScratchpadOpend({ ...scratchpadOpend, [idx]: !scratchpadOpend[idx] })}
+                                                className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase border transition-all flex items-center gap-1.5 ${
+                                                    scratchpadOpend[idx]
+                                                        ? 'bg-amber-500/10 border-amber-500/35 text-amber-500 font-extrabold'
+                                                        : 'bg-brand-bg border border-brand-border text-brand-text-secondary hover:text-brand-text'
+                                                }`}
+                                            >
+                                                <span>✏️ Whiteboard {scratchpadOpend[idx] ? 'Opened' : 'Scratchpad'}</span>
+                                            </button>
+
+                                            {getApiKey() && !p.choices && (
                                                 <button
-                                                    onClick={() => executeAiTutorReview(idx)}
-                                                    disabled={hasAiReview?.generating || !answerDraft.trim()}
+                                                    onClick={() => executeQuickAsk(idx)}
+                                                    disabled={chatLoading[idx] || !answerDraft.trim()}
                                                     className="px-4 py-2.5 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-[10px] font-bold uppercase text-brand-primary hover:bg-brand-primary hover:text-brand-bg transition-all disabled:opacity-50"
                                                 >
-                                                    {hasAiReview?.generating ? 'Analyzing Steps...' : 'Submit to AI Coach'}
+                                                    {chatLoading[idx] ? 'Analyzing...' : 'Submit to AI Coach'}
                                                 </button>
                                             )}
                                         </div>
                                     ) : mode === 'exam' && !examSubmitted ? (
-                                        /* Confident level markers in exam mode, self-eval to log score */
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[9px] font-mono text-brand-text-secondary uppercase tracking-widest">Mark Self-Confidence:</span>
-                                            <div className="flex bg-brand-bg/50 rounded-lg p-1 border border-brand-border">
-                                                <button 
-                                                    onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'correct'})}
-                                                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'correct' ? 'bg-emerald-500/10 text-emerald-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
-                                                >
-                                                    Confident
-                                                </button>
-                                                <button 
-                                                    onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'partial'})}
-                                                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'partial' ? 'bg-amber-500/10 text-amber-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
-                                                >
-                                                    Unsure
-                                                </button>
-                                                <button 
-                                                    onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'review'})}
-                                                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'review' ? 'bg-red-500/10 text-red-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
-                                                >
-                                                    Tough
-                                                </button>
+                                        /* Confident level markers in exam mode */
+                                        <div className="flex gap-4 items-center flex-wrap">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[9px] font-mono text-brand-text-secondary uppercase tracking-widest">Mark Self-Confidence:</span>
+                                                <div className="flex bg-brand-bg/50 rounded-lg p-1 border border-brand-border">
+                                                    <button 
+                                                        onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'correct'})}
+                                                        className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'correct' ? 'bg-emerald-500/10 text-emerald-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                                                    >
+                                                        Confident
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'partial'})}
+                                                        className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'partial' ? 'bg-amber-500/10 text-amber-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                                                    >
+                                                        Unsure
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'review'})}
+                                                        className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'review' ? 'bg-red-500/10 text-red-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                                                    >
+                                                        Tough
+                                                    </button>
+                                                </div>
                                             </div>
+
+                                            <button
+                                                onClick={() => setScratchpadOpend({ ...scratchpadOpend, [idx]: !scratchpadOpend[idx] })}
+                                                className={`px-4 py-2 py-2.5 rounded-xl text-[10px] font-bold uppercase border transition-all ${
+                                                    scratchpadOpend[idx]
+                                                        ? 'bg-amber-500/10 border-amber-500/35 text-amber-500 font-extrabold'
+                                                        : 'bg-brand-bg border border-brand-border text-brand-text-secondary hover:text-brand-text'
+                                                }`}
+                                            >
+                                                <span>✏️ Calculations Wire</span>
+                                            </button>
                                         </div>
                                     ) : (
                                         /* Post exam view */
@@ -3272,26 +3495,52 @@ const PracticeBench = () => {
                                     </motion.div>
                                 )}
 
-                                {/* AI review grading output */}
-                                {mode === 'practice' && hasAiReview && (hasAiReview.generating || hasAiReview.response) && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="p-6 bg-brand-primary/5 border border-brand-primary/15 rounded-2xl relative"
-                                    >
-                                        <div className="absolute top-4 right-4 text-[9px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-1">
-                                            <Sparkles size={11} /> AI Coach Report
+                                {/* Interactive Quick-Ask Conversational AI Coach Core overlay */}
+                                {mode === 'practice' && (
+                                    <div className="mt-4 p-5 rounded-3xl bg-brand-surface/30 border border-brand-border/40 space-y-4 print:hidden">
+                                        <div className="text-[9px] font-black uppercase text-brand-primary tracking-widest flex items-center gap-1">
+                                            <span>💬 Realtime Audio & Study chat coach</span>
                                         </div>
-                                        {hasAiReview.generating ? (
-                                            <div className="flex items-center gap-3 py-3 text-brand-text-secondary text-[11px] font-medium font-mono animate-pulse">
-                                                <Loader2 size={13} className="animate-spin text-brand-primary" /> Analyzing solution vectors...
-                                            </div>
-                                        ) : (
-                                            <div className="markdown-body text-xs leading-relaxed text-brand-text-secondary space-y-2 font-medium">
-                                                <ReactMarkdown>{hasAiReview.response}</ReactMarkdown>
+                                        
+                                        {/* Discussion logs */}
+                                        {aiChatLogs[idx] && aiChatLogs[idx].length > 0 && (
+                                            <div className="space-y-4 border-b border-brand-border/20 pb-4 max-h-56 overflow-y-auto pr-1">
+                                                {aiChatLogs[idx].map((msg, mIdx) => (
+                                                    <div key={mIdx} className={`flex flex-col gap-1 text-[11px] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                                        <span className="text-[8px] uppercase tracking-widest text-brand-text-secondary font-bold">
+                                                            {msg.role === 'user' ? 'Scholar' : 'Academic Coach'}
+                                                        </span>
+                                                        <div className={`p-3.5 rounded-2xl max-w-[85%] font-medium leading-relaxed ${
+                                                            msg.role === 'user' 
+                                                                ? 'bg-brand-primary/10 text-brand-primary rounded-tr-none' 
+                                                                : 'bg-brand-surface/60 text-brand-text-secondary rounded-tl-none border border-brand-border/30'
+                                                        }`}>
+                                                            <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
-                                    </motion.div>
+
+                                        {/* Chat inputs */}
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={chatInputs[idx] || ''}
+                                                onChange={(e) => setChatInputs({ ...chatInputs, [idx]: e.target.value })}
+                                                onKeyDown={(e) => e.key === 'Enter' && executeQuickAsk(idx)}
+                                                placeholder="Ask coach: 'Can you simplify steps?', 'Where did the constant come from?'..."
+                                                className="flex-1 bg-brand-bg/50 border border-brand-border/50 rounded-xl px-4 py-2.5 text-xs text-brand-text outline-none focus:ring-1 focus:ring-brand-primary placeholder:opacity-20"
+                                            />
+                                            <button
+                                                onClick={() => executeQuickAsk(idx)}
+                                                disabled={chatLoading[idx] || !(chatInputs[idx] || '').trim()}
+                                                className="px-4 py-2.5 bg-brand-primary text-brand-bg font-black uppercase tracking-widest text-[9px] rounded-xl hover:bg-brand-primary/95 disabled:opacity-50 transition-colors"
+                                            >
+                                                {chatLoading[idx] ? 'Consulting...' : 'Ask Coach'}
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
 
                                 {/* Correct Solution Block */}
