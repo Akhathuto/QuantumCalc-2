@@ -1369,32 +1369,64 @@ export const K5Worksheets: React.FC = () => {
       if (iframeDoc) {
         iframeDoc.open();
         iframeDoc.write(`
+          <!DOCTYPE html>
           <html>
             <head>
+              <meta charset="UTF-8">
               <title>${worksheetTitle} (Print Copy)</title>
+              <!-- Backup CDN references to guarantee perfect vector typography and padding inside print previews -->
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;950&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+              <script src="https://cdn.tailwindcss.com"></script>
               ${styleSheets}
+              <script>
+                tailwind.config = {
+                  darkMode: 'class',
+                  theme: {
+                    extend: {
+                      fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        serif: ['Georgia', 'serif']
+                      }
+                    }
+                  }
+                }
+              </script>
               <style>
                 @media print {
                   @page {
-                    size: auto;
-                    margin: 20mm;
+                    size: A4 portrait;
+                    margin: 15mm;
                   }
                   body {
                     background: white !important;
                     color: black !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
+                  .print\\:break-inside-avoid {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
                   }
                 }
                 body {
                   background: white !important;
-                  color: black !important;
+                  color: #111827 !important;
+                  font-family: 'Inter', sans-serif;
                   padding: 10px !important;
                   -webkit-print-color-adjust: exact !important;
                   print-color-adjust: exact !important;
                 }
-                .no-print, button, .audio-button, select, input {
+                /* Robust element stripper */
+                .no-print, button, .audio-button, select, input, .companions-panel, .navigation-header {
                   display: none !important;
+                  opacity: 0 !important;
+                  visibility: hidden !important;
+                  height: 0 !important;
+                  width: 0 !important;
+                  padding: 0 !important;
+                  margin: 0 !important;
                 }
-                /* Ensure break-before-page makes separate answer sheet work */
                 .break-before-page {
                   page-break-before: always !important;
                   break-before: page !important;
@@ -1403,24 +1435,28 @@ export const K5Worksheets: React.FC = () => {
                   page-break-inside: avoid !important;
                   break-inside: avoid !important;
                 }
+                /* Custom styles to force exact visual ledger lines */
+                .ledger-lines-grid {
+                  opacity: 0.65 !important;
+                  border-color: #cbd5e1 !important;
+                }
               </style>
             </head>
             <body class="${isKidsTheme ? 'bg-gradient-to-br from-emerald-50/20 to-blue-50/20' : 'bg-white'}">
-              <div class="max-w-4xl mx-auto">
+              <div class="max-w-4xl mx-auto p-4">
                 ${worksheetElement.outerHTML}
               </div>
               <script>
-                // Strip interactive buttons or scribbles inside the cloned print context
-                const buttons = document.querySelectorAll('.no-print, button, .audio-button, select');
-                buttons.forEach(b => b.remove());
+                // Execute active element cleanups within the cloned frame
+                document.querySelectorAll('.no-print, button, .audio-button, select, input, .companions-panel').forEach(b => b.remove());
                 
-                // Trigger browser system native print view
+                // Automatically activate system printer dialogue
                 setTimeout(() => {
                   window.print();
                   setTimeout(() => {
                     window.parent.document.body.removeChild(window.frameElement);
-                  }, 100);
-                }, 500);
+                  }, 1200);
+                }, 800);
               </script>
             </body>
           </html>
@@ -2541,13 +2577,28 @@ export const K5Worksheets: React.FC = () => {
           <div className="flex flex-col gap-2.5 pt-4 border-t border-brand-border/30">
             <button
               onClick={handlePrintWorksheet}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-brand-bg rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-brand-primary/20 relative group overflow-hidden"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 relative group overflow-hidden"
+              title="Print directly or save as vector PDF file"
             >
-              <Printer size={14} className="group-hover:scale-110 transition-transform" /> Print Homework Sheet
-              <div className="absolute top-0 right-0 p-1 px-1.5 bg-brand-secondary text-brand-bg font-black text-[7px] tracking-normal rounded-bl-lg">PREMIUM PDF</div>
+              <Printer size={14} className="group-hover:scale-110 transition-transform" /> Direct Print / Save PDF
+              <div className="absolute top-0 right-0 p-1 px-1.5 bg-amber-500 text-zinc-950 font-black text-[7px] tracking-normal rounded-bl-lg">HQ VECTOR</div>
             </button>
+
+            {/* Direct PDF saving guide annotation */}
+            <div className="p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/15 text-[10px] text-brand-text-secondary leading-relaxed font-sans space-y-1 text-left">
+              <p className="font-semibold text-emerald-400 flex items-center gap-1">
+                <span>💡</span> <span>Digital PDF &amp; Printer Setup Guide</span>
+              </p>
+              <p className="font-light">
+                Clicking <strong className="text-brand-text">Print / Save PDF</strong> opens your system dialogue. In <strong className="text-brand-text">Destination</strong>:
+              </p>
+              <ul className="list-disc pl-3.5 space-y-0.5 font-light">
+                <li>Choose <strong className="text-brand-text">your physical printer's name</strong> to print active homework sheets instantly.</li>
+                <li>Choose <strong className="text-brand-text">"Save as PDF"</strong> or <strong className="text-brand-text">"Microsoft Print to PDF"</strong> to download a digital, pixel-perfect document.</li>
+              </ul>
+            </div>
             
-            <div className="text-[10px] font-black uppercase text-brand-text-secondary tracking-widest pt-1 pl-1">Export Solutions &amp; Formats</div>
+            <div className="text-[10px] font-black uppercase text-brand-text-secondary tracking-widest pt-2.5 pl-1 text-left">Export Solutions &amp; Formats</div>
             
             <div className="grid grid-cols-3 gap-2">
               <button
