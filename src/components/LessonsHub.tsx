@@ -337,6 +337,106 @@ const PREBUILT_LESSONS: Lesson[] = [
                 explanation: 'Represented as columns: 8s, 4s, 2s, 1s. The code 0100 has a 1 in the Fours column only, meaning it equals exactly 4.'
             }
         ]
+    },
+    {
+        id: 'kids_algebra',
+        title: 'Basic Equations & The Mystery of X',
+        subject: 'Mathematics',
+        difficulty: 'Middle School',
+        summary: 'Become a math detective! Solve mysteries by finding the secret value of the hidden letter X completely offline.',
+        chapters: [
+            {
+                title: 'What is an Equation?',
+                content: 'An equation is like a **perfectly balanced playground seesaw**.\n\nIf you have 5 pounds on the left side, you must have exactly 5 pounds on the right side to keep it straight. We write this balance using an equals sign ($=$):\n$$5 = 5$$\n\nSometimes, one of the values gets hidden inside a secret box or replaced by a letter like $x$. This is called a **variable**:\n$$x + 3 = 8$$\n\nYour job as a math detective is to figure out: *What number must be inside $x$ to keep the seesaw balanced?* Since $5 + 3 = 8$, the secret value of $x$ is $5$!'
+            },
+            {
+                title: 'The Magic Detective Rule: Do the Opposite',
+                content: 'How do we solve more complex mysteries? We use the weight-balance rule: **Whatever you do to one side of the equal sign, you MUST do to the other side!**\n\nTo find what $x$ is, we want to get $x$ completely by itself. We do this by reversing or doing the **opposite operation**:\n* The opposite of **Addition ($+$)** is **Subtraction ($-$)**.\n* The opposite of **Multiplication ($\\times$)** is **Division ($/$)**.\n\nLet\'s solve $x + 12 = 20$:\n* To get $x$ alone, we need to get rid of $+ 12$.\n* The opposite of $+12$ is $-12$.\n* Subtract 12 from BOTH sides:\n  $$x + 12 - 12 = 20 - 12$$\n  $$x = 8$$\n\nYou solved the mystery! $x$ is exactly 8.'
+            }
+        ],
+        derivationSteps: [
+            'Objective: Solve the equation $3x - 5 = 10$ step-by-step.',
+            'First, isolate the term containing $x$ by removing the $-5$.',
+            'The opposite of $-5$ is $+5$. Add 5 to both sides of the equation: $3x - 5 + 5 = 10 + 5$, which simplifies to: $3x = 15$.',
+            'Next, isolate $x$ by removing the multiplication of 3.',
+            'The opposite of multiplying by 3 is dividing by 3.',
+            'Divide both sides by 3: $\\frac{3x}{3} = \\frac{15}{3}$.',
+            'Calculate the final value of $x$: $x = 5$. Substitute back to verify: $3(5) - 5 = 15 - 5 = 10$. Correct!'
+        ],
+        quiz: [
+            {
+                q: 'Solve the equation for the mystery variable x: x - 7 = 15',
+                options: [
+                    'x = 8',
+                    'x = 22',
+                    'x = 15',
+                    'x = 10'
+                ],
+                correctIdx: 1,
+                explanation: 'To solve x - 7 = 15, do the opposite of subtracting 7, which is adding 7 to both sides: x = 15 + 7 = 22.'
+            },
+            {
+                q: 'If 4x = 24, what is the secret value of x?',
+                options: [
+                    'x = 20',
+                    'x = 28',
+                    'x = 6',
+                    'x = 9'
+                ],
+                correctIdx: 2,
+                explanation: 'To solve 4x = 24, do the opposite of multiplying by 4, which is dividing both sides by 4: x = 24 / 4 = 6.'
+            }
+        ]
+    },
+    {
+        id: 'kids_photosynthesis',
+        title: 'Photosynthesis & The Power of Leaves',
+        subject: 'Science',
+        difficulty: 'Primary School',
+        summary: 'How do plants cook their own food using nothing but air, water, and beautiful golden sunshine? Let-s explore offline!',
+        chapters: [
+            {
+                title: 'The Sol-Powered Kitchen',
+                content: 'Unlike humans and animals who go to grocery stores or hunt for meals, **green plants can cook their own food from scratch!** This incredible cooking process is called **Photosynthesis**.\n\nTo make their food, plants need three simple ingredients:\n1. **Golden Sunlight**: Energizes the leaf kitchen cells.\n2. **Water ($H_2O$)**: Absorbed by roots from the underground soil.\n3. **Carbon Dioxide ($CO_2$)**: A gas breathed in from the surrounding air through tiny mouth-like leaf pores called **stomata**.\n\nThe plant uses green microscopic capturing solar-panels called **chlorophyll** (which also gives leaves their beautiful green color) to absorb sunlight and kickstart the culinary magic!'
+            },
+            {
+                title: 'Cooking Food & Releasing Air',
+                content: 'Once the ingredients are heated by sunlight inside the leaf cells, a chemical transformation occurs!\n\nThe plant converts water and carbon dioxide into:\n* **Glucose (Sugar Juice)**: The delicious food of the plant, distributed through stems to grow strong trunks, sweet fruits, and bright flowers.\n* **Oxygen ($O_2$)**: A super-essential waste gas that the plant breathes back out into the world. This is the very same fresh oxygen that humans and animals breathe to stay alive!\n\nHere is the simple chemical equation of tree cooking:\n$$\\text{Carbon Dioxide} + \\text{Water} + \\text{Sunlight} \\rightarrow \\text{Glucose} + \\text{Oxygen}$$\n\nWithout green plants performing photosynthesis, there wouldn\'t be enough oxygen for us to breathe. Plants are the lungs of planet Earth!'
+            }
+        ],
+        derivationSteps: [
+            'Objective: Track how a single molecule of Water ($H_2O$) moves through a plant to make Oxygen ($O_2$).',
+            'Water is absorbed from underground soil by the root hairs of the plant.',
+            'Water travels UP the stem against gravity through tiny pipe-like veins called the **Xylem**.',
+            'The water molecules arrive inside the green cells of the leaves, entering the chlorophyll solar-panel centers.',
+            'Sunlight strikes the chlorophyll, providing enough energy to tear the water molecule apart into Hydrogen and Oxygen atoms!',
+            'The individual Oxygen atoms combine with each other to form Oxygen gas ($O_2$).',
+            'The Oxygen gas escapes through the microscopic leaf pores (stomata) out into the atmosphere for we humans to breathe!'
+        ],
+        quiz: [
+            {
+                q: 'What green substance inside leaves captures solar energy from golden sunlight?',
+                options: [
+                    'Stomata',
+                    'Chlorophyll',
+                    'Glucose',
+                    'Xylem'
+                ],
+                correctIdx: 1,
+                explanation: 'Chlorophyll is the green pigment inside plant cells that acts as a solar panel to absorb sunlight for photosynthesis.'
+            },
+            {
+                q: 'Which gas do plants release into the air as a helpful byproduct of green cooking?',
+                options: [
+                    'Carbon Dioxide',
+                    'Nitrogen',
+                    'Oxygen',
+                    'Helium'
+                ],
+                correctIdx: 2,
+                explanation: 'Plants take in Carbon Dioxide and release Oxygen gas, which humans and other living things breathe to live.'
+            }
+        ]
     }
 ];
 

@@ -64,6 +64,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     clearError();
   }, [activeTab, clearError]);
 
+  const getPasswordStrength = () => {
+    if (!password) return { label: '', color: 'bg-transparent', width: 'w-0', score: 0 };
+    let score = 0;
+    if (password.length >= 6) score += 1;
+    if (password.length >= 10) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+    if (score <= 1) return { label: 'Weak', color: 'bg-red-500', width: 'w-1/3', score };
+    if (score <= 3) return { label: 'Moderate (Add uppercase/symbols)', color: 'bg-amber-500', width: 'w-2/3', score };
+    return { label: 'Strong Scholar Key', color: 'bg-emerald-500', width: 'w-full', score };
+  };
+
+  const strength = getPasswordStrength();
+  const doPasswordsMatch = password && confirmPassword && password === confirmPassword;
+
   const validateForm = () => {
     if (!email || !password) {
       setLocalError('Please fill in all required fields.');
@@ -312,6 +329,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
+                    {activeTab === 'signup' && password && (
+                      <div className="space-y-1 pt-1">
+                        <div className="flex justify-between items-center text-[9px] font-mono text-brand-text-secondary">
+                          <span>Password Strength:</span>
+                          <span className={`font-bold uppercase tracking-wider ${strength.score >= 4 ? 'text-emerald-400' : strength.score >= 2 ? 'text-amber-400' : 'text-red-400'}`}>
+                            {strength.label}
+                          </span>
+                        </div>
+                        <div className="h-1 w-full bg-brand-bg/50 rounded-full overflow-hidden border border-brand-border/20">
+                          <div className={`h-full transition-all duration-300 ${strength.color} ${strength.width}`} />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {activeTab === 'signup' && (
@@ -340,6 +370,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                           {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
+                      {confirmPassword && (
+                        <div className="flex items-center gap-1 text-[9px] font-mono mt-1">
+                          {doPasswordsMatch ? (
+                            <span className="text-emerald-400 flex items-center gap-1">✓ Keys match perfectly</span>
+                          ) : (
+                            <span className="text-red-400 flex items-center gap-1">✗ Keys do not match yet</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 

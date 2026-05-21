@@ -2297,25 +2297,373 @@ const EquationSolver = () => {
 };
 
 // --- 13. Practice Bench (Dynamic Problem Sets) ---
+
+interface PracticeProblem {
+    q: string;
+    a: string;
+    hints?: string[];
+    answerKey?: string;
+    keywords?: string[];
+    show?: boolean;
+}
+
+const OFFLINE_SAMPLES: Record<string, PracticeProblem[]> = {
+    'Math': [
+        { 
+            q: 'Find the derivative of the composite transcendental function: $f(x) = e^{2x} \\sin(x)$', 
+            a: 'Apply the Product Rule: $\\frac{d}{dx}[u \\cdot v] = u\'v + uv\'$. Here, let $u = e^{2x}$ and $v = \\sin(x)$. Their respective derivatives are $u\' = 2e^{2x}$ and $v\' = \\cos(x)$. Combining these, we obtain: \n$$f\'(x) = (2e^{2x}) \\sin(x) + e^{2x} (\\cos(x)) = e^{2x}(2\\sin(x) + \\cos(x))$$',
+            hints: [
+                'Identify this as a product of two distinct functions, $e^{2x}$ and $\\sin(x)$. Therefore, the Product Rule is mandatory.',
+                'The Chain Rule is needed to find the derivative of the exponent part: $\\frac{d}{dx}[e^{2x}] = 2e^{2x}$.',
+                'Plug $u\' = 2e^{2x}$ and $v\' = \\cos(x)$ into $u\'v + uv\'$, and factor out $e^{2x}$ for the final form.'
+            ],
+            answerKey: 'e^{2x}(2\\sin(x) + \\cos(x))',
+            keywords: ['2e^{2x}', 'cos', 'sin', 'product']
+        },
+        { 
+            q: 'Solve for the real variable $x$ in the logarithmic equation: $\\log_2(x) + \\log_2(x-2) = 3$', 
+            a: 'First, combine files via the rule $\\log_2(A) + \\log_2(B) = \\log_2(A B)$:\n$$\\log_2(x(x-2)) = 3$$\nRewrite this into its corresponding exponential form:\n$$x(x-2) = 2^3 = 8 \\Rightarrow x^2 - 2x - 8 = 0$$\nFactoring the quadratic yields $(x-4)(x+2) = 0$. This gives roots $x = 4$ and $x = -2$. Since the original logarithmic domain restricts $x > 2$, $x = -2$ is extraneous. Thus, the single valid solution is $x = 4$.',
+            hints: [
+                'Combine the terms on the left side of the equation using the logarithmic product identity.',
+                'Convert from logarithmic form to exponential form: $\\log_2(W) = V \\Rightarrow W = 2^V$. Here, $2^3 = 8$.',
+                'Solve the resulting quadratic equation $x^2 - 2x - 8 = 0$. Discard any solutions that violate the original domains ($x>0$ and $x-2>0$ hence $x>2$).'
+            ],
+            answerKey: '4',
+            keywords: ['4', 'x=4', 'extraneous']
+        },
+        { 
+            q: 'Evaluate the indefinite integral: $\\int x \\cos(x) dx$', 
+            a: 'Apply the Integration by Parts formula: $\\int u \\, dv = uv - \\int v \\, du$. \nLet $u = x \\Rightarrow du = dx$. \nLet $dv = \\cos(x)dx \\Rightarrow v = \\sin(x)$. \nSubstituting these into the model:\n$$\\int x \\cos(x) dx = x\\sin(x) - \\int \\sin(x) dx = x\\sin(x) - (-\\cos(x)) + C = x\\sin(x) + \\cos(x) + C$$',
+            hints: [
+                'Use Integration by Parts (ILATE/LIATE rule). Choose $u$ as the algebraic term and $dv$ as the trigonometric term.',
+                'Identify $u = x \\Rightarrow du = dx$ and $dv = \\cos(x)dx \\Rightarrow v = \\sin(x)$.',
+                'Substitute these terms into the integration by parts formula: $uv - \\int v \\, du$. Complete the easy integral remaining.'
+            ],
+            answerKey: 'x\\sin(x) + \\cos(x) + C',
+            keywords: ['x\\sin', 'cos', '+ C', 'parts']
+        }
+    ],
+    'Physics': [
+        { 
+            q: 'A 2kg mass is attached to a high-precision spring with force constant $k = 50 \\text{ N/m}$. Deduce the formal physical period of orbital oscillation ($T$) ignoring external resistive frictional effects.', 
+            a: 'The mechanical period of a mass-spring system is given by the formula:\n$$T = 2\\pi\\sqrt{\\frac{m}{k}}$$\nSubstitute $m = 2\\text{ kg}$ and $k = 50\\text{ N/m}$:\n$$T = 2\\pi\\sqrt{\\frac{2}{50}} = 2\\pi\\sqrt{\\frac{1}{25}} = 2\\pi\\frac{1}{5} = \\frac{2\\pi}{5} \\approx 1.2566 \\text{ seconds}$$',
+            hints: [
+                'Identify the governing physical equation for simple harmonic spring periods: $T = 2\\pi\\sqrt{\\frac{m}{k}}$.',
+                'Plug in $m = 2$ and $k = 50$. Notice that the fraction under the radical simplifies directly to $1/25$.',
+                'The square root of $1/25$ is exactly $1/5 = 0.2$. Multiply this by $2\\pi$ to obtain the numeric value of roughly $1.26\\text{ seconds}$.'
+            ],
+            answerKey: '1.26',
+            keywords: ['1.26', '2\\pi/5', 'spring']
+        },
+        { 
+            q: 'Calculate the total macroscopic physical work done by an constant vector force $F = 20\\text{ N}$ moving an object $5\\text{ m}$ forward, if the angle between the acting force vector and the direction of spatial displacement is exactly $60^\\circ$.', 
+            a: 'The physical work done is defined by the dot product:\n$$W = \\vec{F} \\cdot \\vec{d} = F \\cdot d \\cdot \\cos(\\alpha)$$\nPlugging in the given values:\n$$W = 20 \\text{ N} \\times 5 \\text{ m} \\times \\cos(60^\\circ) = 100 \\times 0.5 = 50 \\text{ Joules}$$',
+            hints: [
+                'Use the basic physics equation for Work: $W = F \\cdot d \\cdot \\cos(\\theta)$.',
+                'Substitute $F=20\\text{ N}$, $d=5\\text{ m}$, and $\\theta=60^\\circ$. Recall that $\\cos(60^\\circ)$ equals exactly $0.5$ (or $1/2$).',
+                'Multiply $100$ by $0.5$ to calculate the final scalar work in Joules.'
+            ],
+            answerKey: '50',
+            keywords: ['50', 'joules', '50J']
+        }
+    ],
+    'Chemistry': [
+        { 
+            q: 'Evaluate the precise theoretical molar concentration (pH) of a $0.01 \\text{ M}$ solution of Hydrochloric Acid (HCl), assuming complete academic dissociation in an aqueous format.', 
+            a: 'Since hydrochloric acid (HCl) is a strong mineral acid, it undergoes complete dissociation in water:\n$$\\text{HCl}_{(aq)} \\rightarrow \\text{H}^+_{(aq)} + \\text{Cl}^-_{(aq)}$$\nHence, the concentration of hydrated proton species $[\\text{H}^+] = [\\text{HCl}]_0 = 0.01 \\text{ M} = 10^{-2} \\text{ M}$. Calculating pH using the negative logarithmic multiplier yields:\n$$\\text{pH} = -\\log_{10}[\\text{H}^+] = -\\log_{10}(10^{-2}) = 2$$',
+            hints: [
+                'Identify hydrochloric acid (HCl) as a strong acid that ionizes entirely in water, meaning $[\\text{H}^+] = 0.01\\text{ M}$.',
+                'Apply the definition of pH: $\\text{pH} = -\\log_{10}[\\text{H}^+]$.',
+                'Compute $-\\log_{10}(0.01)$. Note that $0.01 = 10^{-2}$.'
+            ],
+            answerKey: '2',
+            keywords: ['2', 'ph', 'dissociation']
+        },
+        { 
+            q: 'Determine the exact mass of Sodium Hydroxide (NaOH, molar mass = $40.0\\text{ g/mol}$) needed to prepare a solution volume of $500\\text{ mL}$ with a target concentration of $0.1\\text{ M}$.', 
+            a: 'Step 1: Calculate moles of NaOH solute required:\n$$n = M \\times V = 0.1 \\text{ mol/L} \\times 0.500 \\text{ L} = 0.05 \\text{ moles}$$\nStep 2: Convert quantitative chemical moles to macroscopic weight in grams:\n$$\\text{Mass} = n \\times \\text{MW} = 0.05 \\text{ moles} \\times 40.0 \\text{ g/mol} = 2.0 \\text{ grams}$$',
+            hints: [
+                'Calculate the required chemical moles of NaOH first: $\\text{moles} = \\text{Molarity} \\times \\text{Volume in Liters}$. Convert $500\\text{ mL}$ to liters first ($0.5\\text{ L}$).',
+                'This gives $0.1 \\times 0.5 = 0.05\\text{ moles}$.',
+                'Multiply $0.05\\text{ moles}$ by the molecular mass of Sodium Hydroxide ($40.0\\text{ g/mol}$).'
+            ],
+            answerKey: '2',
+            keywords: ['2', '2g', '0.05']
+        }
+    ],
+    'CS': [
+        { 
+            q: 'Translate the 8-bit digital binary byte `01000011` into a standard human base-10 integer.', 
+            a: 'Identify column weights from right to left ($128|64|32|16|8|4|2|1$):\n* Position 6: $1 \\times 64 = 64$\n* Position 1: $1 \\times 2 = 2$\n* Position 0: $1 \\times 1 = 1$\nSumming these up: $64 + 2 + 1 = 67$.',
+            hints: [
+                'Under base-2 positional binary systems, column weights increase by a factor of 2 starting from the rightmost place ($1, 2, 4, 8, 16, 32, 64, 128$).',
+                'Identify which weights hold active 1s in `01000011`. This corresponds to the columns with value 64, 2, and 1.',
+                'Add these active values to get the scalar decimal translation.'
+            ],
+            answerKey: '67',
+            keywords: ['67', 'sixty-seven']
+        },
+        { 
+            q: 'State the worst-case asymptotic algorithmic time complexity (Big-O) of sorting an initial array of size $n$ using the classic divide-and-conquer Merge Sort algorithm.', 
+            a: 'Merge Sort recursively splits the array structure into identical halves, forming a recursion tree with a depth of $O(\\log n)$. On each layer of the tree, merging the arrays takes a combined linear sweep time of $O(n)$. Combining these operations yields the rigorous worst-case bound of:\n$$O(n \\log n)$$',
+            hints: [
+                'Recall that Merge Sort divides arrays in half recursively, producing a recursion tree with $\\log_2 n$ levels.',
+                'At each level, elements must be re-merged sequentially, which consumes linear $O(n)$ time operations.',
+                'Multiply the depth ($\\log n$) by the linear reconstruction cost ($n$).'
+            ],
+            answerKey: 'O(n \log n)',
+            keywords: ['n log n', 'o(n log n)', 'logarithmic']
+        }
+    ],
+    'Biology': [
+        { 
+            q: 'Which vital cell organelle serves as the energy power generation station where cellular respiration occurs and ATP is actively synthesized?', 
+            a: 'The **Mitochondrion** (plural: Mitochondria) is a double-membrane organelle that hosts the citric acid cycle (Krebs) and electron transport chain to convert sugar chemical inputs into Adenosine Triphosphate (ATP) chemical fuel.',
+            hints: [
+                'It contains its own DNA and has deeply folded internal membrane layers called cristae.',
+                'Its primary product is ATP.',
+                'Its spelling begins with "Mito" and is often jokingly called the powerhouse.'
+            ],
+            answerKey: 'Mitochondria',
+            keywords: ['mitochondria', 'mitochondrion']
+        }
+    ],
+    'Economics': [
+        { 
+            q: 'Assume market consumer demand is modeled by the price equation $P = 100 - 2Q_d$ and supply is given by $P = 20 + 2Q_s$. Compute the exact price ($P$) established at market clearance equilibrium.', 
+            a: 'Set quantity demanded equal to quantity supplied ($Q_d = Q_s = Q$) for equilibrium:\n$$100 - 2Q = 20 + 2Q \\Rightarrow 80 = 4Q \\Rightarrow Q = 20 \\text{ units}$$\nPlug $Q = 20$ back into the demand model to determine price:\n$$P = 100 - 2(20) = 60$$',
+            hints: [
+                'Equilibrium clears the market when demand price equals supply price. Set $100 - 2Q = 20 + 2Q$.',
+                'Solve for quantity $Q$ by grouping like terms: $80 = 4Q \\Rightarrow Q = 20$.',
+                'Substitute $Q=20$ back into either equation to obtain the equilibrium price.'
+            ],
+            answerKey: '60',
+            keywords: ['60', 'p=60', 'equilibrium']
+        }
+    ],
+    'History': [
+        { 
+            q: 'State the exact Renaissance calendar year when Christopher Columbus crossed the Atlantic Ocean and made landfall in the Americas.', 
+            a: 'Christopher Columbus landed on Caribbean shores in the calendar year **1492**, initiating extensive transatlantic exchange sequences.',
+            hints: [
+                'It occurred in the final decade of the 15th century.',
+                'The rhymes go "In fourteen hundred and ninety-..."',
+                'Write down the 4-digit year.'
+            ],
+            answerKey: '1492',
+            keywords: ['1492', 'fourteen ninety-two']
+        }
+    ],
+    'Literature': [
+        { 
+            q: 'Name the specific literary figure of speech where Romeo compares Juliet to the morning sun in the phrase: "Juliet is the sun".', 
+            a: 'This is a **Metaphor**, as it makes a direct semantic comparison equating Juliet to the sun without utilizing comparative auxiliary qualifiers like "like" or "as" (which would indicate a simile).',
+            hints: [
+                'Contrast this direct identity with a comparison that utilizes "like" or "as" (which would be a Simile).',
+                'By saying "she IS the sun," the author equates her directly to the solar source.',
+                'Starts with an M.'
+            ],
+            answerKey: 'Metaphor',
+            keywords: ['metaphor']
+        }
+    ],
+    'Psychology': [
+        { 
+            q: 'Identify the prominent behavioral psychologist who pioneered Operant Conditioning theories using conditioning boxes containing custom stimulus levers.', 
+            a: 'The prominent behaviorist **B.F. Skinner** (Burrhus Frederic Skinner) developed theories of Operant Conditioning using experimental animal chambers popularly titled "Skinner Boxes."',
+            hints: [
+                'The chamber boxes named after him give a strong hint to his surname.',
+                'He studied behavior modified through positive reinforcement and negative punishment.',
+                'His initials are B. F.'
+            ],
+            answerKey: 'B.F. Skinner',
+            keywords: ['skinner', 'b.f. skinner']
+        }
+    ]
+};
+
+const SYLLABUS_CHEATSHEETS: Record<string, { title: string, content: string }> = {
+    'Math': {
+        title: 'Analytical Calculus & Logarithm Cheat Sheet',
+        content: `**Core Derivative Formulas:**
+* Power Rule: $\\frac{d}{dx}[x^n] = n x^{n-1}$
+* Exponential: $\\frac{d}{dx}[e^{kx}] = k e^{kx}$
+* Trigonometry: $\\frac{d}{dx}[\\sin(x)] = \\cos(x)$, $\\frac{d}{dx}[\\cos(x)] = -\\sin(x)$
+* Product Rule: $(uv)' = u'v + uv'$
+* Chain Rule: $\\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)$
+
+**Fundamental Integrals:**
+* $\\int x^n dx = \\frac{x^{n+1}}{n+1} + C \\quad (n \\neq -1)$
+* $\\int e^{kx} dx = \\frac{1}{k}e^{kx} + C$
+* $\\int \\frac{1}{x} dx = \\ln|x| + C$
+* Integration by parts: $\\int u \\, dv = uv - \\int v \\, du$`
+    },
+    'Physics': {
+        title: 'Mechanics, Energies & Oscillation Quick Sheet',
+        content: `**Linear Kinematics:**
+* Speed relationships: $v = v_0 + at$
+* Displacement: $d = v_0 t + \\frac{1}{2}at^2$
+* Energy Equivalence: $v^2 = v_0^2 + 2ad$
+
+**Dynamics & Mechanical Work:**
+* Newton's 2nd Law: $F = m a$
+* Mechanical Work: $W = F \\cdot d \\cdot \\cos(\\theta)$
+* Kinetic Energy: $KE = \\frac{1}{2}m v^2$
+* Gravitational Potential Energy: $PE = mgh$
+
+**Simple Harmonic Oscillators:**
+* Elastic Spring: Period $T = 2\\pi\\sqrt{\\frac{m}{k}}$
+* Gravity Pendulum: Period $T = 2\\pi\\sqrt{\\frac{L}{g}}$`
+    },
+    'Chemistry': {
+        title: 'Acid-Base Equilibria & Solutions Guide',
+        content: `**Aqueous Acidic pH & pOH:**
+* $\\text{pH} = -\\log_{10}[\\text{H}^+]$
+* $\\text{pOH} = -\\log_{10}[\\text{OH}^-]$
+* Water constant relation: $\\text{pH} + \\text{pOH} = 14 \\quad (\\text{at } 25^\\circ\\text{C})$
+* Hydronium concentration: $[\\text{H}^+] = 10^{-\\text{pH}}$
+
+**Concentration and Dilutions:**
+* Molar Concentration (Molarity): $M = \\frac{\\text{moles of solute (mol)}}{\\text{volume of solution (L)}}$
+* Dilution formula: $M_1 V_1 = M_2 V_2$
+
+**Ideal Gases:**
+* Equation of state: $P V = n R T$
+* Constant $R = 0.08206 \\text{ L}\\cdot\\text{atm}/(\\text{mol}\\cdot\\text{K}) = 8.314 \\text{ J}/(\\text{mol}\\cdot\\text{K})$`
+    },
+    'CS': {
+        title: 'Asymptotics & Positional Systems Guide',
+        content: `**Binary Counting Weights:**
+* Base-2 multipliers:  $128 \\ | \\ 64 \\ | \\ 32 \\ | \\ 16 \\ | \\ 8 \\ | \\ 4 \\ | \\ 2 \\ | \\ 1$
+* A single byte consists of 8 bits. Maximum unsigned value is $255$.
+
+**Complexity Classes (Fastest to Slowest):**
+1. Constant Time: $O(1)$
+2. Logarithmic Time: $O(\\log n)$
+3. Linear Time: $O(n)$
+4. Linearithmic Time: $O(n \\log n)$
+5. Quadratic Time: $O(n^2)$
+6. Exponential Time: $O(2^n)$`
+    },
+    'Biology': {
+        title: 'Organelles & Genetic Code Review Sheet',
+        content: `**Organelle Responsibilities:**
+* **Nucleus**: Encapsulates and protects genomic DNA.
+* **Mitochondria**: Energy production through Krebs cycle and electron transport chain.
+* **Ribosome**: Machine responsible for peptide synthesis (protein assembling).
+
+**The Central Dogma:**
+* Transcription: $\\text{DNA} \\rightarrow \\text{mRNA}$ (Nucleus)
+* Translation: $\\text{mRNA} \\rightarrow \\text{Protein}$ (Ribosomes)
+* Base Pairing: DNA: $\\text{A-T, C-G}$; RNA: $\\text{A-U, C-G}$`
+    },
+    'Economics': {
+        title: 'Microeconomics Demand & Markets',
+        content: `**Market Clearance Equilibrium:**
+* Occurs where Market Quantity Demanded equals Quantity Supplied ($Q_d = Q_s$).
+* Market price is stable here. Any other state triggers surplus or shortage pressures.
+
+**National Accounting Gross Domestic Product:**
+* Income/Expenditure Equation: $GDP = C + I + G + (X - M)$
+* $C$: Household Consumption, $I$: Business Capital Investment, $G$: Government Purchases, $X$: National Exports, $M$: National Imports.`
+    },
+    'History': {
+        title: 'Global Chronologies Cheat Sheet',
+        content: `**Decisive Transition Markers:**
+* **Magna Carta (1215)**: Initial constraints on royal absolute power in England.
+* **Printing Press (c. 1440)**: Hand-made literature converted into mass printing.
+* **Landfall of Columbus (1492)**: Conjoined Western and Eastern hemispheres.
+* **Steam Industrial Era (late 18th century)**: Mechanical energy overrides organic muscular force.`
+    },
+    'Literature': {
+        title: 'Poetics, Devices & Figurative Analysis',
+        content: `**Key Stylistic Figures:**
+* **Metaphor**: Direct semantic equivalence (e.g. *Juliet is the sun*).
+* **Simile**: Comparative equivalence matching using words "like" or "as" (e.g. *Juliet shines like the morning sun*).
+* **Personification**: Assigning animal or human volition to inanimate abstractions.
+* **Alliteration**: Sequential repetition of distinct phonetics (e.g. *She sells sea shells*).`
+    },
+    'Psychology': {
+        title: 'Behaviorism & Neural Storage Quick Sheet',
+        content: `**Conditioning Frameworks:**
+* **Classical Association (Pavlov)**: Biological reflex triggered by an arbitrary paired precursor (bell conditioning).
+* **Operant Adaptation (Skinner)**: Voluntary actions reshaped by positive reinforcement rewards or negative punishments.
+
+**Memory Storehouse Pipeline:**
+$$\\text{Sensory Input} \\rightarrow \\text{Short-Term (Working Memory Case)} \\rightarrow \\text{Long-Term Memory}$$`
+    }
+};
+
 const PracticeBench = () => {
     const [subject, setSubject] = useState('Math');
     const [level, setLevel] = useState('High School');
     const [topic, setTopic] = useState('');
     const [batchSize, setBatchSize] = useState(3);
-    const [problems, setProblems] = useState<{q: string, a: string, show: boolean}[]>([]);
+    const [problems, setProblems] = useState<PracticeProblem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // MODE states: 'practice' (tutoring + immediate hints) vs 'exam' (graded testing)
+    const [mode, setMode] = useState<'practice' | 'exam'>('practice');
+    const [showCheatsheet, setShowCheatsheet] = useState(false);
+    
+    // Interactive states for learner
+    const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+    const [revealedHintsCount, setRevealedHintsCount] = useState<Record<number, number>>({});
+    const [gradeResult, setGradeResult] = useState<Record<number, { checked: boolean; isCorrect: boolean; matchedTerm?: string; feedback: string }>>({});
+    const [confidenceGrades, setConfidenceGrades] = useState<Record<number, 'correct' | 'partial' | 'review'>>({});
+    const [aiTutorReview, setAiTutorReview] = useState<Record<number, { generating: boolean; response: string }>>({});
+
+    // Exam-specific states
+    const [examTimer, setExamTimer] = useState(0);
+    const [examIntervalId, setExamIntervalId] = useState<any>(null);
+    const [examSubmitted, setExamSubmitted] = useState(false);
+    const [examScorecard, setExamScorecard] = useState<{ score: number; total: number; percentage: number; letterGrade: string; evaluation: string } | null>(null);
+
+    // Start counter for exam timer
+    useEffect(() => {
+        if (mode === 'exam' && !examSubmitted && problems.length > 0) {
+            const id = setInterval(() => {
+                setExamTimer(t => t + 1);
+            }, 1000);
+            setExamIntervalId(id);
+            return () => clearInterval(id);
+        } else {
+            if (examIntervalId) {
+                clearInterval(examIntervalId);
+                setExamIntervalId(null);
+            }
+        }
+    }, [mode, examSubmitted, problems.length]);
+
+    // Reset everything when topic/subject/problems changes
+    const resetInteractiveStates = () => {
+        setUserAnswers({});
+        setRevealedHintsCount({});
+        setGradeResult({});
+        setConfidenceGrades({});
+        setAiTutorReview({});
+        setExamTimer(0);
+        setExamSubmitted(false);
+        setExamScorecard(null);
+    };
 
     const generateProblems = async () => {
         setIsLoading(true);
+        resetInteractiveStates();
         try {
             const apiKey = getApiKey();
             if (!apiKey) throw new Error("Gemini API key is not configured.");
             const ai = new GoogleGenAI({ apiKey });
             
-            const prompt = `Generate ${batchSize} practice problems for ${subject} ${topic ? `(specifically focusing on ${topic})` : ''} at ${level} level. 
-            Formatting: Return a JSON array of objects, each with 'q' (the question in markdown) and 'a' (the concise answer/explanation). 
-            Use LaTeX for math. Keep descriptions scholarly and rigorous.
-            Example format: [{"q": "Evaluate $\\int x^2 dx$", "a": "$\\frac{1}{3}x^3 + C$"}]`;
+            const prompt = `Generate ${batchSize} highly rigorous practice exercises for ${subject} ${topic ? `(specifically focusing on ${topic})` : ''} at ${level} level. 
+            Formatting: Return a JSON array of objects, containing:
+            'q': the formal question description in friendly markdown.
+            'a': the full clear, step-by-step rigorous solution text with LaTeX formula derivations.
+            'answerKey': a single word or extremely brief exact key answer.
+            'keywords': an array of 3-4 lowercase scientific key phrases / words found in the solution.
+            'hints': an array of exactly 3 sequential educational scaffolding cues, without giving the final answer away.
+            Keep descriptions extremely academic, detailed and clear for both kids and high school learners too.
+            Example envelope: [{"q": "Calculate...", "a": "Let...", "answerKey": "50", "keywords": ["work", "joules"], "hints": ["Recall...", "Plug..."]}]`;
 
             const response = await ai.models.generateContent({
                 model: "gemini-1.5-flash",
@@ -2328,65 +2676,252 @@ const PracticeBench = () => {
             setProblems(parsed.map((p: any) => ({ ...p, show: false })));
         } catch (error: any) {
             console.error(error);
+            // Fallback to offline samples on error or API key mismatch
+            loadSample(subject);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const SAMPLES: Record<string, {q: string, a: string}[]> = {
-        'Math': [
-            { q: 'Find the derivative of $f(x) = e^{2x} \\sin(x)$', a: '$f\'(x) = 2e^{2x}\\sin(x) + e^{2x}\\cos(x) = e^{2x}(2\\sin(x) + \\cos(x))$' },
-            { q: 'Solve for $x$: $\\log_2(x) + \\log_2(x-2) = 3$', a: '$\\log_2(x(x-2)) = 3 \\Rightarrow x^2-2x = 8 \\Rightarrow x^2-2x-8=0 \\Rightarrow (x-4)(x+2)=0$. Since $x>2$, $x=4$.' },
-            { q: 'Evaluate the integral: $\\int x \\cos(x) dx$', a: 'Using integration by parts: $\\int u dv = uv - \\int v du$. Let $u=x, dv=\\cos(x)dx$. Then $du=dx, v=\\sin(x)$. $\\int x \\cos(x) dx = x\\sin(x) - \\int \\sin(x) dx = x\\sin(x) + \\cos(x) + C$.' },
-            { q: 'Calculate the cross product of $\\vec{u} = (1, 2, 3)$ and $\\vec{v} = (4, 5, 6)$', a: '$\\vec{u} \\times \\vec{v} = (2(6)-3(5), 3(4)-1(6), 1(5)-2(4)) = (12-15, 12-6, 5-8) = (-3, 6, -3)$.' },
-            { q: 'Expand $e^x$ as a Taylor series centered at $x=0$', a: '$e^x = \\sum_{n=0}^{\\infty} \\frac{x^n}{n!} = 1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} + \\dots$' }
-        ],
-        'Physics': [
-            { q: 'A 2kg mass is attached to a spring with $k=50N/m$. What is the period of oscillation?', a: '$T = 2\\pi\\sqrt{m/k} = 2\\pi\\sqrt{2/50} = 2\\pi\\sqrt{1/25} = 2\\pi/5 \\approx 1.26s$' },
-            { q: 'Calculate the total work done by a force $F=20N$ moving an object $5m$ at an angle of $60^\\circ$ to the displacement.', a: '$W = F d \\cos(\\theta) = 20(5)\\cos(60^\\circ) = 100(0.5) = 50J$.' },
-            { q: 'Find the energy stored in a $10\\mu F$ capacitor charged to $50V$.', a: '$U = \\frac{1}{2}CV^2 = \\frac{1}{2}(10 \\times 10^{-6})(50^2) = 5 \\times 10^{-6} \\times 2500 = 0.0125J$.' },
-            { q: 'Determine the angle of refraction for light entering water ($n=1.33$) from air ($n=1.00$) at an incidence angle of $30^\\circ$.', a: '$n_1 \\sin(\\theta_1) = n_2 \\sin(\\theta_2) \\Rightarrow 1.00 \\sin(30^\\circ) = 1.33 \\sin(\\theta_2) \\Rightarrow \\sin(\\theta_2) = 0.5/1.33 \\approx 0.376 \\Rightarrow \\theta_2 \\approx 22.1^\\circ$.' }
-        ],
-        'Chemistry': [
-            { q: 'What is the pH of a 0.01M solution of HCl?', a: '$pH = -\\log[H^+] = -\\log(0.01) = 2$' },
-            { q: 'How many grams of NaOH are needed to make 500mL of a 0.1M solution?', a: '$n = M \\times V = 0.1 \\times 0.5 = 0.05$ mol. Mass = $n \\times MW = 0.05 \\times 40.0 = 2.0g$.' },
-            { q: 'Balance the dry combustion of Propane ($C_3H_8$).', a: '$C_3H_8 + 5O_2 \\rightarrow 3CO_2 + 4H_2O$.' },
-            { q: 'Calculate the volume of 2 moles of an ideal gas at STP.', a: '$V = nRT/P = (2)(0.08206)(273.15)/1.0 = 44.8L$ (or simply $2 \\times 22.4L/mol$).' }
-        ]
+    const loadSample = (s: string) => {
+        resetInteractiveStates();
+        const baseSet = OFFLINE_SAMPLES[s] || OFFLINE_SAMPLES['Math'];
+        // Slice according to batch size or pad if size exceeds
+        let list = [...baseSet];
+        if (list.length > batchSize) {
+            list = list.slice(0, batchSize);
+        }
+        setProblems(list.map(p => ({ ...p, show: false })));
     };
 
-    const loadSample = (s: string) => {
-        const sampleSet = SAMPLES[s] || [];
-        setProblems(sampleSet.map(p => ({ ...p, show: false })));
+    const handleIncrementHint = (idx: number) => {
+        const currentCount = revealedHintsCount[idx] || 0;
+        if (currentCount < 3) {
+            setRevealedHintsCount({
+                ...revealedHintsCount,
+                [idx]: currentCount + 1
+            });
+        }
+    };
+
+    // Offline self-check engine using analytical keywords
+    const executeLocalOfflineCheck = (idx: number) => {
+        const ans = (userAnswers[idx] || '').trim().toLowerCase();
+        if (!ans) {
+            setGradeResult({
+                ...gradeResult,
+                [idx]: { checked: true, isCorrect: false, feedback: 'Blank Submission. Please write down your steps or numeric values!' }
+            });
+            return;
+        }
+
+        const prob = problems[idx];
+        const key = (prob.answerKey || '').toLowerCase();
+        const keywords = prob.keywords || [];
+
+        // Exact match of overall key
+        if (key && ans.includes(key)) {
+            setGradeResult({
+                ...gradeResult,
+                [idx]: { checked: true, isCorrect: true, feedback: 'Superb! Your solution matched the target benchmark key exactly. Keep on keeping on!' }
+            });
+            setConfidenceGrades({ ...confidenceGrades, [idx]: 'correct' });
+            return;
+        }
+
+        // Check keyword matches
+        const matched = keywords.filter(word => ans.includes(word.toLowerCase()));
+        if (matched.length >= Math.max(1, Math.floor(keywords.length / 2))) {
+            setGradeResult({
+                ...gradeResult,
+                [idx]: { 
+                    checked: true, 
+                    isCorrect: true, 
+                    matchedTerm: matched.join(', '),
+                    feedback: `Excellent derivation! While your text is open-ended, we detected key parameters: [${matched.join(', ')}]. Perfect scientific path!` 
+                }
+            });
+            setConfidenceGrades({ ...confidenceGrades, [idx]: 'correct' });
+        } else if (matched.length > 0) {
+            setGradeResult({
+                ...gradeResult,
+                [idx]: { 
+                    checked: true, 
+                    isCorrect: false, 
+                    matchedTerm: matched.join(', '),
+                    feedback: `Partially trace. You mentioned intermediate properties [${matched.join(', ')}], but missing full execution. Disclose the solution step below to learn!` 
+                }
+            });
+            setConfidenceGrades({ ...confidenceGrades, [idx]: 'partial' });
+        } else {
+            setGradeResult({
+                ...gradeResult,
+                [idx]: { 
+                    checked: true, 
+                    isCorrect: false, 
+                    feedback: `Keep drafting! We didn't immediately detect key concepts in your answer. Check the guide hint parameters above to verify formulas or calculations!` 
+                }
+            });
+            setConfidenceGrades({ ...confidenceGrades, [idx]: 'review' });
+        }
+    };
+
+    const executeAiTutorReview = async (idx: number) => {
+        const studentAns = userAnswers[idx] || '';
+        if (!studentAns.trim()) return;
+
+        setAiTutorReview(prev => ({
+            ...prev,
+            [idx]: { generating: true, response: '' }
+        }));
+
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error("Key offline.");
+            const ai = new GoogleGenAI({ apiKey });
+
+            const targetProb = problems[idx];
+            const tutorPrompt = `Review the following student response for grading and education.
+            
+            Exercise Question: "${targetProb.q}"
+            Official Solution Key: "${targetProb.a}"
+            Student Typed Response: "${studentAns}"
+            
+            Evaluate if the student has correct logic, correct values, and formulas. Explain errors beautifully, constructively, and give encouraging suggestions. Keep under 3 brief paragraphs. Use markdown & LaTeX. Encourage their work as a scholar!`;
+
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: [{ role: 'user', parts: [{ text: tutorPrompt }] }]
+            });
+
+            setAiTutorReview(prev => ({
+                ...prev,
+                [idx]: { generating: false, response: response.text || 'Error obtaining tutor analysis.' }
+            }));
+        } catch (err: any) {
+            setAiTutorReview(prev => ({
+                ...prev,
+                [idx]: { generating: false, response: `AI Coaching is offline, read the step-by-step corrections manual.` }
+            }));
+        }
+    };
+
+    // Complete active exam, score and formulate letter grading
+    const submitCompleteExam = () => {
+        if (problems.length === 0) return;
+        
+        let earnedPoints = 0;
+        const totalPossiblePoints = problems.length * 10;
+
+        problems.forEach((_, index) => {
+            const grade = confidenceGrades[index];
+            if (grade === 'correct') {
+                earnedPoints += 10;
+            } else if (grade === 'partial') {
+                earnedPoints += 5;
+            } else {
+                // If they did check locally and got it right
+                const res = gradeResult[index];
+                if (res?.isCorrect) {
+                     earnedPoints += 10;
+                } else if (userAnswers[index]?.trim()) {
+                     earnedPoints += 3; // minimal participation points
+                }
+            }
+        });
+
+        const percentage = Math.round((earnedPoints / totalPossiblePoints) * 100);
+        let letter = 'F';
+        let evalText = '';
+
+        if (percentage >= 95) {
+            letter = 'A+';
+            evalText = 'Outstanding! Your absolute mastery of this field is exemplary. Keep up this magnificent performance!';
+        } else if (percentage >= 85) {
+            letter = 'A';
+            evalText = 'Excellent scholastic capability. You demonstrated critical mechanical knowledge across multiple challenge domains!';
+        } else if (percentage >= 75) {
+            letter = 'B';
+            evalText = 'Solid capability. Minor details need work, but you maintain the underlying scientific principles securely.';
+        } else if (percentage >= 60) {
+            letter = 'C';
+            evalText = 'Passing standard. We suggest reinforcing formulas via the syllabus notes and trying additional practice rounds.';
+        } else {
+            letter = 'D/F';
+            evalText = 'Sub-optimal performance. Re-read the associated subject cheatsheet, utilize hints in Practice Mode, and try again!';
+        }
+
+        setExamScorecard({
+            score: earnedPoints,
+            total: totalPossiblePoints,
+            percentage,
+            letterGrade: letter,
+            evaluation: evalText
+        });
+        setExamSubmitted(true);
+    };
+
+    const formatTimer = (secs: number) => {
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
     };
 
     return (
         <div className="max-w-5xl mx-auto space-y-12">
+            
+            {/* Header Control Panel */}
             <div className="bg-brand-surface/40 p-12 rounded-[4rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-16 opacity-5 group-hover:opacity-10 transition-opacity">
                     <Target size={200} />
                 </div>
-                <div className="relative z-10">
-                    <div className="flex items-center gap-6 mb-12">
-                        <div className="w-16 h-16 rounded-[2rem] bg-brand-primary text-brand-bg flex items-center justify-center shadow-2xl shadow-brand-primary/30">
-                            <Zap size={32} />
+                <div className="relative z-10 space-y-8">
+                    
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-4">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 rounded-[2rem] bg-brand-primary text-brand-bg flex items-center justify-center shadow-2xl shadow-brand-primary/30 shrink-0">
+                                <GraduationCap size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-3xl font-black text-brand-text uppercase tracking-widest">Scholar Arena</h3>
+                                <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.4em] font-black">Interactive Examine & Tutor Platform</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-3xl font-black text-brand-text uppercase tracking-widest">Exercise Bench</h3>
-                            <p className="text-[10px] text-brand-text-secondary uppercase tracking-[0.4em] font-black">Dynamic Problem Generation Suite [Gemini-Powered]</p>
+
+                        {/* Top controls: Practice/Exam mode toggle & Cheatsheet */}
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={() => {
+                                    setMode(mode === 'practice' ? 'exam' : 'practice');
+                                    resetInteractiveStates();
+                                }}
+                                className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${mode === 'exam' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20'}`}
+                            >
+                                <span className={`w-2 h-2 rounded-full ${mode === 'exam' ? 'bg-red-500 animate-pulse' : 'bg-brand-primary'}`} />
+                                Current: {mode === 'exam' ? 'Exam Room Mode' : 'Tutoring Lab'}
+                            </button>
+
+                            <button
+                                onClick={() => setShowCheatsheet(!showCheatsheet)}
+                                className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${showCheatsheet ? 'bg-brand-text text-brand-bg border-brand-text' : 'bg-brand-bg/40 border-brand-border/30 text-brand-text-secondary'}`}
+                            >
+                                <BookOpen size={12} />
+                                {showCheatsheet ? 'Close Reference Notes' : 'Open Study Cheatsheet'}
+                            </button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10">
-                        <div className="space-y-8">
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Discipline Field</label>
+                    {/* Target Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Academic Discipline</label>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {['Math', 'Physics', 'Biology', 'Chemistry', 'CS', 'Economics', 'History', 'Literature', 'Psychology'].map(s => (
+                                    {['Math', 'Physics', 'Chemistry', 'CS', 'Biology', 'Economics', 'History', 'Literature', 'Psychology'].map(s => (
                                         <button 
                                             key={s} 
                                             onClick={() => setSubject(s)}
-                                            className={`p-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${subject === s ? 'bg-brand-primary text-brand-bg border-brand-primary shadow-xl' : 'bg-brand-bg/40 border-brand-border/30 text-brand-text-secondary hover:text-brand-text'}`}
+                                            className={`p-3.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${subject === s ? 'bg-brand-primary text-brand-bg border-brand-primary shadow-xl' : 'bg-brand-bg/40 border-brand-border/30 text-brand-text-secondary hover:text-brand-text'}`}
                                         >
                                             {s}
                                         </button>
@@ -2394,21 +2929,21 @@ const PracticeBench = () => {
                                 </div>
                             </div>
                             
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Contextual Topic (Optional)</label>
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Focus Syllabus Topic (Optional)</label>
                                 <input 
                                     type="text" 
                                     value={topic}
                                     onChange={e => setTopic(e.target.value)}
-                                    placeholder="e.g. Thermodynamics, Organic Synthesis..."
-                                    className="w-full bg-brand-bg/40 border border-brand-border rounded-2xl p-4 text-xs font-bold focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all text-brand-text placeholder:opacity-20"
+                                    placeholder="e.g. Limits, Wave Mechanics, Thermodynamics..."
+                                    className="w-full bg-brand-bg/40 border border-brand-border rounded-xl p-4 text-xs font-bold focus:ring-2 focus:ring-brand-primary/50 outline-none transition-all text-brand-text placeholder:opacity-30"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-8">
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Academic Intensity</label>
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Scholastic Rigor</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {['High School', 'Undergraduate', 'Graduate', 'Doctorate'].map(l => (
                                         <button 
@@ -2422,8 +2957,8 @@ const PracticeBench = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-2">Problem Batch Size</label>
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Challenge Scale (Exercise Count)</label>
                                 <div className="flex gap-2">
                                     {[3, 5, 10].map(n => (
                                         <button 
@@ -2431,7 +2966,7 @@ const PracticeBench = () => {
                                             onClick={() => setBatchSize(n)}
                                             className={`flex-1 p-4 rounded-xl text-xs font-black transition-all border ${batchSize === n ? 'bg-brand-primary/20 border-brand-primary text-brand-primary' : 'bg-brand-bg/40 border-brand-border text-brand-text-secondary'}`}
                                         >
-                                            {n}
+                                            0{n} Challenges
                                         </button>
                                     ))}
                                 </div>
@@ -2439,103 +2974,372 @@ const PracticeBench = () => {
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4 pt-4">
                         <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
                             onClick={generateProblems}
                             disabled={isLoading}
-                            className="flex-[2] py-6 bg-brand-primary text-brand-bg rounded-[2.5rem] font-black uppercase tracking-[0.5em] text-xs shadow-2xl flex items-center justify-center gap-4 disabled:opacity-50"
+                            className="flex-[2] py-5 bg-brand-primary text-brand-bg rounded-2xl font-black uppercase tracking-[0.4em] text-xs shadow-xl flex items-center justify-center gap-4 disabled:opacity-50"
                         >
-                            {isLoading ? <Loader2 size={24} className="animate-spin" /> : <Sparkles size={24} />}
-                            {isLoading ? 'Synthesizing Problems...' : 'Generate New Problem Set'}
+                            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                            {isLoading ? 'Synthesizing Challenges...' : 'Initiate New Exercise Set'}
                         </motion.button>
                         <button 
                             onClick={() => loadSample(subject)}
-                            className="flex-1 py-6 bg-brand-surface border border-brand-border text-brand-text-secondary rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-[9px] hover:text-brand-text transition-all"
+                            className="flex-1 py-5 bg-brand-surface border border-brand-border text-brand-text-secondary rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] hover:text-brand-text transition-all"
                         >
-                            Load Classic Samples
+                            Load Offline Standard Exercises
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div className="space-y-6">
-                <AnimatePresence mode="popLayout" initial={false}>
-                    {problems.map((p, idx) => (
-                        <motion.div
-                            layout
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            key={idx}
-                            className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative group/problem"
-                        >
-                            <div className="flex justify-between items-start mb-8">
-                                <div className="px-4 py-1.5 bg-brand-bg/50 border border-brand-border rounded-full text-[9px] font-black text-brand-text-secondary uppercase tracking-widest">
-                                    Challenge 0{idx + 1}
-                                </div>
-                                <div className="text-[8px] font-mono text-brand-text-secondary/20 uppercase tracking-[0.3em]">
-                                    Source: nolo_core_practice_v2 // {subject}
-                                </div>
+            {/* Collapsible Syllabus Reference Note */}
+            <AnimatePresence>
+                {showCheatsheet && SYLLABUS_CHEATSHEETS[subject] && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="bg-brand-primary/5 border border-brand-primary/15 rounded-[2.5rem] p-8 space-y-4"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary">
+                                <BookOpen size={16} />
                             </div>
-                            <div className="markdown-body prose prose-invert prose-brand max-w-none text-lg font-medium leading-relaxed mb-10">
-                                <ReactMarkdown>{p.q}</ReactMarkdown>
+                            <div>
+                                <h4 className="text-xs font-black uppercase text-brand-primary tracking-widest">{SYLLABUS_CHEATSHEETS[subject].title}</h4>
+                                <p className="text-[9px] text-brand-text-secondary font-mono tracking-wider uppercase mt-0.5">Complementary Study Reference Sheet</p>
                             </div>
-                            
-                            <div className="border-t border-brand-border/20 pt-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-                                <button 
-                                    onClick={() => setProblems(problems.map((prob, i) => i === idx ? { ...prob, show: !prob.show } : prob))}
-                                    className="flex items-center gap-3 text-brand-primary hover:text-brand-secondary transition-colors group/reveal"
-                                >
-                                    <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 group-hover/reveal:bg-brand-primary group-hover/reveal:text-brand-bg transition-all">
-                                        <Layers size={18} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{p.show ? 'Collapse Theoretical Solution' : 'Disclose Theoretical Solution'}</span>
-                                </button>
-                                
-                                <div className="flex gap-2">
-                                    <button className="p-4 bg-brand-bg/40 rounded-2xl text-brand-text-secondary hover:text-brand-primary border border-brand-border/50 transition-all">
-                                        <Plus size={18} />
-                                    </button>
-                                    <button className="p-4 bg-brand-bg/40 rounded-2xl text-brand-text-secondary hover:text-brand-primary border border-brand-border/50 transition-all">
-                                        <Send size={18} />
-                                    </button>
-                                </div>
-                            </div>
+                        </div>
+                        <div className="markdown-body prose prose-invert prose-brand max-w-none text-xs leading-relaxed space-y-2 opacity-90 border-t border-brand-border/15 pt-4">
+                            <ReactMarkdown>{SYLLABUS_CHEATSHEETS[subject].content}</ReactMarkdown>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                            <AnimatePresence>
-                                {p.show && (
+            {/* Active Exam Floating Header Banner */}
+            {mode === 'exam' && problems.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-red-500/5 border border-red-500/20 rounded-2xl gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <div>
+                            <span className="text-[10px] font-mono uppercase text-red-400 tracking-wider">Exam Environment Enabled</span>
+                            <p className="text-[11px] text-brand-text-secondary">Answer confirmation checkers are hidden. Complete all solutions and click grade at the bottom.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="px-4 py-2 bg-black/40 border border-brand-border rounded-xl font-mono text-sm text-brand-text tracking-widest">
+                            Time: {formatTimer(examTimer)}
+                        </div>
+                        {!examSubmitted && (
+                            <button
+                                onClick={submitCompleteExam}
+                                className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all"
+                            >
+                                Finish & Grade Exam
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Scorecard Modal / Panel */}
+            <AnimatePresence>
+                {examSubmitted && examScorecard && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-brand-surface border border-brand-border rounded-[3rem] p-10 space-y-8 relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 p-12 opacity-5 text-brand-primary">
+                            <ShieldCheck size={160} />
+                        </div>
+
+                        <div className="border-b border-brand-border pb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-2xl font-black text-brand-text uppercase tracking-widest">Scholar Examination Report Card</h3>
+                                <p className="text-[10px] text-brand-text-secondary font-mono tracking-widest mt-1">Discipline: {subject} &bull; Intensity Level: {level}</p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="text-center">
+                                    <span className="text-xs text-brand-text-secondary uppercase font-bold block">Class Grade</span>
+                                    <span className="text-4xl font-black text-brand-primary">{examScorecard.letterGrade}</span>
+                                </div>
+                                <div className="h-10 w-px bg-brand-border" />
+                                <div className="text-center font-mono">
+                                    <span className="text-xs text-brand-text-secondary uppercase font-bold block">Performance</span>
+                                    <span className="text-lg font-bold text-brand-text">{examScorecard.percentage}%</span>
+                                    <span className="text-[10px] text-brand-text-secondary block">({examScorecard.score}/{examScorecard.total} Pts)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 bg-brand-bg/50 border border-brand-border rounded-2xl relative">
+                            <span className="absolute -top-3 left-6 px-3 bg-brand-surface border border-brand-border rounded-full text-[9px] font-mono text-brand-primary uppercase tracking-widest">Direct Pedagogical Evaluation</span>
+                            <p className="text-sm text-brand-text-secondary leading-relaxed font-medium pt-2">{examScorecard.evaluation}</p>
+                        </div>
+
+                        <div className="flex justify-end gap-3 text-[10px] font-black uppercase tracking-wider">
+                            <button
+                                onClick={() => {
+                                    setExamSubmitted(false);
+                                    setExamScorecard(null);
+                                    setMode('practice');
+                                }}
+                                className="px-5 py-3 bg-brand-primary text-brand-bg rounded-xl"
+                            >
+                                Convert to Practice (Tutor reviews unlocked)
+                            </button>
+                            <button
+                                onClick={() => {
+                                    resetInteractiveStates();
+                                }}
+                                className="px-5 py-3 bg-brand-bg border border-brand-border text-brand-text-secondary rounded-xl hover:text-brand-text"
+                            >
+                                Re-take Exam with new parameters
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Exercises List */}
+            <div className="space-y-8">
+                <AnimatePresence mode="popLayout" initial={false}>
+                    {problems.map((p, idx) => {
+                        const hintsCount = revealedHintsCount[idx] || 0;
+                        const gradeVal = gradeResult[idx];
+                        const answerDraft = userAnswers[idx] || '';
+                        const hasAiReview = aiTutorReview[idx];
+
+                        return (
+                            <motion.div
+                                layout
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                key={idx}
+                                className="bg-brand-surface/40 p-10 rounded-[3rem] border border-brand-border/50 backdrop-blur-md shadow-2xl relative group/problem space-y-6"
+                            >
+                                <div className="flex justify-between items-start">
+                                    <div className="px-4 py-1.5 bg-brand-bg/50 border border-brand-border rounded-full text-[9px] font-black text-brand-text-secondary uppercase tracking-widest flex items-center gap-2">
+                                        <Target size={12} /> Challenge 0{idx + 1}
+                                    </div>
+                                    <div className="text-[8px] font-mono text-brand-text-secondary/20 uppercase tracking-[0.3em]">
+                                        Method: {p.answerKey ? 'OFFLINE MANUAL' : 'DYNAMIC SYNTHESIS'}
+                                    </div>
+                                </div>
+
+                                <div className="markdown-body prose prose-invert prose-brand max-w-none text-base font-medium leading-relaxed">
+                                    <ReactMarkdown>{p.q}</ReactMarkdown>
+                                </div>
+
+                                {/* Tutoring hints (Practice mode only) */}
+                                {mode === 'practice' && p.hints && p.hints.length > 0 && (
+                                    <div className="p-5 rounded-2xl bg-brand-primary/5 border border-brand-primary/10 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-brand-primary tracking-wider">
+                                                <Activity size={14} /> Responsive Clue Scaffolding
+                                            </div>
+                                            {hintsCount < 3 && (
+                                                <button
+                                                    onClick={() => handleIncrementHint(idx)}
+                                                    className="text-[9px] font-bold text-brand-text-secondary hover:text-brand-primary uppercase tracking-widest"
+                                                >
+                                                    Reveal Clue ({hintsCount}/3)
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {hintsCount > 0 && (
+                                            <ul className="space-y-2 border-t border-brand-border/10 pt-3">
+                                                {p.hints.slice(0, hintsCount).map((hintText, hIdx) => (
+                                                    <li key={hIdx} className="text-[11px] text-brand-text-secondary leading-relaxed flex items-start gap-2">
+                                                        <span className="font-mono text-brand-primary font-bold">Clue 0{hIdx + 1}:</span>
+                                                        <span className="font-light italic">{hintText}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Typing entry workspace (Both modes) */}
+                                {!examSubmitted && (
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-black text-brand-text-secondary uppercase tracking-widest ml-1">Write your mathematical steps or answers here:</label>
+                                        <textarea
+                                            value={answerDraft}
+                                            onChange={(e) => setUserAnswers({ ...userAnswers, [idx]: e.target.value })}
+                                            placeholder="Introduce formulas, numbers, or logic to check."
+                                            rows={3}
+                                            className="w-full bg-brand-bg/60 border border-brand-border rounded-xl p-4 text-xs font-medium focus:ring-2 focus:ring-brand-primary text-brand-text outline-none transition-all placeholder:opacity-20"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Actions row */}
+                                <div className="border-t border-brand-border/15 pt-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                                    
+                                    {/* Evaluation Trigger (Practice lab) */}
+                                    {mode === 'practice' && !examSubmitted ? (
+                                        <div className="flex gap-2 flex-wrap">
+                                            <button
+                                                onClick={() => executeLocalOfflineCheck(idx)}
+                                                className="px-4 py-2.5 bg-brand-bg border border-brand-border rounded-xl text-[10px] font-bold uppercase text-brand-text-secondary hover:text-brand-primary hover:border-brand-primary/30 transition-all"
+                                            >
+                                                Check Answer
+                                            </button>
+
+                                            {getApiKey() && (
+                                                <button
+                                                    onClick={() => executeAiTutorReview(idx)}
+                                                    disabled={hasAiReview?.generating || !answerDraft.trim()}
+                                                    className="px-4 py-2.5 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-[10px] font-bold uppercase text-brand-primary hover:bg-brand-primary hover:text-brand-bg transition-all disabled:opacity-50"
+                                                >
+                                                    {hasAiReview?.generating ? 'Analyzing Steps...' : 'Submit to AI Coach'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : mode === 'exam' && !examSubmitted ? (
+                                        /* Confident level markers in exam mode, self-eval to log score */
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[9px] font-mono text-brand-text-secondary uppercase tracking-widest">Mark Self-Confidence:</span>
+                                            <div className="flex bg-brand-bg/50 rounded-lg p-1 border border-brand-border">
+                                                <button 
+                                                    onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'correct'})}
+                                                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'correct' ? 'bg-emerald-500/10 text-emerald-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                                                >
+                                                    Confident
+                                                </button>
+                                                <button 
+                                                    onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'partial'})}
+                                                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'partial' ? 'bg-amber-500/10 text-amber-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                                                >
+                                                    Unsure
+                                                </button>
+                                                <button 
+                                                    onClick={() => setConfidenceGrades({...confidenceGrades, [idx]: 'review'})}
+                                                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest ${confidenceGrades[idx] === 'review' ? 'bg-red-500/10 text-red-400' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                                                >
+                                                    Tough
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Post exam view */
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-brand-text-secondary font-semibold uppercase">Exam Answer Entered:</span>
+                                            <span className="text-[10px] font-mono font-medium truncate text-brand-primary max-w-xs block bg-brand-bg/50 px-3 py-1 rounded border border-brand-border">"{answerDraft || 'No entry'}"</span>
+                                        </div>
+                                    )}
+
+                                    {/* Reveal full theoretical manual */}
+                                    {(mode === 'practice' || examSubmitted) && (
+                                        <button 
+                                            onClick={() => setProblems(problems.map((prob, i) => i === idx ? { ...prob, show: !prob.show } : prob))}
+                                            className="flex items-center gap-3 text-brand-primary hover:text-brand-secondary transition-colors"
+                                        >
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{p.show ? 'Fold Solution Details' : 'Disclose Solution Ledger'}</span>
+                                            <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20">
+                                                <Layers size={14} />
+                                            </div>
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Self-check feedback result output */}
+                                {mode === 'practice' && gradeVal?.checked && (
                                     <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="overflow-hidden"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className={`p-4 rounded-xl text-[11px] leading-relaxed border flex gap-3 ${gradeVal.isCorrect ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'}`}
                                     >
-                                        <div className="mt-10 p-10 bg-emerald-500/5 border-2 border-emerald-500/20 rounded-[2.5rem] relative">
-                                            <div className="absolute top-0 right-0 p-6 opacity-30 text-emerald-500">
-                                                <ShieldCheck size={32} />
-                                            </div>
-                                            <div className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                                Verified Synthesis Response
-                                            </div>
-                                            <div className="markdown-body prose prose-invert prose-emerald text-brand-text max-w-none font-medium italic leading-relaxed">
-                                                <ReactMarkdown>{p.a}</ReactMarkdown>
-                                            </div>
+                                        <div className="shrink-0 mt-0.5">
+                                            <ShieldCheck size={14} />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold mb-0.5">{gradeVal.isCorrect ? 'Benchmark Verified Correct' : 'Benchmark Correction Recommendation'}</p>
+                                            <p className="opacity-95 text-brand-text-secondary font-medium">{gradeVal.feedback}</p>
                                         </div>
                                     </motion.div>
                                 )}
-                            </AnimatePresence>
-                        </motion.div>
-                    ))}
+
+                                {/* AI review grading output */}
+                                {mode === 'practice' && hasAiReview && (hasAiReview.generating || hasAiReview.response) && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="p-6 bg-brand-primary/5 border border-brand-primary/15 rounded-2xl relative"
+                                    >
+                                        <div className="absolute top-4 right-4 text-[9px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-1">
+                                            <Sparkles size={11} /> AI Coach Report
+                                        </div>
+                                        {hasAiReview.generating ? (
+                                            <div className="flex items-center gap-3 py-3 text-brand-text-secondary text-[11px] font-medium font-mono animate-pulse">
+                                                <Loader2 size={13} className="animate-spin text-brand-primary" /> Analyzing solution vectors...
+                                            </div>
+                                        ) : (
+                                            <div className="markdown-body text-xs leading-relaxed text-brand-text-secondary space-y-2 font-medium">
+                                                <ReactMarkdown>{hasAiReview.response}</ReactMarkdown>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+
+                                {/* Correct Solution Block */}
+                                <AnimatePresence>
+                                    {p.show && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="mt-4 p-8 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl relative">
+                                                <div className="absolute top-0 right-0 p-6 opacity-30 text-emerald-500">
+                                                    <ShieldCheck size={24} />
+                                                </div>
+                                                <div className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                                    Verified Reference Solution Ledger
+                                                </div>
+                                                <div className="markdown-body prose prose-invert prose-emerald text-brand-text-secondary text-sm leading-relaxed max-w-none font-medium italic">
+                                                    <ReactMarkdown>{p.a}</ReactMarkdown>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                            </motion.div>
+                        );
+                    })}
                 </AnimatePresence>
+
                 {problems.length === 0 && !isLoading && (
                     <div className="py-24 text-center border-2 border-dashed border-brand-border/30 rounded-[4rem] bg-brand-surface/10">
                         <Target size={48} className="mx-auto text-brand-text-secondary/10 mb-6" />
-                        <div className="text-[10px] font-black text-brand-text-secondary/30 uppercase tracking-[0.8em]">Idle State // Awaiting Field Parameters</div>
+                        <div className="text-[10px] font-black text-brand-text-secondary/30 uppercase tracking-[0.8em]">Idle State // Choose Parameters & Deploy Sandbox</div>
                     </div>
                 )}
             </div>
+
+            {/* Complete Exam trigger at very bottom */}
+            {mode === 'exam' && problems.length > 0 && !examSubmitted && (
+                <div className="flex justify-center pt-8">
+                    <button
+                        onClick={submitCompleteExam}
+                        className="py-5 px-10 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all"
+                    >
+                        Grade & Submit Exam Set
+                    </button>
+                </div>
+            )}
+
         </div>
     );
 };
