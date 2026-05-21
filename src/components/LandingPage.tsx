@@ -17,7 +17,9 @@ import {
   Type,
   Calendar,
   Coins,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Printer,
+  Award
 } from 'lucide-react';
 import { AppTab, HistoryEntry } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,33 +36,40 @@ interface LandingPageProps {
 
 const toolCategories = [
   {
-    name: 'Core Utilities',
+    name: 'Scientific Calculations',
     tools: [
-      { id: 'calculator', name: 'Calculator', icon: Calculator, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-      { id: 'graphing', name: 'Graphing', icon: LineChart, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-      { id: 'date', name: 'Date Calc', icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-      { id: 'history', name: 'History', icon: History, color: 'text-gray-400', bg: 'bg-gray-400/10' },
+      { id: 'calculator', name: 'Unified Calculator', desc: 'Powerful multi-modal expression parser & algebra engine.', icon: Calculator, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+      { id: 'graphing', name: 'Analytical Grapher', desc: 'Plot 2D equations in real-time with custom scale intervals.', icon: LineChart, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+      { id: 'math-tools', name: 'Advanced Algebra Suite', desc: 'Solve complex linear matrices, calculus polynomial limits.', icon: Beaker, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+      { id: 'periodic', name: 'Interactive Periodic Table', desc: 'Visualize atomic shells, weights, and isotope values.', icon: FlaskConical, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
     ]
   },
   {
-    name: 'Specialist Tools',
+    name: 'Classrooms, Tutors & Scholars',
     tools: [
-      { id: 'math-tools', name: 'Math Toolset', icon: Beaker, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-      { id: 'periodic', name: 'Chemistry', icon: FlaskConical, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-      { id: 'programmer', name: 'Programmer', icon: Binary, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-      { id: 'base', name: 'Base Conv.', icon: ArrowRightLeft, color: 'text-orange-400', bg: 'bg-orange-400/10' },
-      { id: 'financial', name: 'Finance', icon: Landmark, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-      { id: 'developer', name: 'Dev SDK', icon: Code, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-      { id: 'text', name: 'Text Tools', icon: Type, color: 'text-teal-500', bg: 'bg-teal-500/10' },
+      { id: 'k5worksheets', name: 'K-5 Homework Studio', desc: 'Generate seedable high-contrast homework sheets with custom grids, school notes, and separate printed answer sheets.', icon: Printer, color: 'text-pink-500', bg: 'bg-pink-500/10', badge: 'Popular' },
+      { id: 'exercises', name: 'Curriculum Drills Arena', desc: 'Topic-by-topic drills, adaptive test sets, score stars & diploma awards.', icon: Award, color: 'text-yellow-500', bg: 'bg-yellow-500/10', badge: 'Hot' },
+      { id: 'student', name: 'AI Scholar Coach', desc: 'Prompt the custom academic assistant for proof formulas & learning guides.', icon: GraduationCap, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+      { id: 'history', name: 'Formula & Execution Logs', desc: 'Audit and restore previous calculations, export lists, and favorite items.', icon: History, color: 'text-gray-400', bg: 'bg-gray-400/10' },
     ]
   },
   {
-    name: 'Daily & Education',
+    name: 'Everyday & Business Solvers',
     tools: [
-      { id: 'units', name: 'Units', icon: Scale, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
-      { id: 'currency', name: 'Currency', icon: Coins, color: 'text-green-500', bg: 'bg-green-500/10' },
-      { id: 'health', name: 'Health', icon: HeartPulse, color: 'text-pink-500', bg: 'bg-pink-500/10' },
-      { id: 'student', name: 'Student Tools', icon: GraduationCap, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+      { id: 'financial', name: 'Capital & Mortgage Estimator', desc: 'Amortize mortgages, forecast compound interests & business savings.', icon: Landmark, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+      { id: 'units', name: 'Universal Measurement Converter', desc: 'Convert engineering dimensions like Torque, Speed, and Frequency.', icon: Scale, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+      { id: 'currency', name: 'Live Currencies Arbitrage', desc: 'Exchange ratios with automatic live global currency tickers.', icon: Coins, color: 'text-green-500', bg: 'bg-green-500/10' },
+      { id: 'health', name: 'Thermodynamics & Health', desc: 'Examine BMI index metrics, BMR caloric multipliers and hydration guides.', icon: HeartPulse, color: 'text-pink-500', bg: 'bg-pink-500/10' },
+      { id: 'date', name: 'Temporal Date Interval Calc', desc: 'Compare exact calendar spans, time durations, and custom business intervals.', icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+    ]
+  },
+  {
+    name: 'Engineering & Bits',
+    tools: [
+      { id: 'programmer', name: 'Bitwise Programmer Calc', desc: 'Binary, Hex, Octal manipulations with simulated register feeds.', icon: Binary, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+      { id: 'base', name: 'Radix Conversion Tool', desc: 'Convert variables across numeral bases smoothly ranging from 2 to 64.', icon: ArrowRightLeft, color: 'text-orange-400', bg: 'bg-orange-400/10' },
+      { id: 'developer', name: 'Developer Utilities', desc: 'JWT inspectors, secure bcrypt hashes, and JSON syntactic syntax trees.', icon: Code, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+      { id: 'text', name: 'Text Analytics Workspace', desc: 'Character metrics, base64 converters, regex trials & markdown.', icon: Type, color: 'text-teal-500', bg: 'bg-teal-500/10' },
     ]
   }
 ];
@@ -277,49 +286,121 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
           </div>
         </motion.div>
 
-        {/* Categories / Modules */}
-        <motion.div variants={itemVariants} className="md:col-span-12 mt-12 bg-brand-surface border border-brand-border/50 rounded-[32px] p-8 md:p-12 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-brand-border/50">
+        {/* Featured K5 Homework Banner */}
+        <motion.div 
+          variants={itemVariants}
+          onClick={() => onTabClick('k5worksheets')}
+          className="md:col-span-12 lg:col-span-7 bg-gradient-to-br from-teal-950/10 via-zinc-900/10 to-emerald-950/10 rounded-[32px] p-8 md:p-10 border border-emerald-500/25 relative overflow-hidden group cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 hover:-translate-y-1 text-left"
+        >
+          <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-emerald-500/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col h-full justify-between">
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-brand-text mb-2">
-                {searchQuery ? 'Search Results' : 'Comprehensive Modules'}
-              </h2>
-              <p className="text-brand-text-secondary">Everything you need, in one place.</p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-widest w-max mb-5 border border-emerald-500/10">
+                <Printer size={13} /> Homework Studio
+              </div>
+              <h3 className="text-2xl md:text-3xl font-extrabold text-brand-text mb-3 tracking-tight">
+                Elementary K-5 Homework Builder
+              </h3>
+              <p className="text-brand-text-secondary text-sm max-w-xl mb-6 leading-relaxed font-light">
+                Generate seedable high-contrast homework sheets instantly. Tailor printable settings: input custom school names, custom teacher directions, toggle dynamic grid layouts (including handwriting lines, coordinate plane charts, dots, or blank), and print separate Answer Keys automatically.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 group-hover:underline">
+              <span>Open Homework Studio</span> <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-10">
-            {filteredCategories.map((category, idx) => (
-              <div key={idx} className="space-y-6">
-                <h3 className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-[0.15em] flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 bg-brand-primary rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
-                  {category.name}
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {category.tools.map(tool => {
-                    const Icon = tool.icon;
-                    return (
-                      <button
-                        key={tool.id}
-                        onClick={() => onTabClick(tool.id as AppTab)}
-                        className="flex items-center gap-4 p-4 rounded-2xl bg-brand-bg hover:bg-brand-primary/5 hover:border-brand-primary/20 border border-brand-border/50 group transition-all duration-300 text-left shadow-sm hover:shadow-md"
-                      >
-                        <div className={`p-3 rounded-xl ${tool.bg} ${tool.color} group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm`}>
-                          <Icon size={20} />
-                        </div>
-                        <div className="flex-1">
+        </motion.div>
+
+        {/* Featured Practice Arena Banner */}
+        <motion.div 
+          variants={itemVariants}
+          onClick={() => onTabClick('exercises')}
+          className="md:col-span-12 lg:col-span-5 bg-gradient-to-br from-amber-950/10 via-zinc-900/10 to-orange-950/10 rounded-[32px] p-8 border border-amber-500/25 relative overflow-hidden group cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-1 text-left"
+        >
+          <div className="absolute top-0 right-0 w-[20rem] h-[20rem] bg-amber-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col h-full justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-widest w-max mb-5 border border-amber-500/10">
+                <Award size={13} /> Curriculum Practice Arena
+              </div>
+              <h3 className="text-2xl font-extrabold text-brand-text mb-3 tracking-tight">
+                Practice exams &amp; Diplomas
+              </h3>
+              <p className="text-brand-text-secondary text-xs mb-6 leading-normal font-light">
+                Drill curriculum-aligned exercises covering multiplication, fractions, geometry, and calculus. Earn gold stars, track your progress, check dynamic step-by-step math proof guides, and strive to acquire the official Scholar's Graduation Diploma!
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400 group-hover:underline">
+              <span>Enter Practice Arena</span> <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </motion.div>
+
+      </motion.div>
+
+      {/* Categories / Modules */}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 bg-brand-surface border border-brand-border/50 rounded-[32px] p-8 md:p-12 shadow-sm text-left"
+      >
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-brand-border/50">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight text-brand-text mb-2 animate-fade-in">
+              {searchQuery ? 'Search Results' : 'Comprehensive Module Categories'}
+            </h2>
+            <p className="text-brand-text-secondary text-sm">Explore specialized features for schools, code parsing, geometry, matrix math, health, and financials.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12">
+          {filteredCategories.map((category, idx) => (
+            <div key={idx} className="space-y-6">
+              <h3 className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-[0.15em] flex items-center gap-3">
+                <div className="w-1.5 h-1.5 bg-brand-primary rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                {category.name}
+              </h3>
+              <div className="flex flex-col gap-4">
+                {category.tools.map(tool => {
+                  const Icon = tool.icon;
+                  return (
+                    <button
+                      key={tool.id}
+                      onClick={() => onTabClick(tool.id as AppTab)}
+                      className="flex items-start gap-4 p-4 rounded-2xl bg-brand-bg hover:bg-brand-primary/5 hover:border-brand-primary/20 border border-brand-border/50 group transition-all duration-300 text-left shadow-sm hover:shadow-md"
+                    >
+                      <div className={`p-3 rounded-xl shrink-0 ${tool.bg} ${tool.color} group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm`}>
+                        <Icon size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
                           <span className="block text-sm font-bold text-brand-text group-hover:text-brand-primary transition-colors">
                             {tool.name}
                           </span>
+                          {tool.badge && (
+                            <span className="shrink-0 px-2 py-0.5 bg-indigo-500/10 text-indigo-400 font-mono text-[9px] uppercase font-black tracking-widest rounded border border-indigo-500/10">
+                              {tool.badge}
+                            </span>
+                          )}
                         </div>
-                        <ArrowRight size={18} className="ml-auto text-brand-border group-hover:text-brand-primary opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-3 group-hover:translate-x-0" />
-                      </button>
-                    );
-                  })}
-                </div>
+                        {tool.desc && (
+                          <span className="block text-xs text-brand-text-secondary group-hover:text-brand-text/80 transition-colors mt-1.5 leading-relaxed font-light">
+                            {tool.desc}
+                          </span>
+                        )}
+                      </div>
+                      <ArrowRight size={18} className="shrink-0 ml-auto mt-1 text-brand-border group-hover:text-brand-primary opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-3 group-hover:translate-x-0" />
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        </motion.div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
 
         {!user && (
           <motion.div 
@@ -341,7 +422,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
             </button>
           </motion.div>
         )}
-      </motion.div>
     </div>
   );
 };

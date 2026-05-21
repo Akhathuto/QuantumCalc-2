@@ -5,6 +5,9 @@ import {
   Sparkles, 
   Download, 
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
   CheckCircle,
   XCircle,
   Smile,
@@ -12,7 +15,12 @@ import {
   Award,
   Sparkle,
   Volume2,
-  LayoutGrid
+  LayoutGrid,
+  Bookmark,
+  FileSpreadsheet,
+  FileText,
+  SlidersHorizontal,
+  ArrowUpDown
 } from 'lucide-react';
 import Latex from 'react-latex-next';
 
@@ -122,6 +130,7 @@ const ScribbleBox: React.FC = () => {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState('#ec4899'); // Default pink crayon
+  const [isEraser, setIsEraser] = useState(false);
   const [size, setSize] = useState(4);
   const lastX = React.useRef(0);
   const lastY = React.useRef(0);
@@ -163,8 +172,14 @@ const ScribbleBox: React.FC = () => {
     const { x, y } = getCoordinates(e);
 
     ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = size;
+    if (isEraser) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = size * 3;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = size;
+    }
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.moveTo(lastX.current, lastY.current);
@@ -204,9 +219,12 @@ const ScribbleBox: React.FC = () => {
           ].map(c => (
             <button
               key={c.hex}
-              onClick={() => setColor(c.hex)}
+              onClick={() => {
+                setColor(c.hex);
+                setIsEraser(false);
+              }}
               className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110 border ${
-                color === c.hex ? 'border-teal-500 scale-105 shadow-sm ring-2 ring-teal-500/20' : 'border-zinc-200'
+                !isEraser && color === c.hex ? 'border-teal-500 scale-105 shadow-sm ring-2 ring-teal-500/20' : 'border-zinc-200'
               }`}
               style={{ backgroundColor: c.hex }}
               title={`Color: ${c.hex}`}
@@ -216,9 +234,9 @@ const ScribbleBox: React.FC = () => {
           ))}
           <div className="w-px h-5 bg-zinc-200 mx-1" />
           <button
-            onClick={() => setColor('#fdfefe')} // Eraser/White chalk style
+            onClick={() => setIsEraser(true)}
             className={`px-2 py-1 rounded-xl text-[9px] font-bold border transition-all ${
-              color === '#fdfefe' ? 'bg-zinc-100 border-zinc-300 text-zinc-800' : 'bg-white border-zinc-200 text-zinc-500'
+              isEraser ? 'bg-zinc-100 border-zinc-300 text-zinc-800' : 'bg-white border-zinc-200 text-zinc-500'
             }`}
           >
             🧹 Eraser
@@ -465,44 +483,46 @@ const RenderWorksheetSVG: React.FC<{ type: string; data: any }> = ({ type, data 
     for (let i = 0; i < pennies; i++) coinsList.push({ val: 1, label: '1¢', bg: 'p-grad', border: '#ea580c', text: '#7c2d12', r: 14 });
 
     return (
-      <div className="flex justify-center p-4 bg-white rounded-3xl border border-zinc-200/70 w-fit mx-auto shadow-sm my-3 print:bg-white print:shadow-none select-none animate-fade-in">
-        <svg width={Math.min(320, coinsList.length * 38 + 24)} height="52" viewBox={`0 0 ${coinsList.length * 38 + 24} 52`}>
-          <defs>
-            <radialGradient id="q-grad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f8fafc" />
-              <stop offset="70%" stopColor="#e2e8f0" />
-              <stop offset="100%" stopColor="#cbd5e1" />
-            </radialGradient>
-            <radialGradient id="n-grad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f1f5f9" />
-              <stop offset="70%" stopColor="#cbd5e1" />
-              <stop offset="100%" stopColor="#94a3b8" />
-            </radialGradient>
-            <radialGradient id="d-grad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f8fafc" />
-              <stop offset="70%" stopColor="#cbd5e1" />
-              <stop offset="100%" stopColor="#94a3b8" />
-            </radialGradient>
-            <radialGradient id="p-grad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ffedd5" />
-              <stop offset="70%" stopColor="#fed7aa" />
-              <stop offset="100%" stopColor="#ea580c" />
-            </radialGradient>
-          </defs>
-          {coinsList.map((coin, index) => {
-            const cx = 22 + index * 38;
-            const cy = 26;
-            return (
-              <g key={index}>
-                <circle cx={cx} cy={cy} r={coin.r} fill={`url(#${coin.bg})`} stroke={coin.border} strokeWidth="1.5" />
-                <circle cx={cx} cy={cy} r={coin.r - 2.5} fill="none" stroke={coin.border} strokeWidth="0.5" strokeDasharray="1.5,1.5" />
-                <text x={cx} y={cy + 3} textAnchor="middle" fontSize="8.5px" fontWeight="black" fill={coin.text} style={{ fontFamily: 'Inter, sans-serif' }}>
-                  {coin.label}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+      <div className="p-4 bg-white rounded-3xl border border-zinc-200/70 max-w-full overflow-x-auto mx-auto shadow-sm my-3 print:bg-white print:shadow-none select-none animate-fade-in custom-scrollbar">
+        <div className="min-w-fit flex justify-center">
+          <svg width={coinsList.length * 38 + 24} height="52" viewBox={`0 0 ${coinsList.length * 38 + 24} 52`} className="shrink-0">
+            <defs>
+              <radialGradient id="q-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#f8fafc" />
+                <stop offset="70%" stopColor="#e2e8f0" />
+                <stop offset="100%" stopColor="#cbd5e1" />
+              </radialGradient>
+              <radialGradient id="n-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#f1f5f9" />
+                <stop offset="70%" stopColor="#cbd5e1" />
+                <stop offset="100%" stopColor="#94a3b8" />
+              </radialGradient>
+              <radialGradient id="d-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#f8fafc" />
+                <stop offset="70%" stopColor="#cbd5e1" />
+                <stop offset="100%" stopColor="#94a3b8" />
+              </radialGradient>
+              <radialGradient id="p-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ffedd5" />
+                <stop offset="70%" stopColor="#fed7aa" />
+                <stop offset="100%" stopColor="#ea580c" />
+              </radialGradient>
+            </defs>
+            {coinsList.map((coin, index) => {
+              const cx = 22 + index * 38;
+              const cy = 26;
+              return (
+                <g key={index}>
+                  <circle cx={cx} cy={cy} r={coin.r} fill={`url(#${coin.bg})`} stroke={coin.border} strokeWidth="1.5" />
+                  <circle cx={cx} cy={cy} r={coin.r - 2.5} fill="none" stroke={coin.border} strokeWidth="0.5" strokeDasharray="1.5,1.5" />
+                  <text x={cx} y={cy + 3} textAnchor="middle" fontSize="8.5px" fontWeight="black" fill={coin.text} style={{ fontFamily: 'Inter, sans-serif' }}>
+                    {coin.label}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
       </div>
     );
   }
@@ -512,7 +532,7 @@ const RenderWorksheetSVG: React.FC<{ type: string; data: any }> = ({ type, data 
     
     return (
       <div className="flex justify-center p-4 bg-white rounded-3xl border border-zinc-200/70 w-fit mx-auto shadow-sm my-3 print:bg-white print:shadow-none select-none animate-fade-in">
-        <svg width="220" height="90" viewBox="0 0 220 90">
+        <svg width="220" height="90" viewBox="0 0 220 90" className="max-w-full h-auto">
           {/* Circle 1 */}
           <g transform="translate(10, 0)">
             {Array.from({ length: den1 }).map((_, i) => {
@@ -605,6 +625,89 @@ const checkK5Answer = (question: WorksheetQuestion, userVal: string) => {
   return false;
 };
 
+// Programmatic curriculum generator that creates exactly 100 educational worksheet templates
+const generateOneHundredTemplates = () => {
+  const templates: any[] = [];
+  
+  const animals = ['Dinosaur', 'Panda Bear', 'Lion Cub', 'Koala Bear', 'Bunny Hop', 'Unicorn Magic', 'Baby Dragon', 'Forest Fox', 'Honey Bear', 'Happy Penguin', 'Playful Monkey', 'Puppy Friend', 'Fluffy Kitten', 'Robot Buddy', 'Wise Owl'];
+  const places = ['Outer Space', 'Wild Safari', 'Deep Sea Blue', 'Magic Forest', 'Toy Factory', 'Sweet Bakery', 'Candy Island', 'Pirate River', 'Jungles Hub', 'Cloud Castle', 'Volcano Range', 'Submarine Lab'];
+  const roles = ['Astronaut', 'Wizard Math', 'Smart Detective', 'Star Explorer', 'Ninja Sums', 'Baker Chef', 'Sea Captain', 'Superhero', 'Professor'];
+  
+  const companionEmojis = ['🦖', '🐼', '🦁', '🐨', '🐰', '🦄', '🐲', '🦊', '🐻', '🐧', '🐵', '🐶', '🐱', '🤖', '🦉'];
+  const icons = ['✨', '🎪', '🍭', '🎨', '🧩', '🚀', '🔮', '🔭', '🧭', '🛹', '🎳', '🏆', '🎭', '🎸', '🎒'];
+
+  const colors = [
+    { name: 'orange', class: 'from-orange-500/10 via-amber-500/5 to-orange-500/10 border-orange-500/20 text-orange-400' },
+    { name: 'teal', class: 'from-teal-500/10 via-cyan-500/5 to-teal-500/10 border-teal-500/20 text-teal-400' },
+    { name: 'emerald', class: 'from-emerald-500/10 via-green-500/5 to-emerald-500/10 border-emerald-500/30 text-emerald-400' },
+    { name: 'rose', class: 'from-rose-500/10 via-red-500/5 to-rose-500/10 border-rose-500/20 text-rose-400' },
+    { name: 'indigo', class: 'from-indigo-500/10 via-violet-500/5 to-indigo-500/10 border-indigo-500/20 text-indigo-400' },
+    { name: 'amber', class: 'from-amber-500/10 via-yellow-500/5 to-amber-500/10 border-amber-500/20 text-yellow-400' },
+    { name: 'cyan', class: 'from-cyan-500/10 via-blue-500/5 to-cyan-500/10 border-cyan-500/20 text-cyan-400' },
+    { name: 'pink', class: 'from-pink-500/10 via-fuchsia-500/5 to-pink-500/10 border-pink-500/20 text-pink-400' },
+    { name: 'violet', class: 'from-violet-500/10 via-purple-500/5 to-violet-500/10 border-violet-500/20 text-violet-400' },
+  ];
+
+  const topicsList = [
+    { id: 'counting_kids', label: 'Counting', grades: ['K', 'G1'] },
+    { id: 'clock_time', label: 'Time Dial', grades: ['G1', 'G2', 'G3'] },
+    { id: 'money_math', label: 'Money Math', grades: ['G2', 'G3', 'G4'] },
+    { id: 'fractions_sum', label: 'Fractions', grades: ['G3', 'G4', 'G5'] },
+    { id: 'geometry', label: 'Geometry', grades: ['G3', 'G4', 'G5', 'G6'] },
+    { id: 'arithmetic', label: 'Primary Math', grades: ['K', 'G1', 'G2', 'G3'] },
+    { id: 'division_remainder', label: 'Remainders', grades: ['G3', 'G4', 'G5'] },
+    { id: 'decimals', label: 'Decimals', grades: ['G4', 'G5', 'G6'] },
+    { id: 'word_problems', label: 'Story Problems', grades: ['G1', 'G2', 'G3', 'G4', 'G5', 'G6'] }
+  ];
+
+  for (let i = 1; i <= 100; i++) {
+    // Select topic deterministically
+    const topicObj = topicsList[i % topicsList.length];
+    // Select grade from permitted grades
+    const grade = topicObj.grades[i % topicObj.grades.length];
+    
+    const animal = animals[(i * 3 + 1) % animals.length];
+    const place = places[(i * 2 + 5) % places.length];
+    const role = roles[(i * 5 + 2) % roles.length];
+    
+    // Mix and match titles to sound spectacular
+    let title = '';
+    if (i % 3 === 0) {
+      title = `${place} ${animal} ${topicObj.label}`;
+    } else if (i % 3 === 1) {
+      title = `${role} ${topicObj.label} Quest`;
+    } else {
+      title = `${animal} ${topicObj.label} Lab`;
+    }
+
+    const companion = companionEmojis[i % companionEmojis.length];
+    const icon = icons[i % icons.length];
+    const colorObj = colors[i % colors.length];
+    const questionsCount = 4 + ((i * 2) % 10); // 4 to 12 questions
+    const seed = 100 + i * 13;
+
+    const desc = `Level up on ${topicObj.label.toLowerCase()} inside ${place.toLowerCase()} with your friendly mentor ${companion}!`;
+
+    templates.push({
+      id: i,
+      title,
+      badge: `${grade} - Vol. ${i}`,
+      grade,
+      topic: topicObj.id,
+      topicLabel: topicObj.label,
+      icon,
+      companion,
+      count: questionsCount,
+      desc,
+      color: colorObj.class,
+      seed
+    });
+  }
+  return templates;
+};
+
+const ALL_TEMPLATES = generateOneHundredTemplates();
+
 export const K5Worksheets: React.FC = () => {
   const [selectedGrade, setSelectedGrade] = useState('G3');
   const [selectedTopic, setSelectedTopic] = useState('counting_kids');
@@ -634,6 +737,25 @@ export const K5Worksheets: React.FC = () => {
   const [earnedStars, setEarnedStars] = useState(0);
   const [scholarName, setScholarName] = useState('');
 
+  // Curriculum library search, filter, and pagination states
+  const [curriculumSearchText, setCurriculumSearchText] = useState('');
+  const [curriculumGradeFilter, setCurriculumGradeFilter] = useState('All');
+  const [curriculumTopicFilter, setCurriculumTopicFilter] = useState('All');
+  const [curriculumDifficultyFilter, setCurriculumDifficultyFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
+  const [curriculumSortBy, setCurriculumSortBy] = useState<'id' | 'title' | 'count'>('id');
+  const [curriculumSortOrder, setCurriculumSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [bookmarkedBlueprints, setBookmarkedBlueprints] = useState<number[]>([]);
+  const [curriculumPage, setCurriculumPage] = useState(1);
+  const [isCurriculumExpanded, setIsCurriculumExpanded] = useState(false);
+
+  // Print Output configuration customizing overlays
+  const [customSchoolName, setCustomSchoolName] = useState('Primary School Mathematics Sandbox');
+  const [printFontSize, setPrintFontSize] = useState<'sm' | 'base' | 'lg'>('base');
+  const [gridStyle, setGridStyle] = useState<'grid' | 'lines' | 'blank' | 'dots'>('grid');
+  const [appendSolutionsOnPrint, setAppendSolutionsOnPrint] = useState(false);
+  const [customInstructions, setCustomInstructions] = useState('');
+  const [expandPrintDesigner, setExpandPrintDesigner] = useState(false);
+
   // Auto compile lists
   useEffect(() => {
     const generateDynamicWorksheet = () => {
@@ -647,191 +769,566 @@ export const K5Worksheets: React.FC = () => {
 
         switch (selectedTopic) {
           case 'counting_kids': {
-            const count = (qSeed1 % 10) + 4; // 4 to 13 items
-            generated.push({
-              id: i,
-              questionStr: `Count the beautiful companion items in the box below carefully. How many can you count?`,
-              blankSpaceLines: 1,
-              answerKey: `${count}`,
-              svgType: 'counting',
-              svgData: { count, shape: selectedCompanion },
-              stepDetails: `\\text{Counting carefully row by row yields exactly } ${count} \\text{ shapes.}`
-            });
+            // Early grades count visually
+            if (selectedGrade === 'K' || selectedGrade === 'G1') {
+              const count = (qSeed1 % 9) + 3; // 3 to 11 items
+              generated.push({
+                id: i,
+                questionStr: `Count the friendly animals in the box below carefully. How many can you count?`,
+                blankSpaceLines: 1,
+                answerKey: `${count}`,
+                svgType: 'counting',
+                svgData: { count, shape: selectedCompanion },
+                stepDetails: `\\text{Counting slowly one-by-one gives exactly } ${count} \\text{ companion shapes.}`
+              });
+            } else if (selectedGrade === 'G2' || selectedGrade === 'G3') {
+              // Skip counting - trademark K5 Learning worksheet
+              const step = (qSeed1 % 3) === 0 ? 2 : (qSeed1 % 3 === 1 ? 5 : 10);
+              const start = (qSeed2 % 10) * step + step;
+              const sequence = [start, start + step, start + 2 * step, start + 3 * step, start + 4 * step];
+              const blankIdx1 = 2; // middle
+              const blankIdx2 = 4; // last
+              const ans1 = sequence[blankIdx1];
+              const ans2 = sequence[blankIdx2];
+
+              const displaySeq = [...sequence];
+              displaySeq[blankIdx1] = -1; // -1 represents empty underscore block
+              displaySeq[blankIdx2] = -1;
+
+              const mathTexStr = sequence.map((v, idx) => 
+                idx === blankIdx1 || idx === blankIdx2 ? '\\underline{\\quad}' : `${v}`
+              ).join(',\\ ');
+
+              generated.push({
+                id: i,
+                questionStr: `Fill in the missing numbers in this Skip Counting sequence (counting by ${step}s):`,
+                mathContent: mathTexStr,
+                blankSpaceLines: 2,
+                answerKey: `${ans1}, ${ans2}`,
+                stepDetails: `\\text{The sequence increases by } ${step} \\text{ each step. Missing values: } ${ans1} \\text{ and } ${ans2}.`
+              });
+            } else {
+              // Higher grades (G4, G5, G6): Place value or Roman Numerals
+              if (i % 2 === 0) {
+                // Place value identification
+                const digits = [
+                  (qSeed1 % 9) + 1,
+                  (qSeed2 % 9) + 1,
+                  ((qSeed1 + qSeed2) % 9) + 1,
+                  (qSeed1 * qSeed2 % 9) + 1
+                ];
+                const chosenIdx = (qSeed1 % 4); // 0: Thousands, 1: Hundreds, 2: Tens, 3: Ones
+                const chosenDigit = digits[chosenIdx];
+                const placeLabel = ['Thousands', 'Hundreds', 'Tens', 'Ones'][chosenIdx];
+                const placeValue = chosenDigit * Math.pow(10, 3 - chosenIdx);
+
+                const texFormula = digits.map((d, idx) => 
+                  idx === chosenIdx ? `\\underline{${d}}` : `${d}`
+                ).join('');
+
+                generated.push({
+                  id: i,
+                  questionStr: `In the number below, state the Place Value of the underlined digit:`,
+                  mathContent: `${texFormula}`,
+                  blankSpaceLines: 2,
+                  answerKey: `${placeValue}`,
+                  stepDetails: `\\text{The underlined digit } ${chosenDigit} \\text{ is in the } \\text{${placeLabel}} \\text{ place. Value: } ${placeValue}.`
+                });
+              } else {
+                // Roman numeral conversions - classic K5 Learning worksheets
+                const conversions = [
+                  { num: 4, roman: 'IV' }, { num: 9, roman: 'IX' }, { num: 14, roman: 'XIV' },
+                  { num: 19, roman: 'XIX' }, { num: 24, roman: 'XXIV' }, { num: 29, roman: 'XXIX' },
+                  { num: 35, roman: 'XXXV' }, { num: 42, roman: 'XLII' }, { num: 49, roman: 'XLIX' },
+                  { num: 55, roman: 'LV' }, { num: 68, roman: 'LXVIII' }, { num: 89, roman: 'LXXXIX' }
+                ];
+                const val = conversions[i % conversions.length];
+                generated.push({
+                  id: i,
+                  questionStr: `Convert the following Roman Numeral to a standard number value:`,
+                  mathContent: `\\text{Roman Numeral: } \\bf{${val.roman}}`,
+                  blankSpaceLines: 1,
+                  answerKey: `${val.num}`,
+                  stepDetails: `\\text{Roman Numeral } ${val.roman} \\text{ evaluates to } ${val.num} \\text{ in standard arabic notation.}`
+                });
+              }
+            }
             break;
           }
 
           case 'clock_time': {
             const hrs = (qSeed1 % 12) + 1;
-            const minutesList = [0, 5, 15, 25, 30, 45, 50];
-            const mins = minutesList[qSeed2 % minutesList.length];
-            const displayMins = mins.toString().padStart(2, '0');
-            generated.push({
-              id: i,
-              questionStr: `Look at the clock dial below. What time is shown on the clock face?`,
-              blankSpaceLines: 1,
-              answerKey: `${hrs}:${displayMins}`,
-              svgType: 'clock',
-              svgData: { hour: hrs, minute: mins },
-              stepDetails: `\\text{The short hand is indicating } ${hrs} \\text{ while the long hand is pointing at the minute value } ${mins}. \\text{ Time: } ${hrs}:${displayMins}.`
-            });
+            
+            if (selectedGrade === 'K' || selectedGrade === 'G1') {
+              // Tell time on the hour or half-hour
+              const mins = (qSeed2 % 2 === 0) ? 0 : 30;
+              const displayMins = mins.toString().padStart(2, '0');
+              generated.push({
+                id: i,
+                questionStr: `Look carefully at the clock indicator. What is the time shown?`,
+                blankSpaceLines: 1,
+                answerKey: `${hrs}:${displayMins}`,
+                svgType: 'clock',
+                svgData: { hour: hrs, minute: mins },
+                stepDetails: `\\text{The short hour hand points near } ${hrs} \\text{ and the long minute hand points at } ${mins}\\phi \\text{. Time is: } ${hrs}:${displayMins}.`
+              });
+            } else if (selectedGrade === 'G2') {
+              // Time to nearest 5 minutes
+              const minutesList = [5, 10, 15, 20, 25, 35, 40, 45, 50, 55];
+              const mins = minutesList[qSeed2 % minutesList.length];
+              const displayMins = mins.toString().padStart(2, '0');
+              generated.push({
+                id: i,
+                questionStr: `View the analog clock dial below. State the current time to the nearest 5 minutes:`,
+                blankSpaceLines: 1,
+                answerKey: `${hrs}:${displayMins}`,
+                svgType: 'clock',
+                svgData: { hour: hrs, minute: mins },
+                stepDetails: `\\text{The clock shows exactly } ${hrs} \\text{ hours and } ${mins} \\text{ minutes. Result: } ${hrs}:${displayMins}.`
+              });
+            } else {
+              // Grade 3+: Tell exact time to nearest 1-minute with Elapsed Time word problems!
+              const mins = ((qSeed1 * 7) % 60);
+              const displayMins = mins.toString().padStart(2, '0');
+              const elapsedMinutes = (qSeed2 * 3) % 45 + 15; // 15 to 59 minutes elapsed
+
+              let futureHrs = hrs;
+              let futureMins = mins + elapsedMinutes;
+              if (futureMins >= 60) {
+                futureHrs = (hrs + Math.floor(futureMins / 60)) % 12 || 12;
+                futureMins = futureMins % 60;
+              }
+              const displayFutureMins = futureMins.toString().padStart(2, '0');
+
+              generated.push({
+                id: i,
+                questionStr: `The clock below indicates morning time (AM). If a lesson starts exactly at this time and lasts for ${elapsedMinutes} minutes, what time does the lesson end?`,
+                blankSpaceLines: 3,
+                answerKey: `${futureHrs}:${displayFutureMins} AM`,
+                svgType: 'clock',
+                svgData: { hour: hrs, minute: mins },
+                stepDetails: `\\text{Lesson starts at } ${hrs}:${displayMins}\\text{ AM. Adding elapsed } ${elapsedMinutes} \\text{ mins makes the end time: } ${futureHrs}:${displayFutureMins}\\text{ AM.}`
+              });
+            }
             break;
           }
 
           case 'money_math': {
-            const quarters = (qSeed1 % 3) + 1; // 1 to 3
-            const dimes = (qSeed2 % 4) + 1; // 1 to 4
-            const nickels = (qSeed1 * 2) % 3 + 1; // 1 to 3
-            const pennies = (qSeed2 * 3) % 4 + 1; // 1 to 4
-            const totalCents = quarters * 25 + dimes * 10 + nickels * 5 + pennies * 1;
+            if (selectedGrade === 'K' || selectedGrade === 'G1' || selectedGrade === 'G2') {
+              // Classic coin collection sum
+              const quarters = (qSeed1 % 3) + 1; // 1 to 3
+              const dimes = (qSeed2 % 3) + 1; // 1 to 3
+              const nickels = (qSeed1 * 2) % 3 + i % 2; // 0 to 3
+              const pennies = (qSeed2 * 3) % 4 + 1; // 1 to 4
+              const totalCents = quarters * 25 + dimes * 10 + nickels * 5 + pennies * 1;
 
-            generated.push({
-              id: i,
-              questionStr: `How many total cents do you have in the coin collection displayed below? (Quarters are 25¢, Dimes are 10¢, Nickels are 5¢, Pennies are 1¢).`,
-              blankSpaceLines: 2,
-              answerKey: `${totalCents}`,
-              svgType: 'money',
-              svgData: { quarters, dimes, nickels, pennies },
-              stepDetails: `\\text{Equation: } (${quarters} \\times 25\\phi) + (${dimes} \\times 10\\phi) + (${nickels} \\times 5\\phi) + (${pennies} \\times 1\\phi) = ${quarters * 25} + ${dimes * 10} + ${nickels * 5} + ${pennies} = ${totalCents}\\phi.`
-            });
+              generated.push({
+                id: i,
+                questionStr: `Count the total value of these coins (Quarters = 25¢, Dimes = 10¢, Nickels = 5¢, Pennies = 1¢):`,
+                blankSpaceLines: 2,
+                answerKey: `${totalCents}¢`,
+                svgType: 'money',
+                svgData: { quarters, dimes, nickels, pennies },
+                stepDetails: `\\text{Evaluate: } (${quarters} \\times 25\\phi) + (${dimes} \\times 10\\phi) + (${nickels} \\times 5\\phi) + (${pennies} \\times 1\\phi) = ${totalCents}\\phi.`
+              });
+            } else if (selectedGrade === 'G3' || selectedGrade === 'G4') {
+              // Making change - flagship K5 category
+              const costCents = (qSeed1 % 15) * 20 + 200; // e.g., $2.00 to $4.80
+              const costDisplay = (costCents / 100).toFixed(2);
+              const billPay = 500; // Paid with $5.00
+              const changeCents = billPay - costCents;
+              const changeDisplay = (changeCents / 100).toFixed(2);
+
+              generated.push({
+                id: i,
+                questionStr: `You bought a storybook for $${costDisplay}. If you paid with a $5.00 dollar bill, how much change should you receive?`,
+                blankSpaceLines: 3,
+                answerKey: `$${changeDisplay}`,
+                stepDetails: `\\text{Change} = \\text{Paid} - \\text{Cost} = \\$5.00 - \\$${costDisplay} = \\$${changeDisplay}.`
+              });
+            } else {
+              // Grade 5 & 6: Rate math and decimal currency ratios
+              const itemsCount = (qSeed1 % 4) + 3; // 3 to 6
+              const pricePerItem = (1.10 + (qSeed2 % 5) * 0.15); // e.g. $1.10 to $1.70
+              const totalCost = (itemsCount * pricePerItem).toFixed(2);
+              
+              generated.push({
+                id: i,
+                questionStr: `If ${itemsCount} identical folders cost a total of $${totalCost}, what is the unit price of just a single folder?`,
+                blankSpaceLines: 3,
+                answerKey: `$${pricePerItem.toFixed(2)}`,
+                stepDetails: `\\text{Unit Price} = \\text{Total Cost} \\div \\text{Quantity} = \\$${totalCost} \\div ${itemsCount} = \\$${pricePerItem.toFixed(2)}.`
+              });
+            }
             break;
           }
 
           case 'fractions_sum': {
-            const den1 = Math.max(2, Math.min(qSeed1 % 10, 8));
-            const den2 = Math.max(2, Math.min(qSeed2 % 10, 8));
-            const num1 = Math.max(1, (qSeed1 % (den1 - 1)) + 1);
-            const num2 = Math.max(1, (qSeed2 % (den2 - 1)) + 1);
-            
-            // LCD Math solver
-            const gcdFn = (x: number, y: number): number => (!y ? x : gcdFn(y, x % y));
-            const baseD = den1 * den2;
-            const baseN = num1 * den2 + num2 * den1;
-            const finalGcd = gcdFn(baseN, baseD);
-            const finalNum = baseN / finalGcd;
-            const finalDen = baseD / finalGcd;
+            if (selectedGrade === 'K' || selectedGrade === 'G1' || selectedGrade === 'G2' || selectedGrade === 'G3') {
+              // K-3 K5 Worksheets focus on "What fraction of this circle is colored?"
+              const den = Math.max(3, Math.min(qSeed1 % 8, 8));
+              const num = Math.max(1, (qSeed2 % (den - 1)) + 1);
 
-            generated.push({
-              id: i,
-              questionStr: `Evaluate the visual fractions sum and reduce to simplest form:`,
-              mathContent: `\\frac{${num1}}{${den1}} + \\frac{${num2}}{${den2}}`,
-              blankSpaceLines: 4,
-              answerKey: finalDen === 1 ? `${finalNum}` : `\\frac{${finalNum}}{${finalDen}}`,
-              svgType: 'fraction',
-              svgData: { num1, den1, num2, den2 },
-              stepDetails: `\\text{LCD: } ${baseD}. \\text{ Summed numerator numerics: } ${num1 * den2} + ${num2 * den1} = ${baseN}. \\text{ Reduced: } \\frac{${finalNum}}{${finalDen}}.`
-            });
+              generated.push({
+                id: i,
+                questionStr: `Look at the colored circle partition. What is the fraction of shaded parts?`,
+                blankSpaceLines: 2,
+                answerKey: `${num}/${den}`,
+                svgType: 'fraction',
+                svgData: { num1: num, den1: den }, // Single circle view
+                stepDetails: `\\text{The circle is split into } ${den} \\text{ equal parts. } ${num} \\text{ part(s) are shaded. Fraction: } \\frac{${num}}{${den}}.`
+              });
+            } else if (selectedGrade === 'G4') {
+              // Adding fractions with like denominators
+              const den = Math.max(4, Math.min(qSeed1 % 9, 10));
+              const num1 = Math.max(1, Math.floor(den / 3));
+              const num2 = Math.max(1, Math.floor(den / 3) + 1);
+              const sumNum = num1 + num2;
+              
+              // Simplify outcome
+              const gcdFn = (x: number, y: number): number => (!y ? x : gcdFn(y, x % y));
+              const currentGcd = gcdFn(sumNum, den);
+              const finalNum = sumNum / currentGcd;
+              const finalDen = den / currentGcd;
+
+              generated.push({
+                id: i,
+                questionStr: `Add the following fractions with the same denominator and simplify your final answer:`,
+                mathContent: `\\frac{${num1}}{${den}} + \\frac{${num2}}{${den}}`,
+                blankSpaceLines: 3,
+                answerKey: finalDen === 1 ? `${finalNum}` : `\\frac{${finalNum}}{${finalDen}}`,
+                stepDetails: `\\text{Like Denominators: } \\frac{${num1} + ${num2}}{${den}} = \\frac{${sumNum}}{${den}}. \\text{ Reduced Form: } \\frac{${finalNum}}{${finalDen}}.`
+              });
+            } else {
+              // G5 & G6: Unlike denominators, or mixed improper conversion
+              if (i % 2 === 0) {
+                // Different denominator sum
+                const den1 = (qSeed1 % 2 === 0) ? 3 : 5;
+                const den2 = (qSeed2 % 2 === 0) ? 2 : 4;
+                const num1 = 1;
+                const num2 = 1;
+
+                const baseD = den1 * den2;
+                const baseN = num1 * den2 + num2 * den1;
+
+                generated.push({
+                  id: i,
+                  questionStr: `Evaluate the fractions sum with unlike denominators and find simpler terms:`,
+                  mathContent: `\\frac{${num1}}{${den1}} + \\frac{${num2}}{${den2}}`,
+                  blankSpaceLines: 4,
+                  answerKey: `\\frac{${baseN}}{${baseD}}`,
+                  svgType: 'fraction',
+                  svgData: { num1, den1, num2, den2 },
+                  stepDetails: `\\text{Find common denominator: } ${den1} \\times ${den2} = ${baseD}. \\text{ Equation: } \\frac{${den2}}{${baseD}} + \\frac{${den1}}{${baseD}} = \\frac{${baseN}}{${baseD}}.`
+                });
+              } else {
+                // Mixed fraction to improper
+                const whole = (qSeed1 % 4) + 1; // 1 to 4
+                const den = [3, 4, 5, 8][qSeed2 % 4];
+                const num = (qSeed1 % (den - 1)) + 1;
+                const improperNum = whole * den + num;
+
+                generated.push({
+                  id: i,
+                  questionStr: `Convert this mixed fraction into an improper fraction:`,
+                  mathContent: `${whole}\\ \\frac{${num}}{${den}}`,
+                  blankSpaceLines: 3,
+                  answerKey: `\\frac{${improperNum}}{${den}}`,
+                  stepDetails: `\\text{Multiply whole and denominator then add numerator: } (${whole} \\times ${den}) + ${num} = ${improperNum}. \\text{ Result is } \\frac{${improperNum}}{${den}}.`
+                });
+              }
+            }
             break;
           }
 
           case 'geometry': {
-            const shapeTypesList = ['rectangle', 'triangle', 'square'];
-            const shapeType = shapeTypesList[i % shapeTypesList.length];
-
-            if (shapeType === 'triangle') {
-              const base = (qSeed1 % 6) + 4;
-              const height = (qSeed2 % 5) + 3;
-              const area = 0.5 * base * height;
-              const hypo = Math.sqrt(base*base + height*height);
-              const perimeter = Math.round(base + height + hypo);
-              generated.push({
-                id: i,
-                questionStr: `Find the perfect Area (in cm²) and approximate rounded Perimeter (in cm) of this right triangle:`,
-                blankSpaceLines: 4,
-                answerKey: `Area = ${area}, Perimeter = ${perimeter}`,
-                svgType: 'geometry',
-                svgData: { shapeType: 'triangle', base, height },
-                stepDetails: `\\text{Area} = \\frac{1}{2} \\times b \\times h = \\frac{1}{2} \\times ${base} \\times ${height} = ${area}\\text{ cm}^2. \\text{ Perimeter: } ${base} + ${height} + ${hypo.toFixed(1)} \\approx ${perimeter}\\text{ cm}.`
-              });
-            } else if (shapeType === 'square') {
-              const side = (qSeed1 % 5) + 3;
-              const area = side * side;
+            if (selectedGrade === 'K' || selectedGrade === 'G1' || selectedGrade === 'G2' || selectedGrade === 'G3') {
+              // Perimeter of squares / basic shape identification
+              const side = (qSeed1 % 5) + 3; // 3 to 7
               const perimeter = 4 * side;
               generated.push({
                 id: i,
-                questionStr: `Calculate the Area (square cm) and Perimeter (cm) of the square shown:`,
-                blankSpaceLines: 4,
-                answerKey: `Area = ${area}, Perimeter = ${perimeter}`,
+                questionStr: `Find the complete perimeter (in cm) of a playground sandbox shaped like a perfect square with side length ${side} cm:`,
+                blankSpaceLines: 3,
+                answerKey: `${perimeter} cm`,
                 svgType: 'geometry',
                 svgData: { shapeType: 'square', side },
-                stepDetails: `\\text{Square Area} = s^2 = ${side} \\times ${side} = ${area}\\text{ cm}^2. \\text{ Perimeter} = 4s = 4 \\times ${side} = ${perimeter}\\text{ cm}.`
+                stepDetails: `\\text{A square has } 4 \\text{ equal sides. } \\text{Perimeter} = 4 \\times s = 4 \\times ${side} = ${perimeter}\\text{ cm}.`
               });
+            } else if (selectedGrade === 'G4' || selectedGrade === 'G5') {
+              // Classic Rectangle area/perimeter or Triangles
+              const isTri = (i % 2 === 0);
+              if (isTri) {
+                const base = (qSeed1 % 6) + 4;
+                const height = (qSeed2 % 4) + 4;
+                const area = 0.5 * base * height;
+                generated.push({
+                  id: i,
+                  questionStr: `Calculate the Area (cm²) of this right triangle:`,
+                  blankSpaceLines: 4,
+                  answerKey: `${area} cm²`,
+                  svgType: 'geometry',
+                  svgData: { shapeType: 'triangle', base, height },
+                  stepDetails: `\\text{Area} = \\frac{1}{2} \\times b \\times h = \\frac{1}{2} \\times ${base} \\times ${height} = ${area}\\text{ cm}^2.`
+                });
+              } else {
+                const length = (qSeed1 % 5) + 5;
+                const width = (qSeed2 % 4) + 3;
+                const area = length * width;
+                const perimeter = 2 * (length + width);
+                generated.push({
+                  id: i,
+                  questionStr: `Compute the Area (cm²) and Perimeter (cm) of the rectangle shown:`,
+                  blankSpaceLines: 4,
+                  answerKey: `Area = ${area}, Perimeter = ${perimeter}`,
+                  svgType: 'geometry',
+                  svgData: { shapeType: 'rectangle', length, width },
+                  stepDetails: `\\text{Area} = L \\times W = ${length} \\times ${width} = ${area}\\text{ cm}^2. \\text{ Perimeter} = 2(L+W) = 2(${length}+${width}) = ${perimeter}\\text{ cm}.`
+                });
+              }
             } else {
-              const length = (qSeed1 % 6) + 4;
-              const width = (qSeed2 % 4) + 3;
-              const area = length * width;
-              const perimeter = 2 * (length + width);
+              // G6 Volume of Rectangular Prism
+              const length = (qSeed1 % 4) + 4;
+              const width = (qSeed2 % 3) + 3;
+              const height = (qSeed1 % 3) + 2;
+              const volume = length * width * height;
+
               generated.push({
                 id: i,
-                questionStr: `Compute the Area (cm²) and Perimeter (cm) of this rectangle layout:`,
+                questionStr: `A rectangular chest box has length = ${length} cm, width = ${width} cm, and height = ${height} cm. Find its complete Volume in cubic centimeters (cm³):`,
                 blankSpaceLines: 4,
-                answerKey: `Area = ${area}, Perimeter = ${perimeter}`,
-                svgType: 'geometry',
-                svgData: { shapeType: 'rectangle', length, width },
-                stepDetails: `\\text{Area} = L \\times W = ${length} \\times ${width} = ${area}\\text{ cm}^2. \\text{ Perimeter} = 2(L + W) = 2(${length} + ${width}) = ${perimeter}\\text{ cm}.`
+                answerKey: `${volume} cm³`,
+                stepDetails: `\\text{Volume} = L \\times W \\times H = ${length} \\times ${width} \\times ${height} = ${volume}\\text{ cm}^3.`
               });
             }
             break;
           }
 
           case 'decimals': {
-            const val1 = (qSeed1 * 0.4).toFixed(1);
-            const val2 = (qSeed2 * 0.3).toFixed(1);
-            const ansDec = (parseFloat(val1) * parseFloat(val2)).toFixed(2);
-            generated.push({
-              id: i,
-              questionStr: `Multiply these numbers with decimal fractions:`,
-              mathContent: `${val1} \\times ${val2}`,
-              blankSpaceLines: 3,
-              answerKey: `${ansDec}`,
-              stepDetails: `\\text{Multiply like values then shift decimal point: } ${val1} \\times ${val2} = ${ansDec}.`
-            });
+            if (selectedGrade === 'K' || selectedGrade === 'G1' || selectedGrade === 'G2' || selectedGrade === 'G3' || selectedGrade === 'G4') {
+              // Simple converting tenths/hundredths to decimal representation
+              const fractionNumerator = [3, 7, 9, 23, 45, 81][qSeed1 % 6];
+              const fractionDenominator = (fractionNumerator > 10) ? 100 : 10;
+              const expectedDec = (fractionNumerator / fractionDenominator).toFixed(fractionDenominator === 100 ? 2 : 1);
+
+              generated.push({
+                id: i,
+                questionStr: `Convert the following base fraction to its exact decimal notation format:`,
+                mathContent: `\\frac{${fractionNumerator}}{${fractionDenominator}}`,
+                blankSpaceLines: 2,
+                answerKey: `${expectedDec}`,
+                stepDetails: `\\text{Divide the numerator by denominator: } ${fractionNumerator} \\div ${fractionDenominator} = ${expectedDec}.`
+              });
+            } else if (selectedGrade === 'G5') {
+              // Decimals addition and subtraction
+              const d1 = (qSeed1 * 0.15 + 1.2).toFixed(2);
+              const d2 = (qSeed2 * 0.12 + 0.4).toFixed(2);
+              const sum = (parseFloat(d1) + parseFloat(d2)).toFixed(2);
+
+              generated.push({
+                id: i,
+                questionStr: `Solve this decimal addition sum carefully. Align the decimal points:`,
+                mathContent: `${d1} + ${d2}`,
+                blankSpaceLines: 3,
+                answerKey: `${sum}`,
+                stepDetails: `\\text{Align dots row-wise: } 1.00 + 0.00 \\text{ yields outcome } {${d1}} + {${d2}} = {${sum}}.`
+              });
+            } else {
+              // Grade 6: decimals multiplication & division
+              const d1 = (qSeed1 * 0.4).toFixed(1); // e.g. 1.2, 2.4
+              const d2 = (qSeed2 * 0.3).toFixed(1); // e.g. 0.9, 1.5
+              const prod = (parseFloat(d1) * parseFloat(d2)).toFixed(2);
+
+              generated.push({
+                id: i,
+                questionStr: `Multiply these decimals. Count the decimal places in the product:`,
+                mathContent: `${d1} \\times ${d2}`,
+                blankSpaceLines: 3,
+                answerKey: `${prod}`,
+                stepDetails: `\\text{Multiply digits: } ${Math.round(parseFloat(d1)*10)} \\times ${Math.round(parseFloat(d2)*10)} = ${Math.round(parseFloat(prod)*100)}. \\text{ Place decimal 2 spaces left: } ${prod}.`
+              });
+            }
             break;
           }
 
           case 'division_remainder': {
-            const numerator = qSeed1 * 13 + qSeed2;
-            const denominator = Math.max(3, qSeed2 % 7 + 2);
-            const quotient = Math.floor(numerator / denominator);
-            const remainder = numerator % denominator;
-            generated.push({
-              id: i,
-              questionStr: `Write the complete quotient and remainder if any (Form: Q R Remainder or just value):`,
-              mathContent: `${numerator} \\div ${denominator}`,
-              blankSpaceLines: 3,
-              answerKey: remainder === 0 ? `${quotient}` : `${quotient} R ${remainder}`,
-              stepDetails: `\\text{Solve: } ${denominator} \\times ${quotient} = ${denominator * quotient}. \\text{ Remainder value } = ${numerator} - ${denominator * quotient} = ${remainder}.`
-            });
+            if (selectedGrade === 'K' || selectedGrade === 'G1' || selectedGrade === 'G2' || selectedGrade === 'G3') {
+              // Basic division facts
+              const quotient = (qSeed1 % 9) + 2; // 2 to 10
+              const divisor = (qSeed2 % 5) + 2; // 2 to 6
+              const product = quotient * divisor;
+
+              generated.push({
+                id: i,
+                questionStr: `Solve the simple division fact:`,
+                mathContent: `${product} \\div ${divisor}`,
+                blankSpaceLines: 2,
+                answerKey: `${quotient}`,
+                stepDetails: `\\text{Think multiplication: } ${divisor} \\times ? = ${product}. \\text{ Answer is } ${quotient}.`
+              });
+            } else if (selectedGrade === 'G4') {
+              // Division with remainders
+              const numVal = qSeed1 * 4 + qSeed2 + 10;
+              const divisor = Math.max(3, qSeed2 % 6 + 2);
+              const q = Math.floor(numVal / divisor);
+              const r = numVal % divisor;
+
+              generated.push({
+                id: i,
+                questionStr: `Evaluate the division problem and state the quotient and remainder (format like: 5 R 2 or simply quotient if remainder is 0):`,
+                mathContent: `${numVal} \\div ${divisor}`,
+                blankSpaceLines: 3,
+                answerKey: r === 0 ? `${q}` : `${q} R ${r}`,
+                stepDetails: `\\text{Divide: } ${divisor} \\times ${q} = ${divisor * q}. \\text{ Remainder: } ${numVal} - ${divisor * q} = ${r}. Answer: ${q} R ${r}.`
+              });
+            } else {
+              // Grade 5 & 6: Multi-digit division
+              const dividend = (qSeed1 * 12) + 120;
+              const divisor = 12;
+              const q = Math.floor(dividend / divisor);
+              const r = dividend % divisor;
+
+              generated.push({
+                id: i,
+                questionStr: `Find the exact quotient of this long division:`,
+                mathContent: `${dividend} \\div ${divisor}`,
+                blankSpaceLines: 4,
+                answerKey: r === 0 ? `${q}` : `${q} R ${r}`,
+                stepDetails: `\\text{Solving } ${dividend} \\div ${divisor} = ${q}.`
+              });
+            }
             break;
           }
 
           case 'word_problems': {
-            const countApples = qSeed1 * 3 + 8;
-            const students = (qSeed2 % 3) + 3;
-            const share = Math.floor(countApples / students);
-            const left = countApples % students;
-            generated.push({
-              id: i,
-              questionStr: `Sarah has ${countApples} delicious apples to pack into bags. If she splits them equally among ${students} students, how many apples does each friend get, and how many are left?`,
-              blankSpaceLines: 3,
-              answerKey: left === 0 ? `${share}` : `${share} with ${left} left`,
-              stepDetails: `${countApples} \\div ${students} = ${share} \\text{ apples each with a remainder left of } ${left}.`
-            });
+            // Adaptive story word problems
+            if (selectedGrade === 'K' || selectedGrade === 'G1' || selectedGrade === 'G2') {
+              // Simple single step problems
+              const hasItems = qSeed1 + 4;
+              const takesAway = (qSeed2 % 3) + 2;
+              generated.push({
+                id: i,
+                questionStr: `Tim has ${hasItems} colorful marbles. Under a playground sandtree, he gives ${takesAway} marbles to his companion classmate. How many marbles does Tim have left now?`,
+                blankSpaceLines: 2,
+                answerKey: `${hasItems - takesAway}`,
+                stepDetails: `\\text{Take away calculation: } ${hasItems} - ${takesAway} = ${hasItems - takesAway} \\text{ marbles remaining.}`
+              });
+            } else if (selectedGrade === 'G3' || selectedGrade === 'G4') {
+              // Multiple groups or simple sharing
+              const groupCount = (qSeed1 % 4) + 3; // 3 to 6 groups
+              const applesPerGroup = (qSeed2 % 3) + 4; // 4 to 6 apples
+              generated.push({
+                id: i,
+                questionStr: `There are ${groupCount} picnic baskets. Each basket contains exactly ${applesPerGroup} red apples. What is the total number of apples inside all the baskets?`,
+                blankSpaceLines: 3,
+                answerKey: `${groupCount * applesPerGroup}`,
+                stepDetails: `\\text{Equal groups multiplier: } ${groupCount} \\text{ baskets} \\times ${applesPerGroup} \\text{ apples/basket} = ${groupCount * applesPerGroup} \\text{ apples.}`
+              });
+            } else {
+              // G5-6 Fraction sharing or rate
+              const totalPizza = 8;
+              const spent = (qSeed1 % 3) + 2;
+              generated.push({
+                id: i,
+                questionStr: `A family pizza is divided into ${totalPizza} equal slices. If Emily eats ${spent} slices, write down the fraction representing what remains of the pizza:`,
+                blankSpaceLines: 3,
+                answerKey: `${totalPizza - spent}/${totalPizza}`,
+                stepDetails: `\\text{Emily ate } ${spent} \\text{ slices. Remaining slices: } ${totalPizza} - ${spent} = ${totalPizza - spent}. \\text{ Fraction is } \\frac{${totalPizza - spent}}{${totalPizza}}.`
+              });
+            }
             break;
           }
 
           case 'arithmetic':
           default: {
-            const x = qSeed1 * 3 + 12;
-            const y = qSeed2 * 2 + 5;
-            const resultVal = x + y - 8;
-            generated.push({
-              id: i,
-              questionStr: `Complete the simple arithmetic sum values:`,
-              mathContent: `${x} + ${y} - 8`,
-              blankSpaceLines: 2,
-              answerKey: `${resultVal}`,
-              stepDetails: `\\text{Evaluate: } ${x} + ${y} = ${x + y}. \\text{ Subtracting } 8 \\text{ gives outcome parameter } = ${resultVal}.`
-            });
+            if (selectedGrade === 'K') {
+              // Single-digit addition facts under 10
+              const x = (qSeed1 % 5) + 1;
+              const y = (qSeed2 % 4) + 1;
+              generated.push({
+                id: i,
+                questionStr: `Add the single-digit numbers:`,
+                mathContent: `${x} + ${y}`,
+                blankSpaceLines: 1,
+                answerKey: `${x + y}`,
+                stepDetails: `\\text{Result: } ${x} + ${y} = ${x + y}.`
+              });
+            } else if (selectedGrade === 'G1') {
+              // Double digit plus single digit without regrouping (e.g., 23 + 4 = 27)
+              const x1 = (qSeed1 % 3) * 10 + 20; // 20, 30, 40
+              const x2 = (qSeed1 % 5); // units (0 to 4)
+              const num1 = x1 + x2;
+              const num2 = (qSeed2 % 5); // digit under 5 so no regrouping occurs
+              const sum = num1 + num2;
+
+              generated.push({
+                id: i,
+                questionStr: `Add the numbers carefully. No regrouping needed:`,
+                mathContent: `${num1} + ${num2}`,
+                blankSpaceLines: 2,
+                answerKey: `${sum}`,
+                stepDetails: `\\text{Add place values separately: } ${num1} + ${num2} = ${sum}.`
+              });
+            } else if (selectedGrade === 'G2') {
+              // 2-digit with regrouping
+              const num1 = (qSeed1 % 6) * 10 + 28; // e.g., 28 to 78
+              const num2 = (qSeed2 % 7) + 15; // e.g., 15 to 21
+              const sum = num1 + num2;
+
+              generated.push({
+                id: i,
+                questionStr: `Solve the double-digit addition (Regrouping may be required):`,
+                mathContent: `${num1} + ${num2}`,
+                blankSpaceLines: 3,
+                answerKey: `${sum}`,
+                stepDetails: `\\text{Regrouping units: }  \\text{Sum is } ${num1} + ${num2} = ${sum}.`
+              });
+            } else if (selectedGrade === 'G3') {
+              // Triple digit addition / subtraction - standard K5 testing
+              const num1 = qSeed1 * 12 + 150;
+              const num2 = qSeed2 * 8 + 80;
+              const isMinus = (i % 2 === 0);
+              const answer = isMinus ? num1 - num2 : num1 + num2;
+
+              generated.push({
+                id: i,
+                questionStr: isMinus ? `Subtract the numbers using triple-digit column subtraction:` : `Add the triple-digit numbers carefully:`,
+                mathContent: isMinus ? `${num1} - ${num2}` : `${num1} + ${num2}`,
+                blankSpaceLines: 3,
+                answerKey: `${answer}`,
+                stepDetails: isMinus 
+                  ? `\\text{Evaluate: } ${num1} - ${num2} = ${answer}.`
+                  : `\\text{Evaluate: } ${num1} + ${num2} = ${answer}.`
+              });
+            } else if (selectedGrade === 'G4') {
+              // Simple multiplication column values
+              const x = (qSeed1 % 10) + 3; // 3 to 12
+              const y = (qSeed2 % 9) + 3; // 3 to 11
+              generated.push({
+                id: i,
+                questionStr: `Find the product of these values:`,
+                mathContent: `${x} \\times ${y}`,
+                blankSpaceLines: 2,
+                answerKey: `${x * y}`,
+                stepDetails: `\\text{Multiplication math: } ${x} \\times ${y} = ${x * y}.`
+              });
+            } else {
+              // G5-6 Order of Operations (PEMDAS/BODMAS) - trademark advanced K5 worksheets
+              const val1 = (qSeed1 % 5) + 3; // 3 to 7
+              const val2 = (qSeed2 % 4) + 2; // 2 to 5
+              const val3 = 2;
+              const plusVal = (qSeed1 % 8) + 1;
+              const computedAnswer = val1 * val2 - val3 + plusVal;
+
+              generated.push({
+                id: i,
+                questionStr: `Apply the correct Order of Operations (PEMDAS) to evaluate the numeric expression:`,
+                mathContent: `${val1} \\times ${val2} - ${val3} + ${plusVal}`,
+                blankSpaceLines: 3,
+                answerKey: `${computedAnswer}`,
+                stepDetails: `\\text{First solve multiplication: } ${val1} \\times ${val2} = ${val1 * val2}. \\text{ Then subtract and add: } ${val1 * val2} - ${val3} + ${plusVal} = ${computedAnswer}.`
+              });
+            }
             break;
           }
         }
@@ -852,34 +1349,149 @@ export const K5Worksheets: React.FC = () => {
   }, [selectedGrade, selectedTopic, questionsCount, seed, selectedCompanion]);
 
   const handlePrintWorksheet = () => {
-    window.print();
+    const worksheetElement = document.getElementById('printable-k5-paper');
+    if (worksheetElement) {
+      // Collect all document stylesheets to perfectly copy the styled tailwind theme context
+      const styleSheets = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map(el => el.outerHTML)
+        .join('\n');
+
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(`
+          <html>
+            <head>
+              <title>${worksheetTitle} (Print Copy)</title>
+              ${styleSheets}
+              <style>
+                @media print {
+                  @page {
+                    size: auto;
+                    margin: 20mm;
+                  }
+                  body {
+                    background: white !important;
+                    color: black !important;
+                  }
+                }
+                body {
+                  background: white !important;
+                  color: black !important;
+                  padding: 10px !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
+                .no-print, button, .audio-button, select, input {
+                  display: none !important;
+                }
+                /* Ensure break-before-page makes separate answer sheet work */
+                .break-before-page {
+                  page-break-before: always !important;
+                  break-before: page !important;
+                }
+                .break-inside-avoid {
+                  page-break-inside: avoid !important;
+                  break-inside: avoid !important;
+                }
+              </style>
+            </head>
+            <body class="${isKidsTheme ? 'bg-gradient-to-br from-emerald-50/20 to-blue-50/20' : 'bg-white'}">
+              <div class="max-w-4xl mx-auto">
+                ${worksheetElement.outerHTML}
+              </div>
+              <script>
+                // Strip interactive buttons or scribbles inside the cloned print context
+                const buttons = document.querySelectorAll('.no-print, button, .audio-button, select');
+                buttons.forEach(b => b.remove());
+                
+                // Trigger browser system native print view
+                setTimeout(() => {
+                  window.print();
+                  setTimeout(() => {
+                    window.parent.document.body.removeChild(window.frameElement);
+                  }, 100);
+                }, 500);
+              </script>
+            </body>
+          </html>
+        `);
+        iframeDoc.close();
+      }
+    } else {
+      window.print();
+    }
   };
 
   const handlePrintDiploma = () => {
     // Elegant single element print focus helper
     const certElement = document.getElementById('scholastic-diploma-print-area');
     if (certElement) {
-      const compiledCertHtml = certElement.outerHTML;
-      
-      // Temporarily write body for printing
-      document.body.innerHTML = `
-        <html>
-          <head>
-            <title>Scholastic Mathematics Diploma — ${scholarName || 'Primary Scholar'}</title>
-            <style>
-              body { background: white; color: black; padding: 20px; font-family: "Georgia", serif; -webkit-print-color-adjust: exact; }
-              @media print { .no-print { display: none; } }
-            </style>
-          </head>
-          <body>
-            ${compiledCertHtml}
-          </body>
-        </html>
-      `;
-      window.print();
-      
-      // Restore page state
-      window.location.reload();
+      // Find all stylesheets and styled nodes from parent context to duplicate fully rendered theme
+      const styleSheets = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map(el => el.outerHTML)
+        .join('\n');
+
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(`
+          <html>
+            <head>
+              <title>Scholastic Mathematics Diploma — ${scholarName || 'Primary Scholar'}</title>
+              ${styleSheets}
+              <style>
+                body { 
+                  background: white !important; 
+                  color: black !important; 
+                  padding: 24px !important; 
+                  -webkit-print-color-adjust: exact !important; 
+                  print-color-adjust: exact !important;
+                }
+                .no-print, button { display: none !important; }
+              </style>
+            </head>
+            <body class="bg-white">
+              <div class="max-w-4xl mx-auto">
+                ${certElement.outerHTML}
+              </div>
+              <script>
+                // Strip the print buttons inside the cloned print area context
+                const printButtons = document.querySelectorAll('.no-print, button');
+                printButtons.forEach(btn => btn.remove());
+                
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.print();
+                    setTimeout(function() {
+                      window.frameElement.remove();
+                    }, 500);
+                  }, 300);
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        iframeDoc.close();
+      }
     }
   };
 
@@ -910,6 +1522,80 @@ export const K5Worksheets: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const exportToCSV = () => {
+    let csvContent = "Question Number,Direction,Math Formula,Expected Answer,Solution Steps\n";
+    
+    questions.forEach((q, idx) => {
+      const qNum = idx + 1;
+      const direction = `"${q.questionStr.replace(/"/g, '""')}"`;
+      const formula = `"${(q.mathContent || '').replace(/"/g, '""')}"`;
+      const expectedAns = `"${q.answerKey.replace(/"/g, '""')}"`;
+      const steps = `"${(q.stepDetails || '').replace(/"/g, '""')}"`;
+      
+      csvContent += `${qNum},${direction},${formula},${expectedAns},${steps}\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `k5_worksheet_set_${seed}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToMarkdown = () => {
+    let mdContent = `# ${worksheetTitle}\n\n`;
+    mdContent += `**School:** ${customSchoolName || 'Primary School Mathematics Sandbox'}\n`;
+    mdContent += `**Date:** __________________ | **Student Name:** _________________\n\n`;
+    if (customInstructions) {
+      mdContent += `> *Instructions:* ${customInstructions}\n\n`;
+    }
+    mdContent += `---\n\n`;
+    
+    questions.forEach((q, idx) => {
+      mdContent += `### Question ${idx + 1}\n`;
+      mdContent += `${q.questionStr}\n\n`;
+      if (q.mathContent) {
+        mdContent += `$$ ${q.mathContent} $$\n\n`;
+      }
+      mdContent += `*Your Workspace:*\n\n\n\n`;
+      mdContent += `*Answer:* ____________________\n\n`;
+      mdContent += `---\n\n`;
+    });
+    
+    mdContent += `\n# ANSWER KEY & SOLUTIONS SET\n\n`;
+    questions.forEach((q, idx) => {
+      mdContent += `**Q${idx + 1} Correct Answer:** \`${q.answerKey}\`\n`;
+      if (q.stepDetails) {
+        mdContent += `*Detailed Solution Steps:* \`${q.stepDetails}\`\n\n`;
+      }
+    });
+
+    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `k5_worksheet_set_${seed}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const toggleBookmark = (blueprintId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBookmarkedBlueprints(prev => {
+      if (prev.includes(blueprintId)) {
+        return prev.filter(id => id !== blueprintId);
+      } else {
+        return [...prev, blueprintId];
+      }
+    });
   };
 
   const handleGradeWorksheet = () => {
@@ -1096,19 +1782,23 @@ export const K5Worksheets: React.FC = () => {
                     setAnswersDraft({});
                     setIsInteractive(true);
                   }}
-                  className={`flex flex-col text-left p-3.5 rounded-2xl border transition-all relative overflow-hidden group hover:scale-[1.02] hover:shadow-md ${
+                  className={`flex flex-col text-left p-3.5 rounded-2xl border transition-all relative overflow-hidden group hover:scale-[1.02] hover:shadow-md h-full justify-between ${
                     isCurrentlySelected 
                       ? 'bg-brand-surface border-teal-500 ring-1 ring-teal-500/30 shadow' 
                       : 'bg-brand-bg/40 hover:bg-brand-surface border-brand-border/40'
                   }`}
                 >
-                  <div className="absolute top-2 right-2 text-lg group-hover:animate-bounce">{preset.icon}</div>
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-bg/80 border w-fit mb-2 ${preset.color}`}>
-                    {preset.badge}
-                  </span>
-                  <div className="font-bold text-xs text-brand-text line-clamp-1">{preset.title}</div>
-                  <div className="text-[10px] text-brand-text-secondary mt-1 line-clamp-2 leading-relaxed font-light">
-                    {preset.desc}
+                  <div className="w-full">
+                    <div className="flex items-center justify-between w-full mb-2 gap-1.5 flex-wrap">
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-bg/80 border truncate max-w-[80px] ${preset.color}`}>
+                        {preset.badge}
+                      </span>
+                      <span className="text-base group-hover:animate-bounce shrink-0">{preset.icon}</span>
+                    </div>
+                    <div className="font-bold text-xs text-brand-text line-clamp-1">{preset.title}</div>
+                    <div className="text-[10px] text-brand-text-secondary mt-1 line-clamp-2 leading-relaxed font-light">
+                      {preset.desc}
+                    </div>
                   </div>
                   
                   {isCurrentlySelected && (
@@ -1119,12 +1809,438 @@ export const K5Worksheets: React.FC = () => {
             })}
           </div>
         </div>
+
+        <hr className="border-brand-border/10" />
+
+        {/* Expandable 100+ Curriculum Catalog */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => {
+                setIsCurriculumExpanded(!isCurriculumExpanded);
+                if (!isCurriculumExpanded) {
+                  setCurriculumPage(1);
+                }
+              }}
+              className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-brand-bg/60 border border-brand-border/50 hover:bg-brand-surface hover:border-teal-500/40 text-brand-text transition-all group shadow-inner text-left w-full md:w-auto"
+            >
+              <span className="text-lg group-hover:rotate-12 transition-transform">📚</span>
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-teal-400 flex items-center gap-1.5 flex-wrap">
+                  <span>Curriculum Library Catalog</span>
+                  <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 text-[9px] rounded font-mono">100 Premium Blueprints</span>
+                </div>
+                <div className="text-[11px] text-brand-text-secondary font-light mt-0.5">
+                  {isCurriculumExpanded ? 'Hide' : 'Explore'} the comprehensive primary mathematics lesson catalog
+                </div>
+              </div>
+              <div className="ml-auto md:ml-6 pl-4">
+                <ChevronDown
+                  size={16}
+                  className={`text-brand-text-secondary group-hover:text-teal-400 transition-transform duration-300 ${
+                    isCurriculumExpanded ? 'rotate-180' : ''
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {isCurriculumExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="overflow-hidden space-y-6 pt-2"
+              >
+                {/* Advanced Catalog Filters */}
+                <div className="bg-brand-bg/80 border border-brand-border/40 rounded-3xl p-5 md:p-6 space-y-5 shadow-inner">
+                  
+                  {/* Search and chip shortcuts bar */}
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Search box column */}
+                      <div className="md:col-span-2 space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary pl-1">
+                          🔍 Instant Lesson Blueprint Search Engine
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={curriculumSearchText === '__bookmarked__' ? '' : curriculumSearchText}
+                            onChange={(e) => {
+                              setCurriculumSearchText(e.target.value);
+                              setCurriculumPage(1);
+                            }}
+                            placeholder={curriculumSearchText === '__bookmarked__' ? "Filtering Favorites. Click click tags to clear filter..." : "Search e.g. Space, Dino, Pizza, Addition, Grade 3..."}
+                            className={`w-full border rounded-xl px-3.5 py-2 pl-9 text-xs font-semibold outline-none transition-all ${
+                              curriculumSearchText === '__bookmarked__' 
+                                ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' 
+                                : 'bg-brand-surface/80 border-brand-border/60 hover:border-teal-500/40 focus:border-teal-500/80 text-brand-text placeholder-zinc-500'
+                            }`}
+                          />
+                          <Search className="absolute left-3 top-2.5 text-zinc-500" size={13} />
+                          {curriculumSearchText && (
+                            <button
+                              onClick={() => {
+                                setCurriculumSearchText('');
+                                setCurriculumPage(1);
+                              }}
+                              className="absolute right-3 top-2 text-[9px] font-black uppercase tracking-wider bg-brand-bg/80 hover:bg-brand-border px-2 py-1 rounded text-brand-text-secondary hover:text-brand-text transition-all"
+                            >
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Instant metrics or favorites summary count */}
+                      <div className="md:col-span-1 bg-brand-surface/50 border border-brand-border/40 hover:border-teal-500/20 px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-all self-end h-10">
+                        <div className="flex items-center gap-1.5">
+                          <Bookmark size={12} className="text-amber-400 fill-amber-400" />
+                          <span className="text-[10px] font-black text-brand-text uppercase tracking-widest">My Bookmarked Lessons</span>
+                        </div>
+                        <span className="bg-amber-400/20 text-amber-300 font-extrabold text-[10px] px-2 py-0.5 rounded-full border border-amber-400/20">
+                          {bookmarkedBlueprints.length} Bookmarked
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quick filter shortcut search keywords tags */}
+                    <div className="flex flex-wrap items-center gap-1.5 pl-1">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-brand-text-secondary mr-2">Quick Tags:</span>
+                      {[
+                        { label: 'All lessons', val: '' },
+                        { label: '🦖 Dino', val: 'dinosaur' },
+                        { label: '🚀 Space', val: 'space' },
+                        { label: '🎂 Bakery', val: 'bakery' },
+                        { label: '🦁 Safari', val: 'safari' },
+                        { label: '🕵️‍♂️ Detective', val: 'detective' },
+                        { label: '⭐ Starred Favs', val: '__bookmarked__' }
+                      ].map((chip) => {
+                        const isChosen = curriculumSearchText === chip.val;
+                        return (
+                          <button
+                            key={chip.label}
+                            type="button"
+                            onClick={() => {
+                              setCurriculumSearchText(chip.val);
+                              setCurriculumPage(1);
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold tracking-tight border transition-all ${
+                              isChosen 
+                                ? 'bg-teal-500/20 border-teal-500 text-teal-400 scale-[1.03]' 
+                                : chip.val === '__bookmarked__'
+                                ? 'bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/25 text-amber-400'
+                                : 'bg-brand-surface border-brand-border/40 hover:bg-brand-border hover:border-teal-500/20 text-brand-text-secondary hover:text-brand-text'
+                            }`}
+                          >
+                            {chip.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Dropdown Filters Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-1">
+                    {/* Grade Selector */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary pl-0.5">Grade Level</label>
+                      <select
+                        value={curriculumGradeFilter}
+                        onChange={(e) => {
+                          setCurriculumGradeFilter(e.target.value);
+                          setCurriculumPage(1);
+                        }}
+                        className="w-full bg-brand-surface/80 border border-brand-border/60 hover:border-teal-500/40 focus:border-teal-500/80 rounded-xl px-2.5 py-2 text-xs font-bold text-brand-text outline-none transition-all cursor-pointer"
+                      >
+                        <option value="All">All Grades (K-6)</option>
+                        {GRADE_LEVELS.map(g => (
+                          <option key={g.id} value={g.id}>{g.label} ({g.id})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Topic selector */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary pl-0.5">Core Subject</label>
+                      <select
+                        value={curriculumTopicFilter}
+                        onChange={(e) => {
+                          setCurriculumTopicFilter(e.target.value);
+                          setCurriculumPage(1);
+                        }}
+                        className="w-full bg-brand-surface/80 border border-brand-border/60 hover:border-teal-500/40 focus:border-teal-500/80 rounded-xl px-2.5 py-2 text-xs font-bold text-brand-text outline-none transition-all cursor-pointer"
+                      >
+                        <option value="All">All Topics / Core Subjects</option>
+                        {TOPICS.map(t => (
+                          <option key={t.id} value={t.id}>{t.label.split(' & ')[0]}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Difficulty selector */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary pl-0.5">Complexity Level</label>
+                      <select
+                        value={curriculumDifficultyFilter}
+                        onChange={(e) => {
+                          setCurriculumDifficultyFilter(e.target.value as any);
+                          setCurriculumPage(1);
+                        }}
+                        className="w-full bg-brand-surface/80 border border-brand-border/60 hover:border-teal-500/40 focus:border-teal-500/80 rounded-xl px-2.5 py-2 text-xs font-bold text-brand-text outline-none transition-all cursor-pointer"
+                      >
+                        <option value="All">All Complexity</option>
+                        <option value="Easy">Easy (K - Grade 1)</option>
+                        <option value="Medium">Medium (Grades 2 - 4)</option>
+                        <option value="Hard">Hard (Grades 5 - 6)</option>
+                      </select>
+                    </div>
+
+                    {/* Sorting selector */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary pl-0.5">Sort Attribute</label>
+                      <select
+                        value={curriculumSortBy}
+                        onChange={(e) => {
+                          setCurriculumSortBy(e.target.value as any);
+                          setCurriculumPage(1);
+                        }}
+                        className="w-full bg-brand-surface/80 border border-brand-border/60 hover:border-teal-500/40 focus:border-teal-500/80 rounded-xl px-2.5 py-2 text-xs font-bold text-brand-text outline-none transition-all cursor-pointer"
+                      >
+                        <option value="id">Blueprint ID</option>
+                        <option value="title">Alphabetical Title</option>
+                        <option value="count">Count of Problems</option>
+                      </select>
+                    </div>
+
+                    {/* Sort Order Button column */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary pl-0.5">Toggle Order</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurriculumSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                          setCurriculumPage(1);
+                        }}
+                        className="w-full bg-brand-surface/80 hover:bg-brand-border hover:border-teal-500/40 border border-brand-border/60 rounded-xl px-2.5 py-2 text-xs font-bold text-brand-text outline-none transition-all flex items-center justify-center gap-1.5 h-[34px]"
+                      >
+                        <ArrowUpDown size={11} className="text-teal-400" />
+                        <span>{curriculumSortOrder === 'asc' ? 'Ascending ⇅' : 'Descending ⇅'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Programmatic Match Metrics */}
+                  {(() => {
+                    const getDifficultyForGrade = (g: string) => {
+                      if (g === 'K' || g === 'G1') return 'Easy';
+                      if (g === 'G2' || g === 'G3' || g === 'G4') return 'Medium';
+                      return 'Hard';
+                    };
+
+                    const matchedWithDifficulty = ALL_TEMPLATES.map(item => ({
+                      ...item,
+                      difficulty: getDifficultyForGrade(item.grade)
+                    }));
+
+                    const filtered = matchedWithDifficulty.filter(item => {
+                      const matchesSearch = curriculumSearchText === '__bookmarked__'
+                        ? bookmarkedBlueprints.includes(item.id)
+                        : item.title.toLowerCase().includes(curriculumSearchText.toLowerCase()) ||
+                          item.desc.toLowerCase().includes(curriculumSearchText.toLowerCase()) ||
+                          item.topicLabel.toLowerCase().includes(curriculumSearchText.toLowerCase());
+                      const matchesGrade = curriculumGradeFilter === 'All' || item.grade === curriculumGradeFilter;
+                      const matchesTopic = curriculumTopicFilter === 'All' || item.topic === curriculumTopicFilter;
+                      const matchesDifficulty = curriculumDifficultyFilter === 'All' || item.difficulty === curriculumDifficultyFilter;
+                      return matchesSearch && matchesGrade && matchesTopic && matchesDifficulty;
+                    });
+
+                    // Perform sort on results
+                    const sorted = [...filtered].sort((a, b) => {
+                      let fieldA: any = a[curriculumSortBy];
+                      let fieldB: any = b[curriculumSortBy];
+                      
+                      if (curriculumSortBy === 'title') {
+                        fieldA = a.title.toLowerCase();
+                        fieldB = b.title.toLowerCase();
+                      }
+                      
+                      if (fieldA < fieldB) return curriculumSortOrder === 'asc' ? -1 : 1;
+                      if (fieldA > fieldB) return curriculumSortOrder === 'asc' ? 1 : -1;
+                      return 0;
+                    });
+
+                    const itemsPerPage = 8;
+                    const totalPages = Math.ceil(sorted.length / itemsPerPage) || 1;
+                    const pageStart = (curriculumPage - 1) * itemsPerPage;
+                    const paginatedItems = sorted.slice(pageStart, pageStart + itemsPerPage);
+
+                    // Dynamic fast action to select random blueprint
+                    const selectRandomMatch = () => {
+                      if (sorted.length > 0) {
+                        const randomItem = sorted[Math.floor(Math.random() * sorted.length)];
+                        setSelectedGrade(randomItem.grade);
+                        setSelectedTopic(randomItem.topic);
+                        setQuestionsCount(randomItem.count);
+                        setSelectedCompanion(randomItem.companion);
+                        setSeed(randomItem.seed);
+                        setSubmittedAnswers(false);
+                        setAnswersDraft({});
+                        setIsInteractive(true);
+                      }
+                    };
+
+                    return (
+                      <div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-brand-text-secondary font-medium px-1">
+                          <div className="flex items-center gap-1.5 bg-brand-surface px-3 py-1 rounded-full border border-brand-border/50">
+                            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                            <span>Found <strong>{sorted.length}</strong> active lesson blueprints matching query</span>
+                          </div>
+
+                          {sorted.length > 0 && (
+                            <button
+                              onClick={selectRandomMatch}
+                              className="text-[10px] font-bold text-teal-400 hover:text-teal-300 flex items-center gap-1 bg-teal-500/10 hover:bg-teal-500/20 px-2.5 py-1 rounded-lg border border-teal-500/20 transition-all shadow-sm"
+                            >
+                              🎲 Quick Load Random Match
+                            </button>
+                          )}
+                        </div>
+
+                        {sorted.length === 0 ? (
+                          <div className="text-center py-10 bg-brand-surface/40 rounded-2xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2">
+                            <span className="text-2xl">🐱</span>
+                            <div className="text-sm font-bold text-brand-text">No blueprints found</div>
+                            <div className="text-xs text-brand-text-secondary font-light">Try relaxing your search keywords or grade filter tags.</div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+                            {paginatedItems.map((preset) => {
+                              const isCurrentlySelected = selectedGrade === preset.grade && selectedTopic === preset.topic && seed === preset.seed;
+                              const isBookmarked = bookmarkedBlueprints.includes(preset.id);
+                              
+                              return (
+                                <button
+                                  key={preset.id}
+                                  onClick={() => {
+                                    setSelectedGrade(preset.grade);
+                                    setSelectedTopic(preset.topic);
+                                    setQuestionsCount(preset.count);
+                                    setSelectedCompanion(preset.companion);
+                                    setSeed(preset.seed);
+                                    setSubmittedAnswers(false);
+                                    setAnswersDraft({});
+                                    setIsInteractive(true);
+                                  }}
+                                  className={`flex flex-col text-left p-3.5 rounded-2xl border transition-all relative overflow-hidden group hover:scale-[1.02] hover:shadow-lg min-h-[148px] justify-between ${
+                                    isCurrentlySelected 
+                                      ? 'bg-brand-surface border-teal-500 ring-2 ring-teal-500/20 shadow-md shadow-teal-500/5' 
+                                      : 'bg-brand-surface/40 hover:bg-brand-surface border-brand-border/40 hover:border-teal-500/20'
+                                  }`}
+                                >
+                                  <div className="w-full">
+                                    <div className="flex items-center justify-between w-full mb-2 gap-1.5">
+                                      <div className="flex items-center gap-1">
+                                        <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-bg/80 border truncate ${preset.color}`}>
+                                          {preset.badge}
+                                        </span>
+                                        <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                                          preset.difficulty === 'Easy' 
+                                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                                            : preset.difficulty === 'Medium'
+                                            ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                                            : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
+                                        }`}>
+                                          {preset.difficulty}
+                                        </span>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-1.5 shrink-0 animate-fade-in">
+                                        {/* Bookmark trigger star button */}
+                                        <div
+                                          onClick={(e) => toggleBookmark(preset.id, e)}
+                                          className={`p-1 rounded-md border transition-all cursor-pointer ${
+                                            isBookmarked 
+                                              ? 'bg-amber-400/20 border-amber-400/30 text-amber-400' 
+                                              : 'bg-brand-bg/60 border-brand-border/45 text-brand-text-secondary hover:text-amber-400 hover:bg-brand-border/60'
+                                          }`}
+                                          title={isBookmarked ? "Remove from bookmarks" : "Bookmark lesson blueprint"}
+                                        >
+                                          <Bookmark size={11} className={isBookmarked ? "fill-amber-400 text-amber-400" : ""} />
+                                        </div>
+                                        <span className="text-sm group-hover:scale-125 transition-transform">{preset.icon}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="font-extrabold text-xs text-brand-text line-clamp-1 group-hover:text-teal-400 transition-colors pt-0.5">{preset.title}</div>
+                                    <div className="text-[10px] text-brand-text-secondary mt-1 line-clamp-2 leading-relaxed font-light">
+                                      {preset.desc}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-between w-full pt-1.5 mt-2 border-t border-brand-border/20">
+                                    <span className="text-[9px] text-zinc-500 font-mono">ID #{preset.id} &bull; {preset.count}Q &bull; {preset.companion}</span>
+                                    {isCurrentlySelected ? (
+                                      <span className="text-[9px] font-extrabold text-teal-400 flex items-center gap-1 bg-teal-500/10 px-1.5 py-0.5 rounded">Active ★</span>
+                                    ) : (
+                                      <span className="text-[9px] font-bold text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity">Load &rarr;</span>
+                                    )}
+                                  </div>
+                                  
+                                  {isCurrentlySelected && (
+                                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-teal-500 to-emerald-400" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Pagination Selector Panel */}
+                        {sorted.length > itemsPerPage && (
+                          <div className="flex items-center justify-between pt-4 border-t border-brand-border/10">
+                            <span className="text-xs text-brand-text-secondary font-medium">
+                              Page <strong>{curriculumPage}</strong> of {totalPages}
+                            </span>
+                            
+                            <div className="flex gap-2">
+                              <button
+                                disabled={curriculumPage === 1}
+                                onClick={() => setCurriculumPage(prev => Math.max(1, prev - 1))}
+                                className="p-2 bg-brand-surface hover:bg-brand-border rounded-xl border border-brand-border/60 text-brand-text-secondary hover:text-brand-text disabled:opacity-30 disabled:hover:bg-brand-surface disabled:hover:text-brand-text-secondary transition-all font-bold"
+                              >
+                                <ChevronLeft size={14} />
+                              </button>
+                              <button
+                                disabled={curriculumPage === totalPages}
+                                onClick={() => setCurriculumPage(prev => Math.min(totalPages, prev + 1))}
+                                className="p-2 bg-brand-surface hover:bg-brand-border rounded-xl border border-brand-border/60 text-brand-text-secondary hover:text-brand-text disabled:opacity-30 disabled:hover:bg-brand-surface disabled:hover:text-brand-text-secondary transition-all font-bold"
+                              >
+                                <ChevronRight size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                      </div>
+                    );
+                  })()}
+
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
         {/* Left Control Rail Panel */}
-        <div className="space-y-6 lg:col-span-1 bg-brand-surface/40 p-6 md:p-8 rounded-[2rem] border border-brand-border/50 backdrop-blur-md sticky top-24 print:hidden">
+        <div className="space-y-6 lg:col-span-1 bg-brand-surface/40 p-6 md:p-8 rounded-[2rem] border border-brand-border/50 backdrop-blur-md lg:sticky lg:top-24 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto custom-scrollbar pb-6 pr-1.5 print:hidden">
           <div className="space-y-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-500/10 text-teal-400 rounded-full text-[10px] font-black uppercase tracking-widest">
               <Sparkles size={11} className="text-teal-400 animate-pulse" /> K-5 Interactive Playroom
@@ -1329,22 +2445,138 @@ export const K5Worksheets: React.FC = () => {
               </button>
             </div>
 
+            {/* Collapsible Print Customizer & Styling Accordion */}
+            <div className="bg-brand-surface/40 p-4 rounded-2xl border border-brand-border/40 space-y-3 mt-4">
+              <button 
+                onClick={() => setExpandPrintDesigner(!expandPrintDesigner)}
+                className="w-full flex items-center justify-between text-left group outline-none"
+              >
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal size={13} className="text-teal-400 group-hover:rotate-180 transition-transform duration-500" />
+                  <span className="text-xs text-brand-text font-black uppercase tracking-wider">✏️ Print Layout Styling</span>
+                </div>
+                <ChevronDown size={14} className={`text-brand-text-secondary transition-transform duration-200 ${expandPrintDesigner ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {expandPrintDesigner && (
+                <div className="pt-2.5 space-y-3.5 border-t border-brand-border/20 animate-fade-in text-xs">
+                  {/* Custom School Title */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary">Classroom / School Title</label>
+                    <input 
+                      type="text" 
+                      value={customSchoolName}
+                      onChange={(e) => setCustomSchoolName(e.target.value)}
+                      placeholder="e.g. Mrs. Smith's Math Class"
+                      className="w-full bg-brand-bg border border-brand-border text-brand-text rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-teal-500/80 font-medium"
+                    />
+                  </div>
+
+                  {/* Custom Directions / Teacher Instructions */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary">Custom Teacher Note / Instructions</label>
+                    <textarea 
+                      value={customInstructions}
+                      onChange={(e) => setCustomInstructions(e.target.value)}
+                      placeholder="e.g. Solve step-by-step. Space is for drawing. Due Friday!"
+                      rows={2}
+                      className="w-full bg-brand-bg border border-brand-border text-brand-text rounded-lg px-2.5 py-1.5 text-xs text-brand-text outline-none focus:border-teal-500/80 font-medium resize-none placeholder-zinc-600"
+                    />
+                  </div>
+
+                  {/* Font Size & Grid Type select */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary">Print Font Size</label>
+                      <select 
+                        value={printFontSize}
+                        onChange={(e) => setPrintFontSize(e.target.value as any)}
+                        className="w-full bg-brand-bg border border-brand-border text-brand-text rounded-lg p-1.5 text-xs outline-none focus:border-teal-500/85 font-semibold"
+                      >
+                        <option value="sm">Compact (Small)</option>
+                        <option value="base">Standard (Normal)</option>
+                        <option value="lg">Large (Younger)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-brand-text-secondary">Writing Workspace</label>
+                      <select 
+                        value={gridStyle}
+                        onChange={(e) => setGridStyle(e.target.value as any)}
+                        className="w-full bg-brand-bg border border-brand-border text-brand-text rounded-lg p-1.5 text-xs outline-none focus:border-teal-500/85 font-semibold"
+                      >
+                        <option value="grid">Graph Grid Boxes</option>
+                        <option value="lines">Lined Paper Lines</option>
+                        <option value="dots">Geometric Dots</option>
+                        <option value="blank">Blank Area Workspace</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Append separate solutions master guide page */}
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <span className="text-[10px] font-black text-brand-text block">Separate Answer Key Page</span>
+                      <span className="text-[8px] text-brand-text-secondary leading-none">Append full solutions guide to printed copy</span>
+                    </div>
+                    <button
+                      onClick={() => setAppendSolutionsOnPrint(!appendSolutionsOnPrint)}
+                      className={`relative inline-flex items-center h-5 w-10 bg-brand-bg rounded-full transition-colors duration-200 border border-brand-border/60 ${
+                        appendSolutionsOnPrint ? 'bg-teal-500' : 'bg-gray-600'
+                      }`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
+                        appendSolutionsOnPrint ? 'translate-x-[1.2rem]' : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* Action Row */}
           <div className="flex flex-col gap-2.5 pt-4 border-t border-brand-border/30">
             <button
               onClick={handlePrintWorksheet}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-brand-primary hover:bg-brand-primary/95 text-brand-bg rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-brand-primary/10"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-brand-bg rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-brand-primary/20 relative group overflow-hidden"
             >
-              <Printer size={13} /> Print Homework Sheet
+              <Printer size={14} className="group-hover:scale-110 transition-transform" /> Print Homework Sheet
+              <div className="absolute top-0 right-0 p-1 px-1.5 bg-brand-secondary text-brand-bg font-black text-[7px] tracking-normal rounded-bl-lg">PREMIUM PDF</div>
             </button>
-            <button
-              onClick={exportWorksheetBlueprint}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-brand-surface hover:bg-brand-border border border-brand-border text-brand-text rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
-            >
-              <Download size={13} /> Export JSON / Blueprint
-            </button>
+            
+            <div className="text-[10px] font-black uppercase text-brand-text-secondary tracking-widest pt-1 pl-1">Export Solutions &amp; Formats</div>
+            
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={exportWorksheetBlueprint}
+                className="flex flex-col items-center justify-center gap-1.5 py-2.5 bg-brand-surface hover:bg-brand-border border border-brand-border text-brand-text rounded-xl font-semibold text-[10px] uppercase tracking-wider transition-all"
+                title="Export JSON lesson blueprint"
+              >
+                <Download size={13} className="text-teal-400" />
+                <span>JSON</span>
+              </button>
+              
+              <button
+                onClick={exportToCSV}
+                className="flex flex-col items-center justify-center gap-1.5 py-2.5 bg-brand-surface hover:bg-brand-border border border-brand-border text-brand-text rounded-xl font-semibold text-[10px] uppercase tracking-wider transition-all"
+                title="Export custom CSV data file"
+              >
+                <FileSpreadsheet size={13} className="text-emerald-400" />
+                <span>CSV Table</span>
+              </button>
+
+              <button
+                onClick={exportToMarkdown}
+                className="flex flex-col items-center justify-center gap-1.5 py-2.5 bg-brand-surface hover:bg-brand-border border border-brand-border text-brand-text rounded-xl font-semibold text-[10px] uppercase tracking-wider transition-all"
+                title="Export clean markdown document file"
+              >
+                <FileText size={13} className="text-purple-400" />
+                <span>MD Doc</span>
+              </button>
+            </div>
           </div>
 
         </div>
@@ -1506,7 +2738,7 @@ export const K5Worksheets: React.FC = () => {
                   <div className="flex items-center justify-center md:justify-start gap-2">
                     <GraduationCap size={16} className={isKidsTheme ? "text-teal-600" : "text-zinc-600"} />
                     <h4 className={`text-[10px] uppercase tracking-[0.25em] font-black ${isKidsTheme ? 'text-teal-600' : 'text-zinc-500'}`}>
-                      Primary School Mathematics Sandbox
+                      {customSchoolName || 'Primary School Mathematics Sandbox'}
                     </h4>
                   </div>
                   <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">{worksheetTitle}</h2>
@@ -1517,6 +2749,20 @@ export const K5Worksheets: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Custom Teacher Note / Instructions */}
+            {customInstructions && (
+              <div className={`mb-8 p-4 rounded-2xl border text-xs leading-relaxed ${
+                isKidsTheme 
+                  ? 'bg-amber-500/5 border-amber-500/20 text-slate-700 font-sans' 
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-700 font-serif italic'
+              }`}>
+                <span className="text-[9px] uppercase font-black tracking-widest block mb-1 text-amber-600 font-sans">
+                  Teacher's Instructions:
+                </span>
+                {customInstructions}
+              </div>
+            )}
 
             {/* Problem card layouts list loop */}
             <div className="space-y-10">
@@ -1536,7 +2782,11 @@ export const K5Worksheets: React.FC = () => {
 
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-3 flex-wrap">
-                          <p className={`text-[15px] p-0.5 font-bold leading-relaxed flex-1 ${
+                          <p className={`p-0.5 font-bold leading-relaxed flex-1 ${
+                            printFontSize === 'sm' ? 'text-[13px]' : 
+                            printFontSize === 'lg' ? 'text-[18px]' : 
+                            'text-[15px]'
+                          } ${
                             isKidsTheme ? 'text-slate-800' : 'text-zinc-900'
                           }`}>
                             {item.questionStr}
@@ -1548,7 +2798,11 @@ export const K5Worksheets: React.FC = () => {
                         {/* Latex Mathematical Content */}
                         {item.mathContent && (
                           <div className={`py-1 w-fit font-mono font-bold select-all overflow-x-auto ${
-                            isKidsTheme ? 'text-teal-700 font-sans text-xl' : 'text-zinc-950 font-serif text-2xl'
+                            printFontSize === 'sm' ? 'text-sm' : 
+                            printFontSize === 'lg' ? 'text-3xl' : 
+                            (isKidsTheme ? 'text-xl' : 'text-2xl')
+                          } ${
+                            isKidsTheme ? 'text-teal-700 font-sans' : 'text-zinc-950 font-serif'
                           }`}>
                             <Latex>{`$$ ${item.mathContent} $$`}</Latex>
                           </div>
@@ -1625,11 +2879,25 @@ export const K5Worksheets: React.FC = () => {
                     {/* Work ledger lines grid if visible */}
                     {showGridWorkspace && !showAnswerKey && !isInteractive && (
                       <div 
-                        className="w-full rounded-2xl border border-zinc-300/50 opacity-50 bg-zinc-50/50"
+                        className="w-full rounded-2xl border border-zinc-300/40 opacity-50 bg-zinc-50/10"
                         style={{ 
                           height: `${item.blankSpaceLines * 25}px`,
-                          backgroundImage: 'linear-gradient(#cbd5e1 1px, transparent 1px)',
-                          backgroundSize: '100% 25px'
+                          backgroundImage: 
+                            gridStyle === 'grid'
+                              ? 'linear-gradient(#cbd5e1 1.2px, transparent 1.2px), linear-gradient(90deg, #cbd5e1 1.2px, transparent 1.2px)'
+                              : gridStyle === 'dots'
+                              ? 'radial-gradient(#64748b 1.5px, transparent 1.5px)'
+                              : gridStyle === 'blank'
+                              ? 'none'
+                              : 'linear-gradient(#cbd5e1 1.2px, transparent 1.2px)', // lines
+                          backgroundSize: 
+                            gridStyle === 'grid'
+                              ? '25px 25px, 25px 25px'
+                              : gridStyle === 'dots'
+                              ? '20px 20px'
+                              : '100% 25px',
+                          backgroundColor: gridStyle === 'blank' ? '#fafafa' : 'transparent',
+                          borderStyle: gridStyle === 'blank' ? 'solid' : 'dashed'
                         }}
                       />
                     )}
@@ -1679,6 +2947,39 @@ export const K5Worksheets: React.FC = () => {
               <span>Primary K-5 Worksheets Suite Core</span>
               <span>Workspace Seed Parameter: {seed}</span>
             </div>
+
+            {/* Separate Answer Key printed page */}
+            {appendSolutionsOnPrint && (
+              <div className="hidden print:block break-before-page border-t-2 border-dashed border-zinc-400 pt-10 mt-14 font-sans">
+                <div className="text-center pb-6 mb-8 border-b-2 border-zinc-200">
+                  <h3 className="text-xl font-extrabold uppercase tracking-widest text-[#1a202c]">
+                    🎓 Answer Key &amp; Solutions Guide
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    {worksheetTitle} &bull; Seed: {seed}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-x-8 gap-y-6 text-sm">
+                  {questions.map((item, index) => (
+                    <div key={`key-${item.id}`} className="p-4 bg-zinc-50 rounded-xl border border-zinc-200 space-y-1.5 break-inside-avoid">
+                      <div className="flex items-center gap-2 font-sans font-black text-xs text-zinc-600">
+                        <span>Question {index + 1}</span>
+                      </div>
+                      <p className="font-bold text-zinc-900 leading-snug">{item.questionStr}</p>
+                      <div className="font-extrabold text-teal-800 bg-white inline-block px-2.5 py-1.5 rounded-lg border border-teal-200 shadow-sm font-mono text-sm">
+                        Correct Answer: {item.answerKey}
+                      </div>
+                      {item.stepDetails && (
+                        <div className="text-xs text-zinc-600 leading-relaxed italic border-t border-zinc-100 pt-1.5 overflow-x-auto scrollbar-none">
+                          Step guide: <Latex>{`$ ${item.stepDetails} $`}</Latex>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
