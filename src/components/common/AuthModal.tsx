@@ -132,6 +132,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   const handleGoogleSignIn = async () => {
     setLocalError(null);
+    if (window.self !== window.top) {
+      setLocalError("Embedded Preview Block: Google Sign-in popup will be blocked by iframe cross-origin policies. Please open this app in a new tab, or use Email Sign Up.");
+      // Still attempt it in case it's a permissive browser, but show the error
+    }
     await signInWithGoogle();
   };
 
@@ -461,7 +465,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                   <button
                     type="button"
-                    onClick={() => signInWithGoogle(true)}
+                    onClick={() => {
+                       if (window.self !== window.top) {
+                         alert("Google Sign-In requires third-party cookies which are blocked in this embedded preview. Please open the application in a new tab, or use Email & Password instead.");
+                       } else {
+                         signInWithGoogle(true);
+                       }
+                    }}
                     disabled={loading}
                     className="w-full text-center text-[10px] text-brand-text-secondary hover:underline py-1.5"
                   >

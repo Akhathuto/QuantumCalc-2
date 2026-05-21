@@ -101,11 +101,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (err: any) {
-        console.error("Error from redirect sign-in:", err);
-        if (err.code === 'auth/network-request-failed') {
-          setError("Network error encountered during redirect sign-in. This often happens if the domain is not authorized in Firebase Console.");
+        console.error('Error from redirect sign-in:', err);
+        // Common in iframes/previews with third-party cookie restrictions or unwhitelisted domains
+        if (err.code === 'auth/internal-error' || err.code === 'auth/network-request-failed') {
+           console.warn('Silently ignoring redirect initialization error:', err.code);
         } else {
-          setError(err.message);
+           // We do not set the error state globally on boot, as it blocks the user from email sign up
+           console.warn('Unhandled redirect error:', err.message);
         }
       }
     };
