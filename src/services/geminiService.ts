@@ -59,18 +59,77 @@ export const getApiKey = (): string => {
   return process.env.GEMINI_API_KEY || '';
 };
 
-let aiClient: GoogleGenAI | null = null;
+export const getGeminiModel = (): string => {
+  try {
+    const selectedModel = localStorage.getItem('CUSTOM_GEMINI_MODEL');
+    if (selectedModel) return selectedModel;
+  } catch(e) {
+    console.warn("Could not retrieve custom model selection.");
+  }
+  return "gemini-3.5-flash"; // default
+};
+
+export const getSystemInstructionSuffix = (): string => {
+  try {
+    const tone = localStorage.getItem('CUSTOM_AI_TONE') || 'academic';
+    switch (tone) {
+      case 'student':
+        return "\nEXPLANATION TONE: Explain concepts like a friendly, encouraging high-school tutor. Keep descriptions simple, use super relatable metaphors, and avoid overly technical terms unless defining them first.";
+      case 'kid':
+        return "\nEXPLANATION TONE: Explain concepts simply as if talking to a curious 8-year-old child. Use playful, high-energy language and funny real-world analogies (like toys or space rockets!).";
+      case 'professional':
+        return "\nEXPLANATION TONE: Explain concepts in a highly professional, concise, and technically rigorous format. Focus on speed, mathematical precision, and engineering application.";
+      case 'academic':
+      default:
+        return "\nEXPLANATION TONE: Explain concepts in a balanced, informative, educational tone. Perfect for academic self-study and learning.";
+    }
+  } catch (e) {
+    return "";
+  }
+};
 
 const getAiClient = (): GoogleGenAI => {
-  if (!aiClient) {
-    const apiKey = getApiKey();
-      
-    if (!apiKey) {
-      throw new AiServiceError('MISSING_KEY', "Gemini API key is missing. It should be configured in the environment.");
-    }
-    aiClient = new GoogleGenAI({ apiKey });
+  const apiKey = getApiKey();
+    
+  if (!apiKey) {
+    throw new AiServiceError('MISSING_KEY', "Gemini API key is missing. It should be configured in the environment.");
   }
-  return aiClient;
+  return new GoogleGenAI({ 
+    apiKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build'
+      }
+    }
+  });
+};
+
+export const validateApiKey = async (apiKey: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const tempAi = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build'
+        }
+      }
+    });
+    const model = getGeminiModel();
+    const response = await tempAi.models.generateContent({
+        model: model,
+        contents: "Respond only with standard system greeting 'Quantum Server Operational'. Keep it under 5 words.",
+    });
+    return { 
+      success: true, 
+      message: response.text?.trim() || "Connected successfully." 
+    };
+  } catch (error: any) {
+    console.error("API Key validation error:", error);
+    return { 
+      success: false, 
+      message: error?.message || "Invalid API key or network error." 
+    };
+  }
 };
 
 const getErrorMessage = (error: any): string => {
@@ -115,11 +174,11 @@ export const getFormulaExplanation = async (expression: string): Promise<Explana
       - For trigonometric functions like sin, use 'θ' as the parameter. For logarithms, use 'log_b(x)'. For combinations, use 'nCr(n, k)'.
       - The 'parameters' array should describe each variable in the formula. If there are no parameters (like for Pi), return an empty array.
       - If no specific function is found, return null.
-    `;
+    ` + getSystemInstructionSuffix();
 
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: getGeminiModel(),
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -170,11 +229,11 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
       Focus on general economic principles.
       For example: "The ${from}/${to} rate is often influenced by factors such as the interest rate decisions of their respective central banks, inflation data, and trade balances."
       Keep the response under 60 words.
-    `;
+    ` + getSystemInstructionSuffix();
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: getGeminiModel(),
         contents: prompt,
     });
     
@@ -213,11 +272,11 @@ export const getAutoLoanAnalysis = async (details: AutoLoanDetails): Promise<str
       - Keep the tone encouraging and informative.
       - The entire response should be under 100 words.
       - Start the response with a concise summary sentence, followed by bullet points.
-    `;
+    ` + getSystemInstructionSuffix();
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: getGeminiModel(),
         contents: prompt,
     });
     
@@ -260,11 +319,11 @@ export const getFinancialInsight = async (data: any, calculatorType: string): Pr
       - DO NOT use speculative language. Use conditional language ("could", "may").
       - Maximum 80 words.
       - Keep it insightful and encouraging.
-    `;
+    ` + getSystemInstructionSuffix();
     
     const ai = getAiClient();
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: getGeminiModel(),
         contents: prompt,
     });
     

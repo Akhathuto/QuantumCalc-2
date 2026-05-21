@@ -2411,7 +2411,7 @@ const OFFLINE_SAMPLES: Record<string, PracticeProblem[]> = {
                 'At each level, elements must be re-merged sequentially, which consumes linear $O(n)$ time operations.',
                 'Multiply the depth ($\\log n$) by the linear reconstruction cost ($n$).'
             ],
-            answerKey: 'O(n \log n)',
+            answerKey: 'O(n \\log n)',
             keywords: ['n log n', 'o(n log n)', 'logarithmic']
         }
     ],
@@ -2633,6 +2633,7 @@ const PracticeBench = () => {
                 setExamIntervalId(null);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode, examSubmitted, problems.length]);
 
     // Reset everything when topic/subject/problems changes

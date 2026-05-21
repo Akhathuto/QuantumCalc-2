@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info } from 'lucide-react';
+import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info, Cpu, Sparkles, Clipboard, Activity } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
-import { secureStorage } from '../services/geminiService';
+import { secureStorage, validateApiKey, getGeminiModel } from '../services/geminiService';
 import { googleDriveService } from '../services/googleDriveService';
 import { motion } from 'motion/react';
 
@@ -149,24 +149,179 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
         catch(e) { return false; }
     });
 
+    // Modern Advanced AI Settings States
+    const [selectedModel, setSelectedModel] = useState(() => getGeminiModel());
+    const [aiTone, setAiTone] = useState(() => localStorage.getItem('CUSTOM_AI_TONE') || 'academic');
+    const [hapticEnabled, setHapticEnabled] = useState(() => localStorage.getItem('CUSTOM_HAPTIC_ENABLED') === 'true');
+    const [apiTestStatus, setApiTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+    const [apiTestMessage, setApiTestMessage] = useState('');
+    const [smartInputText, setSmartInputText] = useState('');
+    const [extractedKey, setExtractedKey] = useState('');
+    const [storageSizes, setStorageSizes] = useState({
+        history: 0,
+        notes: 0,
+        other: 0,
+        total: 0
+    });
+
+    const loadStorageUsage = () => {
+        try {
+            const h = localStorage.getItem('calcHistory') || '';
+            const n = localStorage.getItem('quantum_notes') || '';
+            let totalBytes = 0;
+            let otherBytes = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key) {
+                    const value = localStorage.getItem(key) || '';
+                    const size = (key.length + value.length) * 2;
+                    totalBytes += size;
+                    if (key !== 'calcHistory' && key !== 'quantum_notes') {
+                        otherBytes += size;
+                    }
+                }
+            }
+            setStorageSizes({
+                history: h.length * 2,
+                notes: n.length * 2,
+                other: otherBytes,
+                total: totalBytes
+            });
+        } catch (e) {
+            console.warn("Storage scan restricted.");
+        }
+    };
+
+    useEffect(() => {
+        loadStorageUsage();
+    }, []);
+
     const handleSaveApiKey = () => {
         try {
             if (customApiKey.trim() === '') {
                 secureStorage.removeItem('CUSTOM_GEMINI_API_KEY');
                 setIsKeySaved(false);
+                setApiTestStatus('idle');
+                setApiTestMessage('');
                 showToast("API Key removed.");
             } else {
                 const trimmedKey = customApiKey.trim();
                 if (!trimmedKey.startsWith('AIzaSy')) {
-                    showToast("Warning: This may not be a valid Gemini API key. They usually start with 'AIzaSy'.", );
+                    showToast("Warning: This may not be a valid Gemini API key. They usually start with 'AIzaSy'.");
                 }
                 secureStorage.setItem('CUSTOM_GEMINI_API_KEY', trimmedKey);
                 setIsKeySaved(true);
                 setCustomApiKey('');
+                setApiTestStatus('idle');
+                setApiTestMessage('');
                 showToast("API Key saved securely.");
             }
         } catch (e) {
             showToast("Failed to save API Key.");
+        }
+    };
+
+    const handleSmartKeyExtract = (text: string) => {
+        setSmartInputText(text);
+        const regex = /(AIzaSy[A-Za-z0-9_-]{33})/;
+        const match = text.match(regex);
+        if (match) {
+            setExtractedKey(match[1]);
+        } else {
+            setExtractedKey('');
+        }
+    };
+
+    const saveExtractedKey = async () => {
+        if (!extractedKey) return;
+        setApiTestStatus('testing');
+        setApiTestMessage('Validating extracted key with prompt probe...');
+        const res = await validateApiKey(extractedKey);
+        if (res.success) {
+            secureStorage.setItem('CUSTOM_GEMINI_API_KEY', extractedKey);
+            setIsKeySaved(true);
+            setCustomApiKey('');
+            setSmartInputText('');
+            setExtractedKey('');
+            setApiTestStatus('success');
+            setApiTestMessage(`Connection verified! Response: "${res.message}"`);
+            showToast("Extracted API Key successfully verified & saved!");
+        } else {
+            setApiTestStatus('failed');
+            setApiTestMessage(`Validation failed: ${res.message}`);
+            showToast("Extract verification failed. Is this a valid key?");
+        }
+    };
+
+    const handleTestApiKey = async () => {
+        setApiTestStatus('testing');
+        setApiTestMessage('Reaching out to Gemini network probe...');
+        const storedKey = secureStorage.getItem('CUSTOM_GEMINI_API_KEY');
+        const keyToUse = customApiKey.trim() || storedKey || '';
+        if (!keyToUse) {
+            setApiTestStatus('testing');
+            setApiTestMessage('Checking default system backup key...');
+            // Check validation with generic empty, which hits the fallback env variable client or server side
+            const testFallback = await validateApiKey("");
+            if (testFallback.success) {
+                setApiTestStatus('success');
+                setApiTestMessage(`Standard system key active! Connection is verified: "${testFallback.message}"`);
+            } else {
+                setApiTestStatus('failed');
+                setApiTestMessage(`System default key is currently throttled or offline.`);
+            }
+            return;
+        }
+
+        const res = await validateApiKey(keyToUse);
+        if (res.success) {
+            setApiTestStatus('success');
+            setApiTestMessage(`Success! Gemini API Online. Status response: "${res.message}"`);
+        } else {
+            setApiTestStatus('failed');
+            setApiTestMessage(`Verification failed! Error details: ${res.message}`);
+        }
+    };
+
+    const handleModelChange = (model: string) => {
+        setSelectedModel(model);
+        localStorage.setItem('CUSTOM_GEMINI_MODEL', model);
+        showToast(`AI Engine set to ${model}`);
+    };
+
+    const handleToneChange = (tone: string) => {
+        setAiTone(tone);
+        localStorage.setItem('CUSTOM_AI_TONE', tone);
+        showToast("AI explanation level updated.");
+    };
+
+    const handleHapticToggle = () => {
+        const nextHaptic = !hapticEnabled;
+        setHapticEnabled(nextHaptic);
+        localStorage.setItem('CUSTOM_HAPTIC_ENABLED', nextHaptic ? 'true' : 'false');
+        if (nextHaptic && navigator.vibrate) {
+            try {
+                navigator.vibrate([100, 50, 100]);
+            } catch (err) {
+                console.warn("Haptics not supported on device.");
+            }
+        }
+        showToast(nextHaptic ? "Haptic vibrations enabled!" : "Haptic vibrations disabled.");
+    };
+
+    const handlePartialClear = (type: 'history' | 'notes') => {
+        if (type === 'history') {
+            if (window.confirm("Purge local calculation history? This action is irreversible.")) {
+                localStorage.removeItem('calcHistory');
+                loadStorageUsage();
+                showToast("Calculation logs successfully purged.");
+            }
+        } else {
+            if (window.confirm("Purge all Scratchpad notes? This action is irreversible.")) {
+                localStorage.removeItem('quantum_notes');
+                loadStorageUsage();
+                showToast("Scratchpad files successfully deleted.");
+            }
         }
     };
 
@@ -379,63 +534,214 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                         </div>
                     </motion.div>
 
-                    <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm flex flex-col">
-                        <h3 className="text-xl font-bold mb-6 text-brand-text flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
-                                <AlertCircle size={20} />
-                            </div>
-                            API Keys
-                        </h3>
-                        <div className="flex-1 space-y-4">
-                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed mb-4">
-                                Set your own Gemini API key to unlock advanced features or if you encounter quota limits.
-                            </p>
-                            
-                            {isKeySaved ? (
-                                <div className="flex items-center gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                                    <span className="text-emerald-500 font-medium text-xs">Custom API key is active.</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                                    <AlertCircle className="text-amber-500 shrink-0" size={16} />
-                                    <span className="text-amber-500 font-medium text-xs">System default key used.</span>
-                                </div>
-                            )}
+                    <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm flex flex-col md:col-span-2">
+                        <div className="flex flex-col lg:flex-row gap-8 justify-between">
+                            {/* Key Setup Side */}
+                            <div className="flex-1 space-y-6">
+                                <h3 className="text-xl font-bold text-brand-text flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
+                                        <Cpu size={20} />
+                                    </div>
+                                    Gemini API Custom Integration
+                                </h3>
 
-                            <div className="space-y-3">
-                                <input
-                                    type="password"
-                                    value={customApiKey}
-                                    onChange={(e) => setCustomApiKey(e.target.value)}
-                                    placeholder={isKeySaved ? "Enter new key to replace..." : "Gemini API key (AIzaSy...)"}
-                                    className="w-full bg-brand-bg border border-brand-border/60 text-brand-text rounded-xl p-3 focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:text-brand-text-secondary/50 font-mono text-sm"
-                                />
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleSaveApiKey}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 transition-all font-bold text-xs uppercase tracking-wider border border-purple-500/20"
-                                    >
-                                        <Save size={14} />
-                                        {isKeySaved ? (customApiKey.trim() === '' ? 'Remove' : 'Replace') : 'Save'}
-                                    </button>
-                                    <button
-                                        onClick={async () => {
-                                            try {
-                                                if ((window as any).aistudio?.openSelectKey) {
-                                                    await (window as any).aistudio.openSelectKey();
-                                                    showToast("API Key selection completed.");
-                                                } else {
-                                                    showToast("Platform Dialog unavailable.");
+                                <p className="text-brand-text-secondary text-sm font-light leading-relaxed">
+                                    Maximize performance, bypass request throttling, and unlock deep explanation logic. Get a free API Key instantly from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-purple-400 font-medium hover:underline inline-flex items-center gap-1">Google AI Studio <Sparkles size={12} className="inline" /></a>.
+                                </p>
+
+                                {isKeySaved ? (
+                                    <div className="flex items-center justify-between p-4 bg-emerald-500/15 border border-emerald-500/20 rounded-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                            <div>
+                                                <span className="text-emerald-400 font-semibold text-xs block">CUSTOM KEY VERIFIED & ACTIVE</span>
+                                                <span className="text-emerald-500/80 text-[10px] font-mono leading-none">Your securely sandboxed browser keychain is in use.</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                secureStorage.removeItem('CUSTOM_GEMINI_API_KEY');
+                                                setIsKeySaved(false);
+                                                setApiTestStatus('idle');
+                                                setApiTestMessage('');
+                                                showToast("Custom key dismantled.");
+                                            }}
+                                            className="text-[10px] text-rose-400 font-bold hover:underline px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/20 uppercase"
+                                        >
+                                            Nuke Key
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                                        <AlertCircle className="text-amber-500 shrink-0 animate-bounce" size={18} />
+                                        <div>
+                                            <span className="text-amber-500 font-bold text-xs block">SYSTEM BACKUP KEY ACTIVE</span>
+                                            <span className="text-amber-500/70 text-[10px] leading-none">Utilizing global generic calculation engine capacity.</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-semibold text-brand-text-secondary uppercase tracking-wider block">Manual Key Input</label>
+                                    <input
+                                        type="password"
+                                        value={customApiKey}
+                                        onChange={(e) => setCustomApiKey(e.target.value)}
+                                        placeholder={isKeySaved ? "••••••••••••••••••••••••••••••••••••" : "Paste raw Gemini API Key here (AIzaSy...)"}
+                                        className="w-full bg-brand-bg border border-brand-border/60 text-brand-text rounded-2xl p-3.5 focus:ring-2 focus:ring-brand-primary outline-none transition-all placeholder:text-brand-text-secondary/30 font-mono text-sm shadow-inner"
+                                    />
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={handleSaveApiKey}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-400 transition-all font-bold text-xs uppercase tracking-wider border border-purple-500/20 shadow-md"
+                                        >
+                                            <Save size={14} />
+                                            {isKeySaved ? (customApiKey.trim() === '' ? 'Purge Current' : 'Overrule Key') : 'Save Key'}
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    if ((window as any).aistudio?.openSelectKey) {
+                                                        await (window as any).aistudio.openSelectKey();
+                                                        showToast("API Key selection completed.");
+                                                    } else {
+                                                        showToast("Platform Selector unavailable. Please paste key manually.");
+                                                    }
+                                                } catch (err) {
+                                                    showToast("Failed to open selector.");
                                                 }
-                                            } catch (err) {
-                                                showToast("Failed to open selector.");
-                                            }
-                                        }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-surface border border-brand-border hover:bg-brand-surface/80 text-brand-text transition-all font-bold text-xs uppercase tracking-wider"
-                                    >
-                                        Use Dialog
-                                    </button>
+                                            }}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-surface border border-brand-border hover:bg-brand-surface/80 text-brand-text transition-all font-bold text-xs uppercase tracking-wider shadow-sm"
+                                        >
+                                            Use Dialog
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Active connection testing */}
+                                <div className="pt-3 border-t border-brand-border/40">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-semibold text-brand-text-secondary uppercase tracking-wider">Diagnostic Probe</span>
+                                        <button
+                                            onClick={handleTestApiKey}
+                                            disabled={apiTestStatus === 'testing'}
+                                            className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold uppercase tracking-wider transition-all"
+                                        >
+                                            {apiTestStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+                                        </button>
+                                    </div>
+
+                                    {apiTestStatus !== 'idle' && (
+                                        <div className={`p-3.5 rounded-xl border text-xs font-mono flex items-start gap-2.5 transition-all ${
+                                            apiTestStatus === 'testing' ? 'bg-indigo-500/5 border-indigo-500/20 text-indigo-400' :
+                                            apiTestStatus === 'success' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' :
+                                            'bg-rose-500/5 border-rose-500/20 text-rose-400'
+                                        }`}>
+                                            <Activity size={14} className={`shrink-0 mt-0.5 ${apiTestStatus === 'testing' ? 'animate-spin' : ''}`} />
+                                            <div>
+                                                <span className="font-bold uppercase tracking-wide block mb-0.5">
+                                                    {apiTestStatus === 'testing' ? 'CONNECTING PROBE...' : 
+                                                     apiTestStatus === 'success' ? 'PROBE SUCCESSFUL ✓' : 'PROBE FAILURE ✗'}
+                                                </span>
+                                                <p className="opacity-90 leading-normal">{apiTestMessage}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Smart Pasting and Options Side */}
+                            <div className="flex-1 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-brand-border/40 pt-6 lg:pt-0 lg:pl-8 space-y-6">
+                                <div className="space-y-4">
+                                    <h4 className="text-sm font-bold text-brand-text uppercase tracking-wider flex items-center gap-2">
+                                        <Clipboard size={16} className="text-purple-400" />
+                                        Smart Paste Key Extractor
+                                    </h4>
+                                    <p className="text-brand-text-secondary text-xs font-light leading-relaxed">
+                                        Have a code snippet, JSON configuration, or raw email block containing your key? Simply paste the whole text block below. We will instantly extract, clean, and verify your credentials automatically.
+                                    </p>
+                                    <textarea
+                                        rows={3}
+                                        value={smartInputText}
+                                        onChange={(e) => handleSmartKeyExtract(e.target.value)}
+                                        placeholder="Paste anything here... (e.g., const key = 'AIzaSy...')"
+                                        className="w-full bg-brand-bg/60 border border-brand-border/50 text-brand-text rounded-xl p-3 placeholder:text-brand-text-secondary/30 outline-none transition-all text-xs font-mono"
+                                    />
+                                    {extractedKey && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 5 }} 
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-between"
+                                        >
+                                            <div className="flex items-center gap-2 overflow-hidden truncate">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-ping shrink-0" />
+                                                <span className="text-[10px] text-purple-400 font-mono font-semibold truncate">
+                                                    Key Extracted: {extractedKey.substring(0, 10)}...{extractedKey.substring(extractedKey.length - 6)}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={saveExtractedKey}
+                                                className="px-3 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white font-bold text-[10px] uppercase shadow-lg shadow-purple-500/10"
+                                            >
+                                                Activate Key
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-brand-border/30">
+                                    <h4 className="text-xs font-bold text-brand-text-secondary uppercase tracking-wider">Advanced AI Preferences</h4>
+                                    
+                                    <div className="space-y-3">
+                                        {/* Model selection dropdown */}
+                                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-brand-bg/50 p-2.5 rounded-2xl border border-brand-border/30">
+                                            <span className="text-xs text-brand-text-secondary pl-1">Target Engine</span>
+                                            <select
+                                                value={selectedModel}
+                                                onChange={(e) => handleModelChange(e.target.value)}
+                                                className="bg-brand-surface border border-brand-border text-brand-text text-xs rounded-xl p-1.5 focus:outline-none focus:ring-1 focus:ring-brand-primary cursor-pointer font-mono"
+                                            >
+                                                <option value="gemini-3.5-flash">gemini-3.5-flash (Fast & Creative)</option>
+                                                <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Deep Thinker)</option>
+                                                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Ultra Lite)</option>
+                                            </select>
+                                        </div>
+
+                                        {/* AI Persona/Tone dropdown */}
+                                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-brand-bg/50 p-2.5 rounded-2xl border border-brand-border/30">
+                                            <span className="text-xs text-brand-text-secondary pl-1">Explanation Tone</span>
+                                            <select
+                                                value={aiTone}
+                                                onChange={(e) => handleToneChange(e.target.value)}
+                                                className="bg-brand-surface border border-brand-border text-brand-text text-xs rounded-xl p-1.5 focus:outline-none focus:ring-1 focus:ring-brand-primary cursor-pointer"
+                                            >
+                                                <option value="academic">Standard Academic Lessons</option>
+                                                <option value="student">Friendly Student Tutor</option>
+                                                <option value="kid">Curious Kid (Playful Analogies)</option>
+                                                <option value="professional">Rigorous Tech Professional</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Haptics toggling */}
+                                        <div className="flex justify-between items-center bg-brand-bg/50 p-3 rounded-2xl border border-brand-border/30">
+                                            <div>
+                                                <span className="text-xs text-brand-text font-semibold block">Key Haptic Vibrations</span>
+                                                <span className="text-[10px] text-brand-text-secondary">Tactile physical screen bumps on keyclicks</span>
+                                            </div>
+                                            <button
+                                                onClick={handleHapticToggle}
+                                                className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors duration-300 focus:outline-none ${
+                                                    hapticEnabled ? 'bg-purple-500' : 'bg-gray-600'
+                                                }`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow transition-transform duration-300 ${
+                                                        hapticEnabled ? 'translate-x-[1.6rem]' : 'translate-x-1'
+                                                    }`}
+                                                />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -580,13 +886,96 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
             </motion.div>
 
             <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm relative overflow-hidden">
-                <div className="absolute -top-32 -right-32 w-64 h-64 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
-                <h3 className="text-2xl font-bold mb-8 text-brand-text">Data & Security</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                <h3 className="text-2xl font-bold mb-4 text-brand-text">Local Storage & Sandboxed Memory</h3>
+                <p className="text-brand-text-secondary text-sm font-light leading-relaxed mb-8">
+                    View real-time client-side memory partitions stored inside your browser. Clear individual elements to reclaim space or execute a full backup.
+                </p>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    {/* Size metric widgets */}
+                    <div className="p-5 bg-brand-bg/50 border border-brand-border/40 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <span className="text-xs text-brand-text-secondary font-semibold uppercase tracking-wider block mb-1">Calculator History</span>
+                            <span className="text-2xl font-mono font-bold text-brand-text">{(storageSizes.history / 1024).toFixed(2)} KB</span>
+                        </div>
+                        <button 
+                            onClick={() => handlePartialClear('history')}
+                            disabled={storageSizes.history === 0}
+                            className="w-full mt-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/15 rounded-xl text-xs font-bold uppercase transition-all disabled:opacity-35"
+                        >
+                            Purge History
+                        </button>
+                    </div>
+
+                    <div className="p-5 bg-brand-bg/50 border border-brand-border/40 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <span className="text-xs text-brand-text-secondary font-semibold uppercase tracking-wider block mb-1">Scratchpad Notes</span>
+                            <span className="text-2xl font-mono font-bold text-brand-text">{(storageSizes.notes / 1024).toFixed(2)} KB</span>
+                        </div>
+                        <button 
+                            onClick={() => handlePartialClear('notes')}
+                            disabled={storageSizes.notes === 0}
+                            className="w-full mt-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/15 rounded-xl text-xs font-bold uppercase transition-all disabled:opacity-35"
+                        >
+                            Purge Scratchpad
+                        </button>
+                    </div>
+
+                    <div className="p-5 bg-brand-bg/50 border border-brand-border/40 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <span className="text-xs text-brand-text-secondary font-semibold uppercase tracking-wider block mb-1">Total System Cache</span>
+                            <span className="text-2xl font-mono font-bold text-brand-text">{(storageSizes.total / 1024).toFixed(2)} KB</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={loadStorageUsage}
+                                className="flex-1 mt-4 py-2 bg-brand-surface border border-brand-border hover:bg-brand-border text-brand-text rounded-xl text-xs font-bold uppercase transition-all"
+                            >
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Storage breakdown visualization */}
+                <div className="space-y-2 mb-8 bg-brand-bg/40 p-5 rounded-2xl border border-brand-border/35">
+                    <h4 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3">Partition Allocation</h4>
+                    <div className="w-full h-3 bg-brand-bg rounded-full overflow-hidden flex shadow-inner">
+                        <div 
+                            style={{ width: `${storageSizes.total > 0 ? (storageSizes.history / storageSizes.total) * 100 : 0}%` }} 
+                            className="h-full bg-blue-500 transition-all duration-500"
+                        />
+                        <div 
+                            style={{ width: `${storageSizes.total > 0 ? (storageSizes.notes / storageSizes.total) * 100 : 0}%` }} 
+                            className="h-full bg-emerald-500 transition-all duration-500"
+                        />
+                        <div 
+                            style={{ width: `${storageSizes.total > 0 ? (storageSizes.other / storageSizes.total) * 100 : 0}%` }} 
+                            className="h-full bg-purple-500 transition-all duration-500"
+                        />
+                    </div>
+                    <div className="flex flex-wrap gap-4 pt-2 text-[10px] font-mono">
+                        <span className="flex items-center gap-1.5 text-blue-400">
+                            <span className="w-2 h-2 rounded-full bg-blue-500" />
+                            History: {(storageSizes.history / 1024).toFixed(2)} KB ({storageSizes.total > 0 ? Math.round((storageSizes.history / storageSizes.total) * 100) : 0}%)
+                        </span>
+                        <span className="flex items-center gap-1.5 text-emerald-400">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            Notes: {(storageSizes.notes / 1024).toFixed(2)} KB ({storageSizes.total > 0 ? Math.round((storageSizes.notes / storageSizes.total) * 100) : 0}%)
+                        </span>
+                        <span className="flex items-center gap-1.5 text-purple-400">
+                            <span className="w-2 h-2 rounded-full bg-purple-500" />
+                            Metadata: {(storageSizes.other / 1024).toFixed(2)} KB ({storageSizes.total > 0 ? Math.round((storageSizes.other / storageSizes.total) * 100) : 0}%)
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-brand-border/40">
                     <div className="flex flex-col p-6 bg-brand-bg/60 border border-brand-border/40 rounded-2xl">
                         <div className="flex-1">
-                            <h4 className="font-bold text-brand-text mb-2 flex items-center gap-2"><Download size={18} className="text-blue-500" /> Export Data</h4>
-                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed mb-6">Download a complete snapshot of your calculation history and preferences.</p>
+                            <h4 className="font-bold text-brand-text mb-2 flex items-center gap-2"><Download size={18} className="text-blue-500" /> Export Data Structure</h4>
+                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed mb-6">Download a complete snapshot JSON file of your local memory partitions directly from your client environment.</p>
                         </div>
                         <button
                             onClick={handleExportData}
@@ -598,14 +987,14 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
 
                     <div className="flex flex-col p-6 bg-red-500/5 border border-red-500/10 rounded-2xl relative z-10">
                         <div className="flex-1">
-                            <h4 className="font-bold text-red-500 mb-2 flex items-center gap-2"><Trash2 size={18} /> Reset Application</h4>
-                            <p className="text-red-500/80 text-sm font-light leading-relaxed mb-6">Permanently purge all local memory. This action is instantaneous and irreversible.</p>
+                            <h4 className="font-bold text-red-500 mb-2 flex items-center gap-2"><Trash2 size={18} /> Hard Purge Memory</h4>
+                            <p className="text-red-500/80 text-sm font-light leading-relaxed mb-6">Instantly clear your entire sandbox database footprint, themes, and customized models. This physical purge is irreversible.</p>
                         </div>
                         <button
                             onClick={handleClearAllData}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl font-bold transition-all text-sm"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl font-bold transition-all text-sm animate-pulse"
                         >
-                            <Trash2 size={16} /> Purge Memory
+                            <Trash2 size={16} /> Purge All Database
                         </button>
                     </div>
                 </div>
