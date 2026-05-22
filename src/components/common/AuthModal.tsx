@@ -27,15 +27,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { 
     signInWithGoogle, 
     signUpWithEmail, 
-    signInWithEmail, 
+    signInWithEmail,
+    resetPassword,
     error: authError, 
     clearError, 
     loading, 
     user 
   } = useAuth();
 
-  // Tab State: 'signin' | 'signup'
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  // Tab State: 'signin' | 'signup' | 'forgot'
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup' | 'forgot'>('signin');
   
   // Field States
   const [email, setEmail] = useState('');
@@ -82,6 +83,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const doPasswordsMatch = password && confirmPassword && password === confirmPassword;
 
   const validateForm = () => {
+    if (activeTab === 'forgot') {
+      if (!email) {
+        setLocalError('Please enter your email address to reset password.');
+        return false;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setLocalError('Please enter a valid email address.');
+        return false;
+      }
+      setLocalError(null);
+      return true;
+    }
+
     if (!email || !password) {
       setLocalError('Please fill in all required fields.');
       return false;
@@ -121,8 +136,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     try {
       if (activeTab === 'signin') {
         await signInWithEmail(email, password);
-      } else {
+      } else if (activeTab === 'signup') {
         await signUpWithEmail(email, password, displayName);
+      } else if (activeTab === 'forgot') {
+        await resetPassword(email);
+        setLocalError("If an account exists, a password reset link has been sent. Check your inbox.");
       }
     } catch (err) {
       // Errors are set and displayed via useAuth context
@@ -177,6 +195,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-4xl bg-brand-surface border border-brand-border rounded-[2.5rem] overflow-hidden shadow-2xl z-20"
           >
+            {/* Close Button */}
+            <button 
+              onClick={onClose}
+              className="absolute top-6 right-6 p-2 rounded-full bg-brand-bg/50 border border-brand-border hover:bg-brand-bg hover:border-brand-primary/50 text-brand-text-secondary hover:text-brand-text transition-all z-50 backdrop-blur-md"
+              title="Close Panel"
+            >
+              <X size={18} />
+            </button>
+
             {/* Ambient Background Glows */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-brand-primary/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-brand-secondary/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
@@ -241,25 +268,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <div className="flex bg-brand-bg/40 p-1.5 rounded-2xl border border-brand-border/50 max-w-sm mb-8 self-center md:self-start w-full">
                   <button
                     onClick={() => setActiveTab('signin')}
-                    className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all gap-2 flex items-center justify-center ${activeTab === 'signin' ? 'bg-brand-primary text-brand-bg shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}
+                    className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all gap-2 flex items-center justify-center ${activeTab === 'signin' || activeTab === 'forgot' ? 'bg-brand-primary text-brand-bg shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}
                   >
-                    <LogIn size={13} /> Secure Login
+                    <LogIn size={13} /> {activeTab === 'forgot' ? 'Reset Password' : 'Log In'}
                   </button>
                   <button
                     onClick={() => setActiveTab('signup')}
                     className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all gap-2 flex items-center justify-center ${activeTab === 'signup' ? 'bg-brand-primary text-brand-bg shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}
                   >
-                    <UserPlus size={13} /> Create Account
+                    <UserPlus size={13} /> Sign Up
                   </button>
                 </div>
 
                 {/* Main Heading for small screens */}
                 <div className="md:hidden text-center mb-6">
                   <h3 className="text-2xl font-black text-brand-primary tracking-tight">
-                    {activeTab === 'signin' ? 'Welcome Back!' : 'Get Started'}
+                    {activeTab === 'signin' ? 'Welcome Back!' : activeTab === 'signup' ? 'Get Started' : 'Reset Password'}
                   </h3>
                   <p className="text-xs text-brand-text-secondary mt-1">
-                    {activeTab === 'signin' ? 'Access your personal academic dashboard.' : 'Register a free scholar account.'}
+                    {activeTab === 'signin' ? 'Access your personal academic dashboard.' : activeTab === 'signup' ? 'Register a free scholar account.' : 'Check your email for a recovery link.'}
                   </p>
                 </div>
 
@@ -292,8 +319,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     <label htmlFor="auth_email" className="block text-[9px] font-mono text-brand-text-secondary uppercase tracking-widest">
                       Email Address *
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-4 flex items-center text-brand-text-secondary/70 pointer-events-none">
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-4 flex items-center text-brand-text-secondary/70 group-focus-within:text-brand-primary pointer-events-none transition-colors">
                         <Mail size={16} />
                       </div>
                       <input
@@ -302,59 +329,76 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="e.g. scholar@university.edu"
-                        className="w-full bg-brand-bg/60 border border-brand-border hover:border-brand-primary/40 focus:border-brand-primary/80 text-xs text-brand-text rounded-xl py-3.5 pl-11 pr-4 outline-none transition-all placeholder:text-brand-text-secondary/35 font-medium"
+                        className="w-full bg-brand-bg/60 border border-brand-border hover:border-brand-primary/40 focus:border-brand-primary/80 focus:bg-brand-bg focus:ring-1 focus:ring-brand-primary/50 text-xs text-brand-text rounded-xl py-3.5 pl-11 pr-4 outline-none transition-all placeholder:text-brand-text-secondary/35 font-medium"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label htmlFor="auth_password" className="block text-[9px] font-mono text-brand-text-secondary uppercase tracking-widest">
-                      Password *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-4 flex items-center text-brand-text-secondary/70 pointer-events-none">
-                        <Lock size={16} />
+                  {activeTab !== 'forgot' && (
+                    <div className="space-y-1.5 animate-fade-in">
+                      <div className="flex justify-between items-center">
+                        <label htmlFor="auth_password" className="block text-[9px] font-mono text-brand-text-secondary uppercase tracking-widest">
+                          Password *
+                        </label>
+                        {activeTab === 'signin' && (
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              setActiveTab('forgot');
+                              clearError();
+                              setLocalError(null);
+                            }} 
+                            className="text-[9px] text-brand-primary hover:text-white uppercase font-bold tracking-wider"
+                          >
+                            Forgot Password?
+                          </button>
+                        )}
                       </div>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        id="auth_password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder={activeTab === 'signup' ? 'Minimum 6 characters' : '••••••••'}
-                        className="w-full bg-brand-bg/60 border border-brand-border hover:border-brand-primary/40 focus:border-brand-primary/80 text-xs text-brand-text rounded-xl py-3.5 pl-11 pr-11 outline-none transition-all placeholder:text-brand-text-secondary/35 font-mono"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-4 flex items-center text-brand-text-secondary/70 hover:text-brand-text transition-colors"
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                      <div className="relative group">
+                        <div className="absolute inset-y-0 left-4 flex items-center text-brand-text-secondary/70 group-focus-within:text-brand-primary pointer-events-none transition-colors">
+                          <Lock size={16} />
+                        </div>
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          id="auth_password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder={activeTab === 'signup' ? 'Minimum 6 characters' : '••••••••'}
+                          className="w-full bg-brand-bg/60 border border-brand-border hover:border-brand-primary/40 focus:border-brand-primary/80 focus:bg-brand-bg focus:ring-1 focus:ring-brand-primary/50 text-xs text-brand-text rounded-xl py-3.5 pl-11 pr-11 outline-none transition-all placeholder:text-brand-text-secondary/35 font-mono"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-4 flex items-center text-brand-text-secondary/70 hover:text-brand-primary transition-colors"
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {activeTab === 'signup' && password && (
+                        <div className="space-y-1 pt-1">
+                          <div className="flex justify-between items-center text-[9px] font-mono text-brand-text-secondary">
+                            <span>Password Strength:</span>
+                            <span className={`font-bold uppercase tracking-wider ${strength.score >= 4 ? 'text-emerald-400' : strength.score >= 2 ? 'text-amber-400' : 'text-red-400'}`}>
+                              {strength.label}
+                            </span>
+                          </div>
+                          <div className="h-1 w-full bg-brand-bg/50 rounded-full overflow-hidden border border-brand-border/20">
+                            <div className={`h-full transition-all duration-300 ${strength.color} ${strength.width}`} />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {activeTab === 'signup' && password && (
-                      <div className="space-y-1 pt-1">
-                        <div className="flex justify-between items-center text-[9px] font-mono text-brand-text-secondary">
-                          <span>Password Strength:</span>
-                          <span className={`font-bold uppercase tracking-wider ${strength.score >= 4 ? 'text-emerald-400' : strength.score >= 2 ? 'text-amber-400' : 'text-red-400'}`}>
-                            {strength.label}
-                          </span>
-                        </div>
-                        <div className="h-1 w-full bg-brand-bg/50 rounded-full overflow-hidden border border-brand-border/20">
-                          <div className={`h-full transition-all duration-300 ${strength.color} ${strength.width}`} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
 
                   {activeTab === 'signup' && (
                     <div className="space-y-1.5 animate-fade-in">
                       <label htmlFor="auth_confirmPassword" className="block text-[9px] font-mono text-brand-text-secondary uppercase tracking-widest">
                         Confirm Password *
                       </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-4 flex items-center text-brand-text-secondary/70 pointer-events-none">
+                      <div className="relative group">
+                        <div className="absolute inset-y-0 left-4 flex items-center text-brand-text-secondary/70 group-focus-within:text-brand-primary pointer-events-none transition-colors">
                           <Lock size={16} />
                         </div>
                         <input
@@ -363,13 +407,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="Re-enter your password"
-                          className="w-full bg-brand-bg/60 border border-brand-border hover:border-brand-primary/40 focus:border-brand-primary/80 text-xs text-brand-text rounded-xl py-3.5 pl-11 pr-11 outline-none transition-all placeholder:text-brand-text-secondary/35 font-mono"
+                          className="w-full bg-brand-bg/60 border border-brand-border hover:border-brand-primary/40 focus:border-brand-primary/80 focus:bg-brand-bg focus:ring-1 focus:ring-brand-primary/50 text-xs text-brand-text rounded-xl py-3.5 pl-11 pr-11 outline-none transition-all placeholder:text-brand-text-secondary/35 font-mono"
                           required
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute inset-y-0 right-4 flex items-center text-brand-text-secondary/70 hover:text-brand-text transition-colors"
+                          className="absolute inset-y-0 right-4 flex items-center text-brand-text-secondary/70 hover:text-brand-primary transition-colors"
                         >
                           {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -421,10 +465,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         <RefreshCw size={15} className="animate-spin" />
                       ) : activeTab === 'signin' ? (
                         <>Sign In Securely <ArrowRight size={14} /></>
-                      ) : (
+                      ) : activeTab === 'signup' ? (
                         <>Complete Registration <ArrowRight size={14} /></>
+                      ) : (
+                        <>Send Recovery Link <ArrowRight size={14} /></>
                       )}
                     </button>
+                    {activeTab === 'forgot' && (
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setActiveTab('signin');
+                          clearError();
+                          setLocalError(null);
+                        }} 
+                        className="w-full mt-4 py-2 text-[10px] text-brand-text-secondary hover:text-white uppercase font-bold tracking-wider transition-colors"
+                      >
+                        Nevermind, Back to Sign In
+                      </button>
+                    )}
                   </div>
                 </form>
 

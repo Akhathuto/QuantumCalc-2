@@ -9,7 +9,8 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { 
@@ -34,6 +35,7 @@ interface AuthContextType {
   signInWithGoogle: (useRedirect?: boolean) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -48,6 +50,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithGoogle: async (_useRedirect?: boolean) => {},
   signUpWithEmail: async (_email: string, _password: string, _displayName: string) => {},
   signInWithEmail: async (_email: string, _password: string) => {},
+  resetPassword: async (_email: string) => {},
   logout: async () => {},
   clearError: () => {},
 });
@@ -339,8 +342,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (err: any) {
+      setLoading(false);
+      console.error("Password reset error:", err);
+      if (err.code === 'auth/invalid-email') {
+        setError("Please enter a valid email address.");
+      } else if (err.code === 'auth/user-not-found') {
+        setError("No account found with this email address.");
+      } else {
+        setError(err.message || "Failed to send reset email.");
+      }
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, logout, clearError }}>
+    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, resetPassword, logout, clearError }}>
       {children}
     </AuthContext.Provider>
   );

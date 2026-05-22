@@ -16,8 +16,8 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
   const { user, userData, logout } = useAuth();
 
   const handleSearchClick = () => {
-    const ev = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, metaKey: true });
-    document.dispatchEvent(ev);
+    const ev = new CustomEvent('open-command-palette');
+    window.dispatchEvent(ev);
   };
 
   return (

@@ -25,7 +25,7 @@ interface DrillProblem {
   stepByStepSolution: string;
 }
 
-const CATEGORIES = ["All Categories", "Calculus & Limits", "Algebraic Systems", "Trig Identities", "Fractions & Core Arithmetic"];
+const CATEGORIES = ["All Categories", "Calculus & Limits", "Algebraic Systems", "Trig Identities", "Fractions & Core Arithmetic", "Geometry", "Statistics & Probability"];
 
 export const MathExercises: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState("All Categories");
@@ -261,6 +261,110 @@ export const MathExercises: React.FC = () => {
         ],
         stepByStepSolution: `\\frac{${a}}{3} \\cdot \\frac{6}{${a === 2 ? 5 : a - 1}} = \\frac{${6 * a}}{${3 * (a === 2 ? 5 : a - 1)}} = \\frac{${2 * a}}{${a === 2 ? 5 : a - 1}}.`
       });
+    }
+
+    // Category 5: Geometry
+    if (cat === 'All Categories' || cat === 'Geometry') {
+      if (level === 'basic') {
+        deck.push({
+          id: 501,
+          category: "Geometry",
+          difficulty: 'basic',
+          title: "Area of a right triangle",
+          latexQuery: `\\text{Area of right } \\triangle \\text{ with base } ${a} \\text{ and height } ${b}`,
+          correctAnswer: [`${(a * b) / 2}`],
+          hints: [
+            "The area of a triangle is half the product of its base and height.",
+            "Calculate $0.5 \\times \\text{base} \\times \\text{height}$.",
+            `Calculate $0.5 \\times ${a} \\times ${b}$.`
+          ],
+          stepByStepSolution: `A = \\frac{1}{2}bh = \\frac{1}{2}(${a})(${b}) = ${(a * b) / 2}.`
+        });
+      } else if (level === 'intermediate') {
+        const sideC = Math.sqrt(a * a + b * b);
+        const formatSide = sideC % 1 === 0 ? `${sideC}` : `\\sqrt{${a * a + b * b}}`;
+        deck.push({
+          id: 502,
+          category: "Geometry",
+          difficulty: 'intermediate',
+          title: "Pythagorean Theorem",
+          latexQuery: `\\text{Hypotenuse of right } \\triangle \\text{ with legs } ${a}, ${b}`,
+          correctAnswer: [`${sideC % 1 === 0 ? sideC : `sqrt(${a*a + b*b})`}`],
+          hints: [
+            "Use the Pythagorean theorem: $a^2 + b^2 = c^2$.",
+            `Calculate $${a}^2 + ${b}^2$.`,
+            "Take the square root of the sum."
+          ],
+          stepByStepSolution: `c^2 = a^2 + b^2 = ${a}^2 + ${b}^2 = ${a * a + b * b}. \\quad c = ${formatSide}.`
+        });
+      } else {
+        deck.push({
+          id: 503,
+          category: "Geometry",
+          difficulty: 'advanced',
+          title: "Volume of a cylinder",
+          latexQuery: `\\text{Cylinder Volume } (r = ${a}, h = ${b}) \\quad \\text{in terms of } \\pi`,
+          correctAnswer: [`${a * a * b}\\pi`, `${a * a * b}pi`, `${a * a * b}*pi`],
+          hints: [
+            "The volume formula for a cylinder is $V = \\pi r^2 h$.",
+            `Square the radius: $r^2 = ${a}^2 = ${a * a}$.`,
+            `Multiply by height $h = ${b}$ and append $\\pi$.`
+          ],
+          stepByStepSolution: `V = \\pi r^2 h = \\pi (${a})^2 (${b}) = ${a * a * b}\\pi.`
+        });
+      }
+    }
+
+    // Category 6: Statistics & Probability
+    if (cat === 'All Categories' || cat === 'Statistics & Probability') {
+      if (level === 'basic') {
+        deck.push({
+          id: 601,
+          category: "Statistics & Probability",
+          difficulty: 'basic',
+          title: "Arithmetic Mean",
+          latexQuery: `\\text{Mean of } \\{ ${a}, ${b}, ${c} \\}`,
+          correctAnswer: [`${(a + b + c) / 3}`],
+          hints: [
+            "The mean is the sum of the numbers divided by the count.",
+            `Sum the numbers: $${a} + ${b} + ${c} = ${a + b + c}$.`,
+            `Divide the sum by 3 (the total number of items).`
+          ],
+          stepByStepSolution: `\\text{Mean} = \\frac{${a} + ${b} + ${c}}{3} = \\frac{${a + b + c}}{3} = ${(a + b + c) / 3}.`
+        });
+      } else if (level === 'intermediate') {
+        const total = a + b;
+        deck.push({
+          id: 602,
+          category: "Statistics & Probability",
+          difficulty: 'intermediate',
+          title: "Probability of basic event",
+          latexQuery: `\\text{Probability of picking red from } ${a} \\text{ red, } ${b} \\text{ blue}`,
+          correctAnswer: [`${a}/${total}`],
+          hints: [
+            "Probability is (Target Outcomes) / (Total Outcomes).",
+            `Target outcomes (red) = $${a}$. Total outcomes = $${a} + ${b} = ${total}$.`,
+            `The probability is $${a} / ${total}$.`
+          ],
+          stepByStepSolution: `P(\\text{red}) = \\frac{\\text{red}}{\\text{total}} = \\frac{${a}}{${a} + ${b}} = \\frac{${a}}{${total}}.`
+        });
+      } else {
+        const permResult = a * (a - 1) * (a - 2);
+        deck.push({
+          id: 603,
+          category: "Statistics & Probability",
+          difficulty: 'advanced',
+          title: "Permutations",
+          latexQuery: `P(${a}, 3) \\text{ or } {}^{${a}}P_3`,
+          correctAnswer: [`${permResult}`],
+          hints: [
+            "Permutations formula: $P(n, k) = \\frac{n!}{(n - k)!}$.",
+            "This simplifies to multiplying descending terms: $n \\times (n - 1) \\times (n - 2)$.",
+            `Calculate $${a} \\times ${a - 1} \\times ${a - 2}$.`
+          ],
+          stepByStepSolution: `P(${a}, 3) = \\frac{${a}!}{(${a} - 3)!} = ${a} \\times ${a - 1} \\times ${a - 2} = ${permResult}.`
+        });
+      }
     }
 
     // Fallback if empty

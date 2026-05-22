@@ -19,7 +19,8 @@ const ACADEMIC_CATEGORIES = [
     { id: 'chemistry', name: 'Chemistry', icon: Atom, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     { id: 'biology', name: 'Biology', icon: Dna, color: 'text-pink-500', bg: 'bg-pink-500/10' },
     { id: 'cs', name: 'Computer Science', icon: Code, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    { id: 'history', name: 'History/Geo', icon: Globe, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { id: 'history', name: 'History', icon: Globe, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { id: 'language', name: 'Language Arts', icon: Book, color: 'text-red-500', bg: 'bg-red-500/10' }
 ];
 
 const FORMULAS = {
@@ -49,6 +50,10 @@ const FORMULAS = {
     ],
     history: [
         { name: 'Scale Factor representation', formula: '\\text{Map Ratio} = 1 : 100,000', description: 'Translates ocean and land dimensions onto flat maps' }
+    ],
+    language: [
+        { name: 'Sentence Structure', formula: '\\text{Subject} + \\text{Verb} + \\text{Object}', description: 'Core structure of English sentences.' },
+        { name: 'Simile vs Metaphor', formula: '\\text{Simile uses "like" or "as", Metaphor asserts identity}', description: 'Core figurative language differences.' }
     ]
 };
 
@@ -58,28 +63,53 @@ const EXERCISES = {
         { q: "A square has a side length of 5 cm. What is its Perimeter and its Area?", a: "Perimeter = 20 cm, Area = 25 cm²", difficulty: 'Kids / Easy' },
         { q: "Find the roots of x² - 5x + 6 = 0", a: "x = 2, x = 3", difficulty: 'Medium' },
         { q: "Calculate the derivative of f(x) = x³ + 2x", a: "f'(x) = 3x² + 2", difficulty: 'Medium' },
-        { q: "Integrate ∫(2x) dx", a: "x² + C", difficulty: 'Easy' }
+        { q: "Integrate ∫(2x) dx", a: "x² + C", difficulty: 'Easy' },
+        { q: "Solve for y in the system: x + y = 10, x - y = 2", a: "y = 4", difficulty: 'Medium' },
+        { q: "Calculate the value of sin(π/2)", a: "1", difficulty: 'Easy' },
+        { q: "What is the volume of a sphere with a radius of 3cm? (Leave in terms of π)", a: "36π cm³", difficulty: 'Hard' }
     ],
     physics: [
         { q: "Why do we weigh less on the Moon than on the Earth?", a: "Because the Moon has much less mass and pulls with only 1/6th of Earth's gravity force.", difficulty: 'Kids / Easy' },
         { q: "A car travels 100m in 5s. Find velocity.", a: "20 m/s", difficulty: 'Easy' },
-        { q: "Calculate gravitational force between two 1kg masses at 1m.", a: "6.67 × 10⁻¹¹ N", difficulty: 'Hard' }
+        { q: "Calculate gravitational force between two 1kg masses at 1m.", a: "6.67 × 10⁻¹¹ N", difficulty: 'Hard' },
+        { q: "What is the kinetic energy of a 2kg object moving at 3 m/s?", a: "9 Joules", difficulty: 'Medium' },
+        { q: "If voltage is 12V and resistance is 4Ω, what is the current?", a: "3 Amperes", difficulty: 'Easy' },
+        { q: "Calculate the work done when applying 10N force over 5m.", a: "50 Joules", difficulty: 'Medium' }
     ],
     chemistry: [
-        { q: "What are the three core states of water, and how do we get them?", a: "Ice (Solid, freeze below 0°C), Water (Liquid, average temperature), Steam (Gas, heat up above 100°C).", difficulty: 'Kids / Easy' },
-        { q: "Which three particles make up an atom?", a: "Protons (positive charge), Neutrons (neutral charge), and Electrons (negative charge).", difficulty: 'Kids / Easy' }
+        { q: "What are the three core states of water, and how do we get them?", a: "Ice (Solid), Water (Liquid), Steam (Gas). Change by heating/cooling.", difficulty: 'Kids / Easy' },
+        { q: "Which three particles make up an atom?", a: "Protons (positive charge), Neutrons (neutral charge), and Electrons (negative charge).", difficulty: 'Kids / Easy' },
+        { q: "Balance the equation: H2 + O2 → H2O", a: "2H2 + O2 → 2H2O", difficulty: 'Medium' },
+        { q: "What is the pH of pure water at 25°C?", a: "7.0 (Neutral)", difficulty: 'Easy' },
+        { q: "How many moles are in 18 grams of H2O?", a: "1 mole (Molar mass of H2O is ~18 g/mol)", difficulty: 'Hard' }
     ],
     biology: [
         { q: "What is green pigment in leaves called, and what does it do?", a: "Chlorophyll. It absorbs sunlight to power food production (Photosynthesis).", difficulty: 'Kids / Easy' },
-        { q: "Why do human bodies need red blood cells?", a: "To carry oxygen from your lungs to the rest of your body.", difficulty: 'Kids / Easy' }
+        { q: "Why do human bodies need red blood cells?", a: "To carry oxygen from your lungs to the rest of your body.", difficulty: 'Kids / Easy' },
+        { q: "What is the powerhouse of the cell?", a: "Mitochondria - they generate most of the cell's supply of ATP.", difficulty: 'Medium' },
+        { q: "Name the process by which DNA is copied into RNA.", a: "Transcription", difficulty: 'Hard' },
+        { q: "How many bones are in the adult human body?", a: "206 bones", difficulty: 'Easy' }
     ],
     cs: [
         { q: "How do you write the normal number 5 in computer binary code?", a: "0101 (Fours column + Ones column = 4 + 1 = 5)", difficulty: 'Kids / Easy' },
-        { q: "What is the difference between an If-Else decider and a Loop?", a: "A loop repeats an action multiple times, while If-Else makes a single choice.", difficulty: 'Kids / Easy' }
+        { q: "What is the difference between an If-Else decider and a Loop?", a: "A loop repeats an action multiple times, while If-Else makes a single choice.", difficulty: 'Kids / Easy' },
+        { q: "What does HTML stand for?", a: "HyperText Markup Language", difficulty: 'Easy' },
+        { q: "Define what a Boolean data type is.", a: "A data type that has one of two possible values (usually denoted true and false).", difficulty: 'Medium' },
+        { q: "What is the time complexity of a binary search?", a: "O(log n)", difficulty: 'Hard' }
     ],
     history: [
         { q: "Name the planet in our solar system that is famous for its bright outer rings.", a: "Saturn", difficulty: 'Kids / Easy' },
-        { q: "How many oceans are on the planet Earth, and which one is the largest?", a: "There are 5 oceans in total, and the Pacific Ocean is the largest.", difficulty: 'Kids / Easy' }
+        { q: "How many oceans are on the planet Earth, and which one is the largest?", a: "There are 5 oceans in total, and the Pacific Ocean is the largest.", difficulty: 'Kids / Easy' },
+        { q: "In what year did the Apollo 11 first land humans on the Moon?", a: "1969", difficulty: 'Medium' },
+        { q: "Who was the first woman to win a Nobel Prize?", a: "Marie Curie (in 1903 for Physics)", difficulty: 'Medium' },
+        { q: "What ancient civilization built the Machu Picchu?", a: "The Inca Empire", difficulty: 'Easy' }
+    ],
+    language: [
+        { q: "What is a noun?", a: "A word that represents a person, place, thing, or idea.", difficulty: 'Kids / Easy' },
+        { q: "Identify the verb in: 'The quick brown fox jumps.'", a: "Jumps", difficulty: 'Easy' },
+        { q: "What is an oxymoron?", a: "A figure of speech in which apparently contradictory terms appear in conjunction (e.g., deafening silence).", difficulty: 'Medium' },
+        { q: "Give an example of alliteration.", a: "Peter Piper picked a peck of pickled peppers.", difficulty: 'Medium' },
+        { q: "What is the theme of a story?", a: "The central idea, underlying message, or lesson the author wants to convey.", difficulty: 'Hard' }
     ]
 };
 
@@ -161,6 +191,19 @@ const STUDY_NOTES = {
             'The Seven Continents: Asia (largest), Africa, North America, South America, Antarctica (coldest), Europe, Australia.',
             'The Five Oceans: Pacific (deepest & largest), Atlantic, Indian, Southern (polar cold), Arctic (smallest).'
         ], tip: 'Over 70% of the Earth is covered in salt water oceans!' }
+    ],
+    language: [
+        { title: 'Parts of Speech', points: [
+            'Noun: A person, place, thing, or idea (e.g., dog, city, happiness).',
+            'Verb: An action or state of being (e.g., run, is, think).',
+            'Adjective: Describes a noun (e.g., red, beautiful, quickly).',
+            'Adverb: Describes a verb, adjective, or another adverb (e.g., quickly, very).'
+        ], tip: 'Use strong verbs and adjectives to make your writing more vivid!' },
+        { title: 'Literary Devices', points: [
+            'Simile: Comparing two things using "like" or "as" (e.g., brave as a lion).',
+            'Metaphor: Comparing two things directly without "like" or "as" (e.g., time is a thief).',
+            'Personification: Giving human qualities to non-human things (e.g., the wind whispered).'
+        ], tip: 'Literary devices bring poetry and creative writing to life!' }
     ]
 };
 
@@ -168,6 +211,7 @@ const ExerciseReference = () => {
     const [selectedCat, setSelectedCat] = useState('math');
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState<'formulas' | 'exercises' | 'notes'>('formulas');
+    const [revealedExercises, setRevealedExercises] = useState<Record<number, boolean>>({});
 
     const filteredFormulas = (FORMULAS[selectedCat as keyof typeof FORMULAS] || []).filter(f => 
         f.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -337,12 +381,29 @@ const ExerciseReference = () => {
                                             </div>
                                             <div className="space-y-4">
                                                 <p className="text-lg font-black text-brand-text tracking-tight leading-tight">{e.q}</p>
-                                                <div className="pt-6 border-t border-brand-border/20">
-                                                    <div className="text-[9px] font-black text-brand-text-secondary/40 uppercase tracking-[0.4em] mb-2">Computational Result</div>
-                                                    <div className="text-md font-mono text-emerald-500 font-bold bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/20">
-                                                        {e.a}
+                                                {!revealedExercises[i] ? (
+                                                    <button 
+                                                        onClick={() => setRevealedExercises({...revealedExercises, [i]: true})} 
+                                                        className="w-full py-4 rounded-xl bg-brand-surface border border-brand-border hover:border-brand-primary/50 text-xs font-black uppercase tracking-widest text-brand-text-secondary hover:text-brand-text transition-all mt-4"
+                                                    >
+                                                        Reveal Answer
+                                                    </button>
+                                                ) : (
+                                                    <div className="pt-6 border-t border-brand-border/20 animate-fade-in">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="text-[9px] font-black text-brand-text-secondary/40 uppercase tracking-[0.4em]">Computational Result</div>
+                                                            <button 
+                                                                onClick={() => setRevealedExercises({...revealedExercises, [i]: false})}
+                                                                className="text-[9px] font-black text-brand-primary uppercase tracking-widest hover:text-white transition-colors"
+                                                            >
+                                                                Hide
+                                                            </button>
+                                                        </div>
+                                                        <div className="text-md font-mono text-emerald-400 font-bold bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 shadow-inner">
+                                                            {e.a}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
                                             </div>
                                         </motion.div>
                                     ))
