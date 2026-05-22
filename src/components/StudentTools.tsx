@@ -2810,8 +2810,12 @@ const PracticeBench = () => {
                 config: { responseMimeType: "application/json" }
             });
             
-            const raw = response.text || '[]';
+            let raw = response.text || '[]';
+            raw = raw.replace(/^```json/i, '').replace(/```$/, '').trim();
             const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) {
+                throw new Error("Parsed response is not an array");
+            }
             setProblems(parsed.map((p: any) => ({ ...p, show: false })));
         } catch (error: any) {
             console.error(error);

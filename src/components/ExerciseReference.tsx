@@ -211,7 +211,7 @@ const ExerciseReference = () => {
     const [selectedCat, setSelectedCat] = useState('math');
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState<'formulas' | 'exercises' | 'notes'>('formulas');
-    const [revealedExercises, setRevealedExercises] = useState<Record<number, boolean>>({});
+    const [revealedExercises, setRevealedExercises] = useState<Record<string, boolean>>({});
 
     const filteredFormulas = (FORMULAS[selectedCat as keyof typeof FORMULAS] || []).filter(f => 
         f.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -381,9 +381,9 @@ const ExerciseReference = () => {
                                             </div>
                                             <div className="space-y-4">
                                                 <p className="text-lg font-black text-brand-text tracking-tight leading-tight">{e.q}</p>
-                                                {!revealedExercises[i] ? (
+                                                {!revealedExercises[`${selectedCat}_${i}`] ? (
                                                     <button 
-                                                        onClick={() => setRevealedExercises({...revealedExercises, [i]: true})} 
+                                                        onClick={() => setRevealedExercises({...revealedExercises, [`${selectedCat}_${i}`]: true})} 
                                                         className="w-full py-4 rounded-xl bg-brand-surface border border-brand-border hover:border-brand-primary/50 text-xs font-black uppercase tracking-widest text-brand-text-secondary hover:text-brand-text transition-all mt-4"
                                                     >
                                                         Reveal Answer
@@ -393,7 +393,7 @@ const ExerciseReference = () => {
                                                         <div className="flex items-center justify-between mb-2">
                                                             <div className="text-[9px] font-black text-brand-text-secondary/40 uppercase tracking-[0.4em]">Computational Result</div>
                                                             <button 
-                                                                onClick={() => setRevealedExercises({...revealedExercises, [i]: false})}
+                                                                onClick={() => setRevealedExercises({...revealedExercises, [`${selectedCat}_${i}`]: false})}
                                                                 className="text-[9px] font-black text-brand-primary uppercase tracking-widest hover:text-white transition-colors"
                                                             >
                                                                 Hide

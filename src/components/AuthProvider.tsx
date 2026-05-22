@@ -10,7 +10,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  browserPopupRedirectResolver
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { 
@@ -91,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Handle redirect result
     const checkRedirect = async () => {
       try {
-        const result = await getRedirectResult(auth);
+        const result = await getRedirectResult(auth, browserPopupRedirectResolver);
         if (result) {
           const credential = GoogleAuthProvider.credentialFromResult(result);
           if (credential?.accessToken) {
@@ -203,11 +204,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     try {
       if (useRedirect) {
-        await signInWithRedirect(auth, provider);
+        await signInWithRedirect(auth, provider, browserPopupRedirectResolver);
         return; // Redirecting...
       }
 
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
         setAccessToken(credential.accessToken);

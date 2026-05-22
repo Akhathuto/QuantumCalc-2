@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   CheckCircle2, 
@@ -10,9 +10,16 @@ import {
   Timer, 
   Check, 
   ArrowRight,
-  Flame
+  Flame,
+  Eraser,
+  PenTool,
+  Brain,
+  X,
+  Compass
 } from 'lucide-react';
 import Latex from 'react-latex-next';
+import ReactMarkdown from 'react-markdown';
+import { getExerciseAiExplanation } from '../services/geminiService';
 
 interface DrillProblem {
   id: number;
@@ -52,6 +59,116 @@ export const MathExercises: React.FC = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const timerActive = true;
 
+  // AI Coach state integrations
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [showAiPanel, setShowAiPanel] = useState(false);
+
+  // Scratchpad interactive state integrations
+  const [showScratchpad, setShowScratchpad] = useState(false);
+  const [brushColor, setBrushColor] = useState('#818cf8'); // Indigo
+  const [brushSize, setBrushSize] = useState(3);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  // Canvas drawing handlers
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const coords = getCoords(e, canvas);
+    ctx.beginPath();
+    ctx.moveTo(coords.x, coords.y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const coords = getCoords(e, canvas);
+    ctx.lineTo(coords.x, coords.y);
+    ctx.stroke();
+    
+    // Prevent scrolling on mobile when drawing
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const getCoords = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvas: HTMLCanvasElement
+  ) => {
+    const rect = canvas.getBoundingClientRect();
+    if ('touches' in e) {
+      if (e.touches.length === 0) return { x: 0, y: 0 };
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    } else {
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    }
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  // Adjust canvas size when scratchpad is opened
+  useEffect(() => {
+    if (showScratchpad && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || 450;
+      canvas.height = rect.height || 260;
+    }
+  }, [showScratchpad]);
+
+  const fetchAiTutorHelp = async () => {
+    if (!currentProblem) return;
+    setAiLoading(true);
+    setAiError(null);
+    setAiAnswer(null);
+    setShowAiPanel(true);
+    try {
+      const response = await getExerciseAiExplanation(
+        currentProblem.category,
+        currentProblem.title,
+        currentProblem.latexQuery
+      );
+      setAiAnswer(response);
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err?.message || "Could not reach the AI Coach at this moment.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   // Load custom structured generators or premium library values on render/category shift
   useEffect(() => {
     generateDrills(activeCategory, activeLevel);
@@ -60,6 +177,10 @@ export const MathExercises: React.FC = () => {
     setChecked(false);
     setShowSolution(false);
     setActiveHintIdx(null);
+    setAiAnswer(null);
+    setAiError(null);
+    setShowAiPanel(false);
+    clearCanvas();
   }, [activeCategory, activeLevel]);
 
   // Integrated timer ticks
@@ -421,6 +542,10 @@ export const MathExercises: React.FC = () => {
     setChecked(false);
     setShowSolution(false);
     setActiveHintIdx(null);
+    setAiAnswer(null);
+    setAiError(null);
+    setShowAiPanel(false);
+    clearCanvas();
     if (currentIdx < problems.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
@@ -554,6 +679,140 @@ export const MathExercises: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Enhanced Tools Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-brand-bg/40 p-3 rounded-2xl border border-brand-border/40">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setShowScratchpad(!showScratchpad)}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all ${
+                        showScratchpad 
+                          ? 'bg-amber-500/15 border border-amber-500/30 text-amber-500' 
+                          : 'bg-brand-bg hover:bg-brand-surface border border-brand-border text-brand-text-secondary hover:text-brand-text'
+                      }`}
+                    >
+                      <PenTool size={11} />
+                      {showScratchpad ? 'Hide Scratchpad' : 'Show Scratchpad'}
+                    </button>
+                    <button
+                      onClick={fetchAiTutorHelp}
+                      disabled={aiLoading}
+                      className="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/15 border border-indigo-500/25 rounded-xl text-[10px] text-indigo-400 font-black uppercase tracking-wider flex items-center gap-2 transition-all disabled:opacity-50"
+                    >
+                      <Brain size={11} className={aiLoading ? "animate-spin" : ""} />
+                      {aiLoading ? "Consulting Coach..." : "Consult AI Math Coach"}
+                    </button>
+                  </div>
+                  {showScratchpad && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-1.5 bg-brand-bg/60 px-2 py-1 rounded-lg border border-brand-border/40">
+                        <span className="text-[9px] font-bold text-brand-text-secondary uppercase">Ink:</span>
+                        {['#818cf8', '#fbbf24', '#34d399', '#ffffff'].map(c => (
+                          <button
+                            key={c}
+                            onClick={() => setBrushColor(c)}
+                            style={{ backgroundColor: c }}
+                            className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                              brushColor === c ? 'ring-2 ring-indigo-400 border-transparent scale-110' : 'border-transparent hover:scale-105'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1 bg-brand-bg/60 px-2 py-1 rounded-lg border border-brand-border/40 text-[9px]">
+                        <span className="font-bold text-brand-text-secondary uppercase">Size:</span>
+                        {[2, 4, 6].map(sz => (
+                          <button
+                            key={sz}
+                            onClick={() => setBrushSize(sz)}
+                            className={`px-1.5 py-0.5 rounded transition-all font-mono font-bold ${
+                              brushSize === sz ? 'bg-indigo-500/20 text-indigo-400' : 'text-brand-text-secondary hover:text-brand-text'
+                            }`}
+                          >
+                            {sz}px
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={clearCanvas}
+                        className="p-1 px-2.5 bg-brand-bg hover:bg-brand-surface border border-brand-border/60 text-brand-text-secondary hover:text-rose-400 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 transition-all"
+                      >
+                        <Eraser size={10} /> Clear
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Interactive Scratchpad Canvas Panel */}
+                <AnimatePresence>
+                  {showScratchpad && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-4 bg-brand-surface/70 rounded-3xl border border-brand-border/60 space-y-2">
+                        <div className="text-[9px] font-black text-brand-text-secondary/55 uppercase tracking-widest flex items-center gap-1">
+                          <Compass size={11} className="text-amber-500 animate-pulse" /> Interactive Canvas (Mouse / Touch draw to formulate derivatives or calculations)
+                        </div>
+                        <canvas
+                          ref={canvasRef}
+                          onMouseDown={startDrawing}
+                          onMouseMove={draw}
+                          onMouseUp={stopDrawing}
+                          onMouseLeave={stopDrawing}
+                          onTouchStart={startDrawing}
+                          onTouchMove={draw}
+                          onTouchEnd={stopDrawing}
+                          className="w-full h-56 bg-brand-bg/95 rounded-2xl cursor-crosshair border border-brand-border/60 shadow-inner block"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* AI Coach Assistant Guidance Overlay */}
+                <AnimatePresence>
+                  {showAiPanel && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 12 }}
+                      className="p-6 bg-indigo-950/25 border border-indigo-500/20 rounded-[2rem] space-y-4 shadow-xl backdrop-blur-sm relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 p-4">
+                        <button
+                          onClick={() => setShowAiPanel(false)}
+                          className="p-1.5 rounded-full bg-brand-bg hover:bg-brand-surface text-brand-text-secondary hover:text-brand-text border border-brand-border transition-all"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-indigo-400">
+                        <Brain size={18} className="animate-pulse" />
+                        <span className="text-xs font-black uppercase tracking-widest font-mono">Quantum AI Math Coach Live Feedback</span>
+                      </div>
+                      
+                      {aiLoading ? (
+                        <div className="space-y-4 py-3 animate-pulse">
+                          <div className="h-4 bg-indigo-500/10 rounded-full w-2/3"></div>
+                          <div className="h-4 bg-indigo-500/10 rounded-full w-4/5"></div>
+                          <div className="h-4 bg-indigo-500/10 rounded-full w-1/2"></div>
+                        </div>
+                      ) : aiError ? (
+                        <div className="text-xs text-rose-400 font-mono py-2 bg-rose-500/5 p-3 rounded-xl border border-rose-500/10">
+                          ⚠️ {aiError}
+                        </div>
+                      ) : aiAnswer ? (
+                        <div className="text-xs text-brand-text-secondary leading-relaxed font-light font-sans whitespace-pre-line py-1 prose prose-invert max-w-none">
+                          <div className="markdown-body">
+                            <ReactMarkdown>{aiAnswer}</ReactMarkdown>
+                          </div>
+                        </div>
+                      ) : null}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Answer prompt controls */}
                 <div className="space-y-4">

@@ -245,6 +245,40 @@ export const getCurrencyForecast = async (from: string, to: string): Promise<str
   }
 };
 
+export const getExerciseAiExplanation = async (category: string, title: string, latexQuery: string): Promise<string> => {
+  try {
+    const prompt = `
+      You are the Quantum Premium AI Math Coach. 
+      Help a student understand and solve the following math exercise:
+      - Category: ${category}
+      - Topic: ${title}
+      - Problem (LaTeX): $$ ${latexQuery} $$
+
+      Provide a concise, encouraging, and highly clear breakdown of this problem.
+      - First, explain the core mathematical concept briefly in 1-2 simple sentences.
+      - Next, break down the key steps or formulas required to solve this kind of problem (using beautiful inline LaTeX where appropriate, e.g., $f(x)$ or $\\frac{dy}{dx}$).
+      - Finally, give a helpful tip or common mistake to avoid when solving this.
+      
+      RULES:
+      - Keep it under 150 words.
+      - Fully use the tone settings.
+      - Do not directly print the final computational answer, guide them step-by-step so they can calculate it themselves.
+      - Maintain a friendly, engaging, coaching tone.
+    ` + getSystemInstructionSuffix();
+
+    const ai = getAiClient();
+    const response = await ai.models.generateContent({
+        model: getGeminiModel(),
+        contents: prompt,
+    });
+    
+    return response.text || "AI Coach was unable to formulate feedback. Verify connection settings.";
+  } catch (error) {
+    console.error("Error fetching math exercise coach explanation:", error);
+    return getErrorMessage(error);
+  }
+};
+
 export interface AutoLoanDetails {
   loanAmount: number;
   interestRate: number;
