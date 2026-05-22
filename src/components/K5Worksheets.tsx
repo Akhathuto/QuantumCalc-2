@@ -2575,26 +2575,36 @@ export const K5Worksheets: React.FC = () => {
 
           {/* Action Row */}
           <div className="flex flex-col gap-2.5 pt-4 border-t border-brand-border/30">
-            <button
-              onClick={handlePrintWorksheet}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 relative group overflow-hidden"
-              title="Print directly or save as vector PDF file"
-            >
-              <Printer size={14} className="group-hover:scale-110 transition-transform" /> Direct Print / Save PDF
-              <div className="absolute top-0 right-0 p-1 px-1.5 bg-amber-500 text-zinc-950 font-black text-[7px] tracking-normal rounded-bl-lg">HQ VECTOR</div>
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handlePrintWorksheet}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-[11px] uppercase tracking-[0.15em] transition-all shadow-lg shadow-emerald-600/20"
+                title="Send active homework sheet to printer"
+              >
+                <Printer size={14} /> Send to Printer
+              </button>
+              
+              <button
+                onClick={handlePrintWorksheet}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-surface border-2 border-emerald-500/50 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-500 rounded-xl font-black text-[11px] uppercase tracking-[0.15em] transition-all relative overflow-hidden"
+                title="Save as a high-quality vector PDF file via Print Dialogue"
+              >
+                <div className="absolute top-0 right-0 p-1 px-1.5 bg-amber-500 text-zinc-950 font-black text-[7px] tracking-normal rounded-bl-lg">VECTOR</div>
+                <FileText size={14} /> Save PDF
+              </button>
+            </div>
 
             {/* Direct PDF saving guide annotation */}
-            <div className="p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/15 text-[10px] text-brand-text-secondary leading-relaxed font-sans space-y-1 text-left">
+            <div className="p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/15 text-[10px] text-brand-text-secondary leading-relaxed font-sans space-y-1 text-left mt-2">
               <p className="font-semibold text-emerald-400 flex items-center gap-1">
                 <span>💡</span> <span>Digital PDF &amp; Printer Setup Guide</span>
               </p>
               <p className="font-light">
-                Clicking <strong className="text-brand-text">Print / Save PDF</strong> opens your system dialogue. In <strong className="text-brand-text">Destination</strong>:
+                Both buttons will open your system dialogue. In <strong className="text-brand-text">Destination</strong>:
               </p>
               <ul className="list-disc pl-3.5 space-y-0.5 font-light">
-                <li>Choose <strong className="text-brand-text">your physical printer's name</strong> to print active homework sheets instantly.</li>
-                <li>Choose <strong className="text-brand-text">"Save as PDF"</strong> or <strong className="text-brand-text">"Microsoft Print to PDF"</strong> to download a digital, pixel-perfect document.</li>
+                <li>Choose <strong className="text-brand-text">your physical printer's name</strong> to print directly.</li>
+                <li>Choose <strong className="text-brand-text">"Save as PDF"</strong> to download a digital, pixel-perfect document.</li>
               </ul>
             </div>
             

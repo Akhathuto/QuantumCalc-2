@@ -181,13 +181,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
           transition={{ delay: 0.2 }}
           className="relative w-full max-w-md mx-auto mt-8 flex flex-col items-center gap-6"
         >
-          <button
-            onClick={() => onTabClick('calculator')}
-            className="inline-flex items-center gap-3 px-10 py-4 bg-brand-primary text-brand-bg rounded-full font-bold text-base hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-brand-primary/30 outline-none focus:ring-4 focus:ring-brand-primary/50"
-          >
-            Get Started <ArrowRight size={20} />
-          </button>
-          <div className="relative w-full group">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
+            <button
+              onClick={() => onTabClick('calculator')}
+              className="w-full sm:w-auto inline-flex justify-center items-center gap-3 px-8 py-4 bg-brand-primary text-brand-bg rounded-full font-bold text-base hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-brand-primary/30 outline-none focus:ring-4 focus:ring-brand-primary/50"
+            >
+              Start Calculating <ArrowRight size={20} />
+            </button>
+            <button
+              onClick={() => onTabClick('exercises')}
+              className="w-full sm:w-auto inline-flex justify-center items-center gap-3 px-8 py-4 bg-brand-surface border border-brand-border text-brand-text rounded-full font-bold text-base hover:bg-brand-primary/5 active:scale-95 transition-all shadow-sm outline-none focus:ring-4 focus:ring-brand-border"
+            >
+              Practice Drills
+            </button>
+          </div>
+          <div className="relative w-full group mt-2">
             <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="relative flex items-center bg-brand-surface border border-brand-border rounded-full p-2 shadow-2xl">
               <Search size={20} className="text-brand-text-secondary ml-3" />
@@ -340,6 +348,45 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
 
       </motion.div>
 
+      {/* Core Capabilities Section */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8"
+      >
+        <motion.div variants={itemVariants} className="bg-brand-surface rounded-[24px] p-8 border border-brand-border/50 text-left hover:border-brand-primary/30 transition-colors shadow-sm">
+          <div className="w-12 h-12 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+            <Calculator size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-brand-text mb-3">Universal Computing</h3>
+          <p className="text-brand-text-secondary text-sm leading-relaxed font-light">
+            From basic math to complex matrix algebra, polynomial limits, and bitwise programming tools. A unified engine designed for precision, speed, and deep analytical parsing.
+          </p>
+        </motion.div>
+        
+        <motion.div variants={itemVariants} className="bg-brand-surface rounded-[24px] p-8 border border-brand-border/50 text-left hover:border-brand-primary/30 transition-colors shadow-sm">
+          <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+            <GraduationCap size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-brand-text mb-3">Academic Excellence</h3>
+          <p className="text-brand-text-secondary text-sm leading-relaxed font-light">
+            Perfect for scholars & educators. Instantly generate printable K-5 Math worksheets with customized answer keys, or jump into adaptive drills to earn achievements.
+          </p>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="bg-brand-surface rounded-[24px] p-8 border border-brand-border/50 text-left hover:border-brand-primary/30 transition-colors shadow-sm">
+          <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+            <LineChart size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-brand-text mb-3">Real-time Visuals</h3>
+          <p className="text-brand-text-secondary text-sm leading-relaxed font-light">
+            Create vivid 2D coordinate graphs, explore interactive periodic tables, and track live currency exchange rates. Data beautifully visualized on any device.
+          </p>
+        </motion.div>
+      </motion.div>
+
       {/* Categories / Modules */}
       <motion.div 
         variants={containerVariants}
@@ -405,20 +452,29 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
         {!user && (
           <motion.div 
             variants={itemVariants}
-            className="md:col-span-12 mt-16 p-12 md:p-20 rounded-[3rem] bg-gradient-to-br from-brand-primary/10 to-transparent border border-brand-primary/20 text-center relative overflow-hidden group hover:border-brand-primary/40 transition-colors duration-500 shadow-sm"
+            className="md:col-span-12 mt-16 p-12 md:p-20 rounded-[3rem] bg-gradient-to-br from-brand-primary/10 via-brand-bg to-brand-secondary/10 border border-brand-primary/20 text-center relative overflow-hidden group hover:border-brand-primary/40 transition-colors duration-500 shadow-sm"
           >
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)] pointer-events-none" />
-            <h2 className="text-4xl md:text-6xl font-black text-brand-text mb-6 tracking-tighter leading-[1.1] relative z-10">
-              Unlock the full potential.
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] pointer-events-none" />
+            <div className="absolute -top-[20rem] -left-[20rem] w-[50rem] h-[50rem] bg-brand-primary/20 rounded-full blur-[120px] pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
+            <div className="absolute -bottom-[20rem] -right-[20rem] w-[50rem] h-[50rem] bg-brand-secondary/20 rounded-full blur-[120px] pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
+            
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-brand-text mb-6 tracking-tighter leading-[1.1] relative z-10 animate-fade-in">
+              Ready to unbox the <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">QuantumCalc Universe</span>?
             </h2>
-            <p className="text-brand-text-secondary text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-light relative z-10">
-              Connect your account to sync your history across devices, access advanced AI workspaces, and personalize your experience. No credit card required.
+            <p className="text-brand-text-secondary text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light relative z-10">
+              Create a free account to sync your history across devices, access advanced AI Workspaces, customize K-5 sheets natively, and gain early access to upcoming modules. No credit card required.
             </p>
+            <div className="flex justify-center mb-10 relative z-10 flex-wrap gap-4">
+               <div className="flex items-center gap-2 text-sm text-brand-text font-medium"><div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-xs">✓</div> Cross-device Sync</div>
+               <div className="flex items-center gap-2 text-sm text-brand-text font-medium"><div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-xs">✓</div> AI Tutors included</div>
+               <div className="flex items-center gap-2 text-sm text-brand-text font-medium"><div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-xs">✓</div> 100% Free forever</div>
+            </div>
+            
             <button 
               onClick={onLoginClick}
-              className="inline-flex items-center gap-3 px-12 py-5 bg-brand-primary text-brand-bg rounded-full font-bold text-sm uppercase tracking-[0.1em] hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-brand-primary/30 relative z-10 outline-none focus:ring-4 focus:ring-brand-primary/50"
+              className="inline-flex items-center gap-3 px-10 py-5 bg-brand-text text-brand-bg rounded-full font-bold text-base hover:scale-105 active:scale-95 transition-transform shadow-2xl shadow-brand-text/20 relative z-10 outline-none focus:ring-4 focus:ring-brand-primary/50"
             >
-              Get Started for Free <ArrowRight size={20} />
+              Sign Up for Free <ArrowRight size={20} />
             </button>
           </motion.div>
         )}

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://qcalc.edgtec.co.za/sitemap.xml

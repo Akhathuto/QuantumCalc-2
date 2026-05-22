@@ -3602,6 +3602,7 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
     const { user, userData } = useAuth();
     type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises' | 'lessons' | 'wolfram' | 'mathexercises' | 'k5worksheets';
     const [activeTool, setActiveTool] = useState<ToolID>('lessons');
+    const [activeToolSearch, setActiveToolSearch] = useState('');
 
     const categories = [
         { id: 'productivity', label: 'Productivity', icon: Activity, types: ['pomodoro', 'assignments', 'notes', 'flashcards'] },
@@ -3671,36 +3672,60 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
             <div className="flex flex-col md:flex-row gap-8 items-start relative">
                 {/* Navigation Sidebar */}
                 <div className="w-full md:w-64 shrink-0 flex flex-col gap-6 relative z-10">
-                    <div className="bg-brand-surface border border-brand-border/50 p-4 rounded-3xl shadow-2xl backdrop-blur-3xl sticky top-24">
-                        {categories.map((cat, index) => (
-                            <div key={cat.id} className={index !== 0 ? 'mt-6' : ''}>
-                                <div className="flex items-center gap-2 px-4 mb-2 text-brand-text-secondary">
-                                    <cat.icon size={12} className="opacity-80" />
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest">{cat.label}</h3>
-                                </div>
-                                <div className="flex flex-col">
-                                    {cat.types.map(type => {
-                                        const toolLabel = type === 'gpa' ? 'GPA Calculator'
-                                            : type === 'elements' ? 'Periodic Table'
-                                            : type === 'tutor' ? 'AI Tutor'
-                                            : type === 'equation' ? 'Equation Solver'
-                                            : type === 'wolfram' ? 'Wolfram Computational'
-                                            : type === 'mathexercises' ? 'Math Drills'
-                                            : type === 'k5worksheets' ? 'K5 Worksheets'
-                                            : type.charAt(0).toUpperCase() + type.slice(1);
-                                        return (
+                    <div className="bg-brand-surface border border-brand-border/50 p-4 rounded-3xl shadow-2xl backdrop-blur-3xl md:sticky md:top-24 max-h-[50vh] md:max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
+                        
+                        {/* Interactive Sidebar Search */}
+                        <div className="relative mb-6">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-text-secondary">
+                                <Search size={14} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Find a tool..."
+                                value={activeToolSearch}
+                                onChange={(e) => setActiveToolSearch(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2.5 bg-brand-bg/50 border border-brand-border rounded-xl text-xs text-brand-text placeholder-brand-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-inner"
+                            />
+                        </div>
+
+                        {categories.map((cat, index) => {
+                            const getToolLabel = (type: string) => {
+                                if (type === 'gpa') return 'GPA Calculator';
+                                if (type === 'elements') return 'Periodic Table';
+                                if (type === 'tutor') return 'AI Tutor';
+                                if (type === 'equation') return 'Equation Solver';
+                                if (type === 'wolfram') return 'Wolfram Computational';
+                                if (type === 'mathexercises') return 'Math Drills';
+                                if (type === 'k5worksheets') return 'K5 Worksheets';
+                                return type.charAt(0).toUpperCase() + type.slice(1);
+                            };
+
+                            const filteredTypes = cat.types.filter(type => {
+                                return getToolLabel(type).toLowerCase().includes(activeToolSearch.toLowerCase());
+                            });
+
+                            if (filteredTypes.length === 0) return null;
+
+                            return (
+                                <div key={cat.id} className={index !== 0 ? 'mt-6' : ''}>
+                                    <div className="flex items-center gap-2 px-4 mb-2 text-brand-text-secondary">
+                                        <cat.icon size={12} className="opacity-80" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest">{cat.label}</h3>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        {filteredTypes.map(type => (
                                             <SubNavButton
                                                 key={type}
-                                                label={toolLabel}
+                                                label={getToolLabel(type)}
                                                 isActive={activeTool === type}
                                                 onClick={() => setActiveTool(type as ToolID)}
                                                 icon={ChevronRight}
                                             />
-                                        );
-                                    })}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
