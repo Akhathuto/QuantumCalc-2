@@ -230,8 +230,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError(`CRITICAL: Domain "${window.location.hostname}" is NOT authorized in Firebase Console. Please go to Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
       } else if (err.code === 'auth/network-request-failed') {
         setError("Network error: This can be caused by ad-blockers, browser privacy settings, or missing Authorized Domains in Firebase. Please try the 'Redirect Method' to bypass common popup restrictions.");
-      } else if (err.code === 'auth/internal-error' && err.message?.includes('popup')) {
-        setError("Internal error during popup initialization. Your browser settings might be restricting the authentication frame. Switching to Redirect Method is recommended.");
+      } else if (err.code === 'auth/internal-error') {
+        setError(`CRITICAL: 'auth/internal-error' usually means the domain "${window.location.hostname}" is NOT authorized. Please go to Firebase Console > Authentication > Settings > Authorized domains and add "${window.location.hostname}". Alternatively, your browser might be blocking third-party cookies or popups.`);
       } else {
         setError(`Authentication Error: ${err.message || "An unexpected error occurred"}. (Code: ${err.code})`);
       }
@@ -301,6 +301,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError("Your password should contain at least 6 characters.");
       } else if (err.code === 'auth/invalid-email') {
         setError("Please enter a valid email address.");
+      } else if (err.code === 'auth/internal-error') {
+        setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Please go to Firebase Console > Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
       } else {
         setError(err.message || "An unexpected error occurred during registration.");
       }
@@ -326,6 +328,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError("Incorrect email or password. Please try again.");
       } else if (err.code === 'auth/invalid-email') {
         setError("Please enter a valid email address.");
+      } else if (err.code === 'auth/internal-error') {
+        setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Please go to Firebase Console > Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
       } else {
         setError(err.message || "An unexpected error occurred during sign-in.");
       }
