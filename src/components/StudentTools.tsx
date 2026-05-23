@@ -3711,12 +3711,12 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                             if (filteredTypes.length === 0) return null;
 
                             return (
-                                <div key={cat.id} className={index !== 0 ? 'mt-6' : ''}>
-                                    <div className="flex items-center gap-2 px-4 mb-2 text-brand-text-secondary">
-                                        <cat.icon size={12} className="opacity-80" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest">{cat.label}</h3>
+                                <div key={cat.id} className={index !== 0 ? 'mt-8 pt-8 border-t border-brand-border/20' : ''}>
+                                    <div className="flex items-center gap-3 px-4 mb-4 text-brand-primary">
+                                        <cat.icon size={14} />
+                                        <h3 className="text-xs font-black uppercase tracking-widest">{cat.label}</h3>
                                     </div>
-                                    <div className="flex flex-col">
+                                    <div className="flex flex-col gap-1">
                                         {filteredTypes.map(type => (
                                             <SubNavButton
                                                 key={type}
@@ -3738,35 +3738,46 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                     <AnimatePresence mode="wait">
                         <motion.div 
                             key={activeTool} 
-                            initial={{ opacity: 0, scale: 0.98, y: 30 }} 
+                            initial={{ opacity: 0, scale: 0.99, y: 10 }} 
                             animate={{ opacity: 1, scale: 1, y: 0 }} 
-                            exit={{ opacity: 0, scale: 0.98, y: -20 }}
-                            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                            exit={{ opacity: 0, scale: 0.99, y: -10 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
                             className="relative group/tool"
                         >
-                            <div className="absolute -inset-4 bg-brand-primary/5 rounded-[3rem] blur-3xl opacity-0 group-hover/tool:opacity-100 transition-opacity duration-1000" />
+                            <div className="absolute -inset-6 bg-brand-primary/5 rounded-[3rem] blur-3xl opacity-0 group-hover/tool:opacity-100 transition-opacity duration-1000" />
                             <div className="relative">
                                 {renderTool()}
                             </div>
 
                             {!user && (
                                 <motion.div 
-                                    initial={{ opacity: 0 }}
-                                    whileInView={{ opacity: 1 }}
-                                    className="mt-16 p-10 md:p-16 rounded-[4rem] bg-brand-surface/30 border border-brand-border/50 flex flex-col md:flex-row items-center justify-between gap-10 backdrop-blur-xl group/cta"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    className="mt-20 p-16 rounded-[4rem] bg-gradient-to-br from-brand-surface/80 to-brand-bg border border-brand-border/50 flex flex-col md:flex-row items-center justify-between gap-12 backdrop-blur-2xl shadow-2xl relative overflow-hidden"
                                 >
-                                    <div className="space-y-4 max-w-xl">
+                                        <div className="absolute top-0 right-0 p-10 opacity-30">
+                                            <GraduationCap size={160} className="text-brand-primary" />
+                                        </div>
+                                        <div className="space-y-4 max-w-xl relative z-10">
                                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest">
                                             <MousePointer2 size={12} /> Researcher License
                                         </div>
-                                        <h4 className="font-black text-brand-text text-4xl leading-tight">Persistent Subject Repository</h4>
+                                        <h4 className="font-black text-brand-text text-4xl leading-tight">Scholastic Repository</h4>
                                         <p className="text-brand-text-secondary text-lg font-light">Authenticated scholars save derivation logs, customized flashcard decks, and AI tutor conversation history across devices.</p>
+                                        <div className="flex flex-wrap gap-4 pt-4">
+                                            {['Sync across devices', 'Infinite history', 'Private dashboard'].map((benefit) => (
+                                                <div key={benefit} className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary bg-brand-surface/50 px-4 py-2 rounded-full">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
+                                                    {benefit}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                     <button 
                                         onClick={onLoginClick}
-                                        className="w-full md:w-auto px-12 py-6 bg-brand-primary text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-brand-primary/40"
+                                        className="w-full md:w-auto px-12 py-6 bg-white text-brand-bg rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-2"
                                     >
-                                        Secure Workspace
+                                        Activate Repository
                                     </button>
                                 </motion.div>
                             )}

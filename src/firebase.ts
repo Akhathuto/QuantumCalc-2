@@ -1,8 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { 
-  initializeAuth, 
-  indexedDBLocalPersistence,
-  browserLocalPersistence 
+  initializeAuth
 } from 'firebase/auth';
 import { doc, getDocFromServer, initializeFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
@@ -17,14 +15,8 @@ export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
 }, dbId);
 
-// Use initializeAuth with explicit persistence for better stability.
-// To prevent the entire Auth service from failing with 'auth/internal-error' inside 
-// sandboxed iframes (where third-party cookies or storage access are blocked on startup),
-// we omit the eager popupRedirectResolver from global initialization. 
-// Instead, the resolver will be passed dynamically during signInWithPopup/Redirect calls.
-export const auth = initializeAuth(app, {
-  persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-});
+// Use initializeAuth with default persistence for better compatibility.
+export const auth = initializeAuth(app);
 
 async function testConnection() {
   try {

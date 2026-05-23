@@ -12,13 +12,13 @@ import {
     Copy,
     Check,
     Terminal,
-    AlertTriangle
+    AlertTriangle,
+    Fingerprint,
+    Link
 } from 'lucide-react';
+
 import { motion, AnimatePresence } from 'motion/react';
 
-import SubNavButton from './common/SubNavButton';
-
-// Reusable UI Components
 const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     const [copied, setCopied] = useState(false);
     
@@ -685,35 +685,193 @@ const RegexTester = () => {
     );
 };
 
+const UuidGenerator = () => {
+    const [uuids, setUuids] = useState<string[]>([]);
+    const [quantity, setQuantity] = useState(5);
+
+    const generate = React.useCallback(() => {
+        const newUuids = Array.from({ length: quantity }, () => crypto.randomUUID());
+        setUuids(newUuids);
+    }, [quantity]);
+
+    React.useEffect(() => {
+        generate();
+    }, [generate]);
+
+    return (
+        <div className="max-w-3xl mx-auto space-y-8">
+            <div className="flex gap-4 items-end">
+                <div className="space-y-4 flex-1">
+                    <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2">Quantity Remaining (1-100)</label>
+                    <input 
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={quantity}
+                        onChange={e => setQuantity(Number(e.target.value) || 1)}
+                        className="w-full bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-xl font-bold shadow-inner"
+                    />
+                </div>
+                <button 
+                    onClick={generate} 
+                    className="h-[76px] px-8 bg-brand-primary text-brand-bg rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-brand-primary/20 hover:scale-[1.02] transition-all"
+                >
+                    <RefreshCw size={20} /> Generate
+                </button>
+            </div>
+
+            <div className="space-y-3 max-h-[30rem] overflow-auto pr-2 custom-scrollbar">
+                {uuids.map((uuid, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 bg-brand-surface/40 rounded-xl border border-brand-border/60 hover:border-brand-primary/30 transition-all group relative">
+                        <span className="font-mono text-brand-text block tracking-wider">{uuid}</span>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-1/2 -translate-y-1/2">
+                            <CopyButton text={uuid} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const UrlParser = () => {
+    const [urlInput, setUrlInput] = useState('https://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash');
+    
+    const parsed = useMemo(() => {
+        if (!urlInput.trim()) return null;
+        try {
+            const u = new URL(urlInput);
+            const params: Record<string, string> = {};
+            u.searchParams.forEach((v, k) => { params[k] = v; });
+            return {
+                href: u.href,
+                protocol: u.protocol,
+                host: u.host,
+                hostname: u.hostname,
+                port: u.port,
+                pathname: u.pathname,
+                search: u.search,
+                hash: u.hash,
+                username: u.username,
+                password: u.password,
+                params
+            };
+        } catch {
+            return null;
+        }
+    }, [urlInput]);
+
+    return (
+        <div className="space-y-8">
+            <div className="space-y-4">
+                <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2">URL String</label>
+                <textarea
+                    value={urlInput}
+                    onChange={e => setUrlInput(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner break-all resize-none h-24"
+                />
+            </div>
+
+            {parsed ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[
+                        { label: 'Protocol', value: parsed.protocol },
+                        { label: 'Hostname', value: parsed.hostname },
+                        { label: 'Port', value: parsed.port || '(default)' },
+                        { label: 'Path', value: parsed.pathname },
+                        { label: 'Query Str', value: parsed.search },
+                        { label: 'Hash Fragment', value: parsed.hash },
+                    ].map((item, i) => (
+                        <div key={i} className="p-6 bg-brand-surface/40 rounded-2xl border border-brand-border/60 hover:border-brand-primary/30 transition-all group relative overflow-hidden">
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <CopyButton text={item.value} />
+                            </div>
+                            <p className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] mb-2">{item.label}</p>
+                            <p className="font-mono text-sm text-brand-text truncate pr-8">{item.value || <span className="opacity-30 italic">none</span>}</p>
+                        </div>
+                    ))}
+
+                    {Object.keys(parsed.params).length > 0 && (
+                        <div className="lg:col-span-3 space-y-4 mt-4">
+                            <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2">Search Params Breakdown</label>
+                            <div className="bg-brand-bg/60 rounded-[2rem] border border-brand-border shadow-inner p-6">
+                                <div className="space-y-2">
+                                    {Object.entries(parsed.params).map(([k, v], i) => (
+                                        <div key={i} className="grid grid-cols-3 gap-4 p-3 bg-brand-surface/40 rounded-xl border border-brand-border/40">
+                                            <div className="font-black text-[10px] uppercase text-brand-primary tracking-wider truncate">{k}</div>
+                                            <div className="col-span-2 font-mono text-sm text-brand-text break-all">{v}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="p-8 text-center bg-red-500/10 border border-red-500/30 rounded-3xl text-red-400 font-mono text-sm">
+                    Invalid URL syntax. Ensure you include a valid protocol (e.g., https://)
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+const tools = [
+    { id: 'json', label: 'JSON Formatter', Icon: Braces, desc: 'Format, minify, and validate JSON data.', category: 'Formatting' },
+    { id: 'jwt', label: 'JWT Decoder', Icon: Key, desc: 'Decode JSON Web Tokens and inspect payloads.', category: 'Security' },
+    { id: 'uuid', label: 'UUID Gen', Icon: Fingerprint, desc: 'Generate standard v4 cryptographic UUIDs.', category: 'Utilities' },
+    { id: 'url', label: 'URL Parser', Icon: Link, desc: 'Break down complex URLs into specific components.', category: 'Utilities' },
+    { id: 'encoder', label: 'Encoders', Icon: Layers, desc: 'Base64, URL encoding, and HTML entities.', category: 'Formatting' },
+    { id: 'regex', label: 'Regex Tester', Icon: Terminal, desc: 'Test regular expressions against practice text.', category: 'Testing' },
+    { id: 'diff', label: 'Text Diff', Icon: Code, desc: 'Compare strings and source code side-by-side.', category: 'Testing' },
+    { id: 'color', label: 'Color Suite', Icon: Palette, desc: 'Inspect colors and compute contrast ratios.', category: 'Design' },
+    { id: 'hasher', label: 'Hash Generator', Icon: Lock, desc: 'Generate SHA-256 and SHA-512 checksums.', category: 'Security' },
+    { id: 'epoch', label: 'Epoch Time', Icon: Clock, desc: 'Convert Unix timestamps to human-readable.', category: 'Utilities' },
+    { id: 'case', label: 'String Case', Icon: CaseSensitive, desc: 'camelCase, snake_case, CONSTANT variables.', category: 'Formatting' },
+];
 
 const DeveloperTools: React.FC = () => {
     const [activeTool, setActiveTool] = useState('json');
+    const [searchTerm, setSearchTerm] = useState('');
 
-    const tools = [
-        { id: 'json', label: 'JSON Formatter', Icon: Braces, desc: 'Format, minify, and validate JSON data.' },
-        { id: 'jwt', label: 'JWT Decoder', Icon: Key, desc: 'Decode JSON Web Tokens and inspect payloads.' },
-        { id: 'encoder', label: 'Encoders', Icon: Layers, desc: 'Base64, URL encoding, and HTML entities.' },
-        { id: 'regex', label: 'Regex Tester', Icon: Terminal, desc: 'Test regular expressions against practice text.' },
-        { id: 'diff', label: 'Text Diff', Icon: Code, desc: 'Compare strings and source code side-by-side.' },
-        { id: 'color', label: 'Color Suite', Icon: Palette, desc: 'Inspect colors and compute contrast ratios.' },
-        { id: 'hasher', label: 'Hash Generator', Icon: Lock, desc: 'Generate SHA-256 and SHA-512 checksums.' },
-        { id: 'epoch', label: 'Epoch Time', Icon: Clock, desc: 'Convert Unix timestamps to human-readable.' },
-        { id: 'case', label: 'String Case', Icon: CaseSensitive, desc: 'camelCase, snake_case, CONSTANT variables.' },
-    ];
+    const filteredTools = useMemo(() => 
+        tools.filter(t => t.label.toLowerCase().includes(searchTerm.toLowerCase())),
+        [searchTerm]
+    );
 
     const renderTool = () => {
+        let component = null;
         switch (activeTool) {
-            case 'json': return <JsonFormatter />;
-            case 'jwt': return <JwtDecoder />;
-            case 'encoder': return <EncoderDecoder />;
-            case 'hasher': return <Hasher />;
-            case 'epoch': return <EpochConverter />;
-            case 'case': return <CaseConverter />;
-            case 'regex': return <RegexTester />;
-            case 'diff': return <VisualDiff />;
-            case 'color': return <ColorSuite />;
-            default: return null;
+            case 'json': component = <JsonFormatter />; break;
+            case 'jwt': component = <JwtDecoder />; break;
+            case 'uuid': component = <UuidGenerator />; break;
+            case 'url': component = <UrlParser />; break;
+            case 'encoder': component = <EncoderDecoder />; break;
+            case 'hasher': component = <Hasher />; break;
+            case 'epoch': component = <EpochConverter />; break;
+            case 'case': component = <CaseConverter />; break;
+            case 'regex': component = <RegexTester />; break;
+            case 'diff': component = <VisualDiff />; break;
+            case 'color': component = <ColorSuite />; break;
         }
+
+        return (
+            <motion.div
+                key={activeTool}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-brand-surface/10 border border-brand-border/30 rounded-[3rem] p-8 md:p-12 shadow-inner"
+            >
+                <div className="mb-10 pb-6 border-b border-brand-border/20">
+                    <h3 className="text-2xl font-black text-white">{activeToolData?.label}</h3>
+                    <p className="text-brand-text-secondary text-sm mt-1">{activeToolData?.desc}</p>
+                </div>
+                {component}
+            </motion.div>
+        );
     };
 
     const activeToolData = tools.find(t => t.id === activeTool);
@@ -739,17 +897,54 @@ const DeveloperTools: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start">
                 {/* Sidebar Navigation */}
                 <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 bg-brand-bg/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none pb-4 md:pb-0 border-b border-brand-border/20 md:border-none -mx-4 px-4 md:mx-0 md:px-0">
-                    <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-2 pb-2 md:pb-0 mask-fade-edges">
-                        <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
-                            {tools.map(tool => (
-                                <SubNavButton 
-                                    key={tool.id}
-                                    label={tool.label} 
-                                    icon={tool.Icon}
-                                    isActive={activeTool === tool.id} 
-                                    onClick={() => setActiveTool(tool.id)}
-                                    layoutId="devNavActive" 
-                                />
+                    <div className="flex flex-col gap-4">
+                        <input 
+                            type="text"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            placeholder="Search tools..."
+                            className="w-full bg-brand-surface/20 border border-brand-border rounded-2xl p-4 text-sm text-white focus:border-brand-primary outline-none"
+                        />
+                        <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-8 pb-2 md:pb-0 mask-fade-edges">
+                            {Object.entries(
+                                filteredTools.reduce((acc, tool) => {
+                                    if (!acc[tool.category]) acc[tool.category] = [];
+                                    acc[tool.category].push(tool);
+                                    return acc;
+                                }, {} as Record<string, typeof filteredTools>)
+                            ).map(([category, catTools]) => (
+                                <div key={category} className="space-y-4">
+                                    <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2 px-1">
+                                        {category}
+                                    </div>
+                                    <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
+                                        {catTools.map(tool => {
+                                            const Icon = tool.Icon;
+                                            const isActive = activeTool === tool.id;
+                                            return (
+                                                <button
+                                                    key={tool.id}
+                                                    onClick={() => setActiveTool(tool.id)}
+                                                    className={`group flex items-center gap-4 px-5 py-4 rounded-3xl transition-all duration-300 w-full text-left
+                                                        ${isActive 
+                                                            ? 'bg-brand-primary text-brand-bg shadow-xl shadow-brand-primary/20 scale-[1.02]' 
+                                                            : 'bg-brand-surface/20 text-brand-text-secondary hover:bg-brand-surface/40 hover:text-brand-text hover:translate-x-1'
+                                                        }`}
+                                                >
+                                                    <div className={`p-3 rounded-2xl transition-colors ${isActive ? 'bg-brand-bg/20' : 'bg-brand-bg/30 group-hover:bg-brand-bg/60'}`}>
+                                                        <Icon size={20} />
+                                                    </div>
+                                                    <div className="flex-1 overflow-hidden">
+                                                        <div className="font-black text-sm uppercase tracking-wider">{tool.label}</div>
+                                                        <div className={`text-[10px] font-mono mt-1 opacity-70 truncate ${isActive ? 'text-brand-bg/80' : ''}`}>
+                                                            {tool.desc}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
