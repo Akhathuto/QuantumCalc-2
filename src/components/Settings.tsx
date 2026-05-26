@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info, Cpu, Sparkles, Clipboard, Activity, Upload } from 'lucide-react';
+import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info, Cpu, Sparkles, Clipboard, Activity, Upload, Sliders, Volume2, Compass, Eye } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -23,6 +23,7 @@ const themes = [
     { id: 'royal', name: 'Royal Purple', color: 'bg-[#1a0b2e]' },
     { id: 'terminal', name: 'Matrix Green', color: 'bg-black border border-green-500' },
     { id: 'cyberpunk', name: 'Cyberpunk', color: 'bg-[#130019]' },
+    { id: 'mobile-touch', name: 'Mobile Tactile', color: 'bg-black border-2 border-dashed border-blue-400' },
 ];
 
 interface SettingsProps {
@@ -171,6 +172,14 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
 
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isRestoring, setIsRestoring] = useState(false);
+    const [autoSyncEnabled, setAutoSyncEnabled] = useState(() => localStorage.getItem('google_drive_auto_sync') === 'true');
+
+    const handleAutoSyncToggle = () => {
+        const nextVal = !autoSyncEnabled;
+        setAutoSyncEnabled(nextVal);
+        localStorage.setItem('google_drive_auto_sync', nextVal ? 'true' : 'false');
+        showToast(nextVal ? "Real-time Google Drive auto-sync is now active!" : "Real-time auto-sync disabled.");
+    };
 
     const [editRole, setEditRole] = useState(userData?.role || '');
     const [editGrade, setEditGrade] = useState(userData?.grade || '');
@@ -189,6 +198,83 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     const [apiTestMessage, setApiTestMessage] = useState('');
     const [smartInputText, setSmartInputText] = useState('');
     const [extractedKey, setExtractedKey] = useState('');
+    
+    // Status states for enhanced installation mode
+    const [isAppInstalled, setIsAppInstalled] = useState(false);
+    const [isNativeApp, setIsNativeApp] = useState(false);
+
+    // Enhanced math engine & performance controls
+    const [decimalPlaces, setDecimalPlaces] = useState(() => localStorage.getItem('calcDecimalPlaces') || 'auto');
+    const [angleUnit, setAngleUnit] = useState(() => localStorage.getItem('calcAngleUnit') || 'rad');
+    const [soundFXEnabled, setSoundFXEnabled] = useState(() => localStorage.getItem('allowSoundFX') === 'true');
+    const [voiceSpeechEnabled, setVoiceSpeechEnabled] = useState(() => localStorage.getItem('allowVoiceSpeech') === 'true');
+    const [reducedMotionEnabled, setReducedMotionEnabled] = useState(() => localStorage.getItem('reducedMotion') === 'true');
+    const [maxHistoryRows, setMaxHistoryRows] = useState(() => localStorage.getItem('calcMaxHistoryRows') || '100');
+
+    useEffect(() => {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                             (navigator as any).standalone || 
+                             document.referrer.includes('android-app://');
+        const isCapacitor = !!(window as any).Capacitor?.isNative;
+        setIsAppInstalled(isStandalone);
+        setIsNativeApp(isCapacitor);
+    }, []);
+
+    const handleDecimalPlacesChange = (val: string) => {
+        setDecimalPlaces(val);
+        localStorage.setItem('calcDecimalPlaces', val);
+        showToast(`Calculation precision capped at: ${val === 'auto' ? 'Floating Point' : val + ' decimal places'}`);
+    };
+
+    const handleAngleUnitChange = (val: string) => {
+        setAngleUnit(val);
+        localStorage.setItem('calcAngleUnit', val);
+        showToast(`Standard angle orientation alignment set to: ${val === 'rad' ? 'Radians' : 'Degrees'}`);
+    };
+
+    const handleSoundFXToggle = () => {
+        const nextSound = !soundFXEnabled;
+        setSoundFXEnabled(nextSound);
+        localStorage.setItem('allowSoundFX', nextSound ? 'true' : 'false');
+        showToast(nextSound ? "Keypress click sounds initialized!" : "Keypress sound feedback muted.");
+    };
+
+    const handleVoiceSpeechToggle = () => {
+        const nextVoice = !voiceSpeechEnabled;
+        setVoiceSpeechEnabled(nextVoice);
+        localStorage.setItem('allowVoiceSpeech', nextVoice ? 'true' : 'false');
+        
+        if (nextVoice && window.speechSynthesis) {
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance("Vocal feedback engine calibrated.");
+                window.speechSynthesis.speak(utterance);
+            } catch (err) {
+                console.warn("Speech synthesis issue:", err);
+            }
+        }
+        showToast(nextVoice ? "Virtual tutor vocal feedback activated!" : "Vocal feedback deactivated.");
+    };
+
+    const handleReducedMotionToggle = () => {
+        const nextMotion = !reducedMotionEnabled;
+        setReducedMotionEnabled(nextMotion);
+        localStorage.setItem('reducedMotion', nextMotion ? 'true' : 'false');
+        
+        const root = window.document.documentElement;
+        if (nextMotion) {
+            root.classList.add('reduced-motion');
+        } else {
+            root.classList.remove('reduced-motion');
+        }
+        showToast(nextMotion ? "Reduced motion speed controls applied!" : "Normal transitions restored.");
+    };
+
+    const handleMaxHistoryRowsChange = (val: string) => {
+        setMaxHistoryRows(val);
+        localStorage.setItem('calcMaxHistoryRows', val);
+        showToast(`Calculation journal log length capped at: ${val === 'unlimited' ? 'Unlimited' : val + ' items'}`);
+    };
     const [storageSizes, setStorageSizes] = useState({
         history: 0,
         notes: 0,
@@ -390,13 +476,26 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
             // 2. Sync to Google Drive (including calculations & scratchpad notes cache)
             if (accessToken) {
                 try {
+                    // Extract all non-auth key-value pairs representing all tool states and preferences
+                    const dump: Record<string, string> = {};
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key !== 'google_access_token' && !key.includes('firebase:authUser') && !key.startsWith('firebase:')) {
+                            const val = localStorage.getItem(key);
+                            if (val !== null) {
+                                dump[key] = val;
+                            }
+                        }
+                    }
+
                     const fullBackupData = {
                         ...profileData,
                         calcHistory: localStorage.getItem('calcHistory') || '',
-                        quantum_notes: localStorage.getItem('quantum_notes') || ''
+                        quantum_notes: localStorage.getItem('quantum_notes') || '',
+                        localStorageDump: dump
                     };
                     await googleDriveService.saveProfile(accessToken, fullBackupData);
-                    showToast("Profile, History and Notes successfully synced to Google Drive!");
+                    showToast("Workspace profile, custom preferences, and all tools history successfully synced to Google Drive!");
                 } catch (driveError: any) {
                     if (driveError.message?.includes('401') || driveError.message?.includes('invalid_grant')) {
                         showToast("Drive Access Expired. Please log out and sign back in to re-link Drive.");
@@ -434,17 +533,29 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                 // Restore calculation history & scratchpad notes if they are present in the backup file
                 let dataRecoveredMessage = "Profile successfully restored from Google Drive!";
                 let countRestored = 0;
-                if (driveProfile.calcHistory) {
-                    localStorage.setItem('calcHistory', driveProfile.calcHistory);
-                    countRestored++;
-                }
-                if (driveProfile.quantum_notes) {
-                    localStorage.setItem('quantum_notes', driveProfile.quantum_notes);
-                    countRestored++;
-                }
 
-                if (countRestored > 0) {
-                    dataRecoveredMessage = "Profile, History, and Notes fully restored from Google Drive! Reloading...";
+                // Restore complete localStorage states if available
+                if (driveProfile.localStorageDump) {
+                    let keysRestored = 0;
+                    Object.entries(driveProfile.localStorageDump).forEach(([key, value]) => {
+                        if (key !== 'google_access_token' && !key.includes('firebase:authUser') && !key.startsWith('firebase:')) {
+                            localStorage.setItem(key, value);
+                            keysRestored++;
+                        }
+                    });
+                    if (keysRestored > 0) {
+                        dataRecoveredMessage = `Success! Restored profile, history, and ${keysRestored} active tools partitions from Google Drive!`;
+                        countRestored++;
+                    }
+                } else {
+                    if (driveProfile.calcHistory) {
+                        localStorage.setItem('calcHistory', driveProfile.calcHistory);
+                        countRestored++;
+                    }
+                    if (driveProfile.quantum_notes) {
+                        localStorage.setItem('quantum_notes', driveProfile.quantum_notes);
+                        countRestored++;
+                    }
                 }
 
                 showToast(dataRecoveredMessage);
@@ -570,6 +681,21 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                                     </p>
                                 </div>
                             </div>
+
+                            {accessToken && (
+                                <div className="p-4 rounded-2xl bg-brand-bg/50 border border-brand-border/40 flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <h5 className="text-xs font-bold text-brand-text">Real-Time Cloud Auto-Backup</h5>
+                                        <p className="text-[10px] text-brand-text-secondary leading-relaxed">Autosaves dynamic workspace state and history on changes.</p>
+                                    </div>
+                                    <button
+                                        onClick={handleAutoSyncToggle}
+                                        className={`w-10 h-6 flex items-center rounded-full p-1 transition-all focus:outline-none ${autoSyncEnabled ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-brand-border hover:bg-brand-border/80'}`}
+                                    >
+                                        <div className={`bg-brand-bg w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${autoSyncEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="flex gap-3">
                                 <button
@@ -807,6 +933,181 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                 </div>
             )}
 
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full blur-2xl pointer-events-none" />
+                <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-brand-primary/10 text-brand-primary">
+                        <Sliders size={24} />
+                    </div>
+                    Math & Operations Engine
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 font-sans">
+                    {/* Decimal Precision config */}
+                    <div className="bg-brand-bg/60 p-5 rounded-2xl border border-brand-border/40 flex flex-col justify-between shadow-inner">
+                        <div>
+                            <span className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary uppercase tracking-wider mb-2">
+                                <Cpu size={16} className="text-brand-primary" />
+                                Decimal Places Precision
+                            </span>
+                            <p className="text-xs text-brand-text-secondary leading-relaxed mb-4 font-light">
+                                Calibrate output accuracy. "Auto" allows floating point structures; specific counts force fraction rounding boundaries.
+                            </p>
+                        </div>
+                        <select
+                            value={decimalPlaces}
+                            onChange={(e) => handleDecimalPlacesChange(e.target.value)}
+                            className="bg-brand-surface border border-brand-border text-brand-text text-sm rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-brand-primary cursor-pointer w-full font-mono font-medium"
+                        >
+                            <option value="auto">Floating Point (Auto)</option>
+                            <option value="0">0 (Integers Only)</option>
+                            <option value="2">2 (Standard Currency/Finance)</option>
+                            <option value="4">4 (Precision Scientific)</option>
+                            <option value="6">6 (Micro-parameters scale)</option>
+                            <option value="8">8 (High Precision Engineering)</option>
+                        </select>
+                    </div>
+
+                    {/* Angular Trigonometry system default orientation */}
+                    <div className="bg-brand-bg/60 p-5 rounded-2xl border border-brand-border/40 flex flex-col justify-between shadow-inner">
+                        <div>
+                            <span className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary uppercase tracking-wider mb-2">
+                                <Compass size={16} className="text-blue-500" />
+                                Default Angular Measurement
+                            </span>
+                            <p className="text-xs text-brand-text-secondary leading-relaxed mb-4 font-light">
+                                Configures standard trigonometric operations functions orientation. Select between Radians and Degrees.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => handleAngleUnitChange('rad')}
+                                className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                                    angleUnit === 'rad' 
+                                    ? 'bg-brand-primary border-brand-primary text-brand-bg shadow-md shadow-brand-primary/15' 
+                                    : 'bg-brand-surface border-brand-border text-brand-text-secondary hover:text-brand-text hover:border-brand-primary/30'
+                                }`}
+                            >
+                                Radians (rad)
+                            </button>
+                            <button
+                                onClick={() => handleAngleUnitChange('deg')}
+                                className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                                    angleUnit === 'deg' 
+                                    ? 'bg-brand-primary border-brand-primary text-brand-bg shadow-md shadow-brand-primary/15' 
+                                    : 'bg-brand-surface border-brand-border text-brand-text-secondary hover:text-brand-text hover:border-brand-primary/30'
+                                }`}
+                            >
+                                Degrees (deg)
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Calculation History Log Journal constraints */}
+                    <div className="bg-brand-bg/60 p-5 rounded-2xl border border-brand-border/40 flex flex-col justify-between shadow-inner col-span-1 md:col-span-2">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                                <span className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary uppercase tracking-wider mb-2">
+                                    <Activity size={16} className="text-emerald-500" />
+                                    Calculation History Cap
+                                </span>
+                                <p className="text-xs text-brand-text-secondary leading-relaxed font-light">
+                                    Restrict the total history entries cached locally to maintain optimal operating heap sizes.
+                                </p>
+                            </div>
+                            <div className="w-full md:w-64 shrink-0">
+                                <select
+                                    value={maxHistoryRows}
+                                    onChange={(e) => handleMaxHistoryRowsChange(e.target.value)}
+                                    className="bg-brand-surface border border-brand-border text-brand-text text-sm rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-brand-primary cursor-pointer w-full font-mono font-medium"
+                                >
+                                    <option value="25">Max 25 Rows (Resource Saver)</option>
+                                    <option value="50">Max 50 Rows (Standard Log)</option>
+                                    <option value="100">Max 100 Rows (Extended Log)</option>
+                                    <option value="unlimited">Unlimited Retention Rows</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Accessibility Toggles Block */}
+                <div className="space-y-4 pt-6 border-t border-brand-border/30">
+                    <h4 className="text-xs font-bold text-brand-text-secondary uppercase tracking-wider mb-3">Accessibility & Keyboard feedback</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Audio Click Feedback */}
+                        <div className="flex justify-between items-center bg-brand-bg/40 p-3.5 rounded-2xl border border-brand-border/30">
+                            <div>
+                                <span className="text-xs text-brand-text font-bold block flex items-center gap-1.5">
+                                    <Volume2 size={14} className="text-emerald-500" />
+                                    Keyclick Sound FX
+                                </span>
+                                <span className="text-[10px] text-brand-text-secondary font-light">Audio ticks on buttons click</span>
+                            </div>
+                            <button
+                                onClick={handleSoundFXToggle}
+                                className={`relative inline-flex items-center h-5.5 w-11 rounded-full transition-colors duration-300 focus:outline-none shrink-0 cursor-pointer ${
+                                    soundFXEnabled ? 'bg-emerald-500' : 'bg-gray-600'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-300 ${
+                                        soundFXEnabled ? 'translate-x-[1.45rem]' : 'translate-x-0.5'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Speech Vocal Synthesis Assistant */}
+                        <div className="flex justify-between items-center bg-brand-bg/40 p-3.5 rounded-2xl border border-brand-border/30">
+                            <div>
+                                <span className="text-xs text-brand-text font-bold block flex items-center gap-1.5">
+                                    <Sparkles size={14} className="text-purple-500" />
+                                    Speech Assistant Voice
+                                </span>
+                                <span className="text-[10px] text-brand-text-secondary font-light">Vocalizes calculation results</span>
+                            </div>
+                            <button
+                                onClick={handleVoiceSpeechToggle}
+                                className={`relative inline-flex items-center h-5.5 w-11 rounded-full transition-colors duration-300 focus:outline-none shrink-0 cursor-pointer ${
+                                    voiceSpeechEnabled ? 'bg-purple-500' : 'bg-gray-600'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-300 ${
+                                        voiceSpeechEnabled ? 'translate-x-[1.45rem]' : 'translate-x-0.5'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Reduced Transitions */}
+                        <div className="flex justify-between items-center bg-brand-bg/40 p-3.5 rounded-2xl border border-brand-border/30">
+                            <div>
+                                <span className="text-xs text-brand-text font-bold block flex items-center gap-1.5">
+                                    <Eye size={14} className="text-amber-500" />
+                                    Reduced Motion
+                                </span>
+                                <span className="text-[10px] text-brand-text-secondary font-light">Lower animations overhead</span>
+                            </div>
+                            <button
+                                onClick={handleReducedMotionToggle}
+                                className={`relative inline-flex items-center h-5.5 w-11 rounded-full transition-colors duration-300 focus:outline-none shrink-0 cursor-pointer ${
+                                    reducedMotionEnabled ? 'bg-amber-500' : 'bg-gray-600'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-300 ${
+                                        reducedMotionEnabled ? 'translate-x-[1.45rem]' : 'translate-x-0.5'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
             <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm">
                 <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
                     <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
@@ -887,49 +1188,120 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                 </div>
             </motion.div>
 
-            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm">
-                <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500">
-                        <Smartphone size={24} />
-                    </div>
-                    App Installation
-                </h3>
-                <div className="space-y-6">
-                    <div className="bg-brand-bg/60 p-6 rounded-2xl border border-brand-border/40 flex flex-col md:flex-row items-center gap-6 shadow-inner">
-                        <div className="flex-1 text-center md:text-left">
-                            <h4 className="font-bold text-brand-text text-lg">Install as Desktop/Mobile App</h4>
-                            <p className="text-brand-text-secondary text-sm font-light mt-1">Get the native-like experience with offline support and a home screen icon.</p>
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
+                
+                <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center justify-between">
+                    <span className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500">
+                            <Smartphone size={24} />
                         </div>
-                        <button
-                            onClick={onInstall}
-                            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all shadow-lg ${
-                                canInstall 
-                                ? 'bg-brand-primary text-brand-bg hover:scale-105 shadow-brand-primary/20' 
-                                : 'bg-brand-surface border border-brand-border text-brand-text shadow-none cursor-help'
-                            }`}
-                        >
-                            <Download size={20} />
-                            {canInstall ? 'Install Now' : 'Check Browser Support'}
-                        </button>
+                        Installation Center
+                    </span>
+                    
+                    {/* Active Mode Badge */}
+                    <div className="flex gap-2">
+                        {isNativeApp ? (
+                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm animate-pulse">
+                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                Android Native Core
+                            </span>
+                        ) : isAppInstalled ? (
+                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-sm animate-pulse">
+                                <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                                Standalone Client Active
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-surface/80 border border-brand-border text-brand-text-secondary">
+                                <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                Web Portal mode
+                            </span>
+                        )}
+                    </div>
+                </h3>
+
+                <div className="space-y-6">
+                    {/* Dynamic Installation Hero Panel */}
+                    <div className="bg-gradient-to-r from-brand-bg/90 to-brand-bg/50 p-6 rounded-2xl border border-brand-border/45 flex flex-col lg:flex-row items-center justify-between gap-6 shadow-inner relative overflow-hidden">
+                        <div className="absolute -left-12 -bottom-12 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl" />
+                        <div className="flex-1 text-center lg:text-left z-10">
+                            <span className="text-xs text-brand-primary uppercase font-black tracking-wider">Progressive Native Engine</span>
+                            <h4 className="font-bold text-brand-text text-xl mt-1">Unified App Sideload</h4>
+                            <p className="text-brand-text-secondary text-sm font-light mt-1.5 max-w-xl">
+                                Dock QuantumCalc to your home screen or operating system taskbar. Standalone clients execute on isolated local threads, bypassing browser overhead with optimized page loads, lower latency, and pristine full-screen viewpoints.
+                            </p>
+                        </div>
+                        
+                        <div className="z-10 shrink-0 w-full lg:w-auto">
+                            {canInstall ? (
+                                <button
+                                    onClick={onInstall}
+                                    className="w-full lg:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary text-brand-bg font-black transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 shadow-brand-primary/25 cursor-pointer"
+                                >
+                                    <Download size={20} />
+                                    <span>Install Dashboard</span>
+                                </button>
+                            ) : (
+                                <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
+                                    <div className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-brand-surface border border-brand-border/80 text-sm text-brand-text-secondary font-mono w-full justify-center">
+                                        <Check size={16} className="text-emerald-500" />
+                                        <span>Standalone-Ready</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Logo/Icon Consistency Card */}
+                    <div className="p-6 rounded-2xl bg-brand-surface/20 border border-brand-border/30 relative overflow-hidden flex flex-col md:flex-row gap-6 items-center">
+                        <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-black border border-brand-border/60 flex items-center justify-center shrink-0 shadow-lg relative overflow-hidden">
+                            {/* Atom-Orbit Icon matching our SVG */}
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0 h-full w-full p-2.5">
+                                <circle cx="50" cy="50" r="12" fill="#3B82F6" />
+                                <ellipse cx="50" cy="50" rx="42" ry="21" fill="none" stroke="#3B82F6" strokeWidth="4" opacity="0.3" />
+                                <ellipse cx="50" cy="50" rx="21" ry="42" fill="none" stroke="#A855F7" strokeWidth="4" opacity="0.3" transform="rotate(60 50 50)" />
+                                {/* Circuit-like nodes */}
+                                <path d="M50 10V22M50 78V90M10 50H22M78 50H90" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" />
+                            </svg>
+                        </div>
+                        <div className="text-center md:text-left">
+                            <h5 className="font-bold text-brand-text flex items-center gap-2 justify-center md:justify-start">
+                                <Sparkles size={16} className="text-amber-500 animate-pulse" />
+                                <span>Premium Icon Continuity</span>
+                            </h5>
+                            <p className="text-xs text-brand-text-secondary leading-relaxed mt-1.5 max-w-2xl">
+                                We have unified the desktop launch systems and Android device packages! The native application now uses a beautifully optimized <b>High-Res Adaptive Vector Icon</b> that mirrors our premium original <b>QuantumCalc Orbits & Brain-Circuit</b> branding, set elegantly against a sleek matte-black launcher canvas (#0A0A0A).
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* OS Platform Specific installation Guide */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-5 bg-brand-bg/30 border border-brand-border/30 rounded-2xl">
-                            <h5 className="font-bold text-brand-text mb-3 flex items-center gap-2">
+                            <h5 className="font-bold text-brand-text mb-2.5 flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                                Android (Chrome)
+                                Android (Capacitor & Web)
                             </h5>
                             <p className="text-xs text-brand-text-secondary leading-relaxed">
-                                Click the <span className="font-bold text-brand-text px-1">Install</span> button above, or tap the three dots <span className="font-bold text-brand-text">(⋮)</span> and select <span className="italic text-brand-text">"Add to Home screen"</span>.
+                                Click the <span className="font-bold text-brand-primary">"Install Dashboard"</span> button above if available. Alternatively, open Chrome's settings <span className="font-bold text-brand-text">(⋮)</span> and tap <span className="italic text-brand-text">"Add to Home screen"</span> to compiled-install instantly.
                             </p>
                         </div>
                         <div className="p-5 bg-brand-bg/30 border border-brand-border/30 rounded-2xl">
-                            <h5 className="font-bold text-brand-text mb-3 flex items-center gap-2">
+                            <h5 className="font-bold text-brand-text mb-2.5 flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
-                                iOS (Safari)
+                                iOS (Apple Safari)
                             </h5>
                             <p className="text-xs text-brand-text-secondary leading-relaxed">
-                                Tap the <span className="font-bold text-brand-text">Share</span> icon (box with up arrow) and select <span className="italic text-brand-text">"Add to Home Screen"</span>.
+                                Launch Safari, tap the system <span className="font-bold text-brand-text">Share</span> button (box with up arrow), scroll down, and select <span className="italic text-brand-text">"Add to Home Screen"</span> for complete standalone windowing.
+                            </p>
+                        </div>
+                        <div className="p-5 bg-brand-bg/30 border border-brand-border/30 rounded-2xl">
+                            <h5 className="font-bold text-brand-text mb-2.5 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                                PC & Mac Desktops
+                            </h5>
+                            <p className="text-xs text-brand-text-secondary leading-relaxed">
+                                Look for the PWA <span className="font-bold text-brand-text">Install</span> app monitor monitor direct-icon visible on the right side of the address URL bar, or choose "Install QuantumCalc..." inside the browser's main drop-down.
                             </p>
                         </div>
                     </div>
@@ -937,7 +1309,7 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                     <div className="flex items-start gap-3 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl">
                         <Info size={16} className="text-indigo-500 shrink-0 mt-0.5" />
                         <p className="text-xs text-indigo-500/80 leading-relaxed italic">
-                            <b>Note:</b> Your app is optimized as a PWA (Progressive Web App). It provides the same benefits as an APK but requires less storage and stays updated automatically.
+                            <b>Did you know?</b> PWAs represent the next generation of native software, avoiding clunky system updates entirely. The client retains identical cached datasets, operates lightning fast, takes up under ~1MB, and syncs smoothly.
                         </p>
                     </div>
                 </div>

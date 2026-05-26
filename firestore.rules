@@ -88,6 +88,18 @@ service cloud.firestore {
              data.status in ['new', 'read', 'replied'];
     }
 
+    function isValidShare(data) {
+      return data.keys().hasAll(['id', 'type', 'title', 'expression', 'result', 'createdAt']) &&
+             data.id is string && data.id.size() <= 100 &&
+             data.type is string && data.type.size() <= 50 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.expression is string && data.expression.size() <= 10000 &&
+             data.result is string && data.result.size() <= 10000 &&
+             (!('stateData' in data) || (data.stateData is string && data.stateData.size() <= 100000)) &&
+             data.createdAt == request.time &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() <= 100));
+    }
+
     function isValidFeedback(data) {
        return data.keys().hasAll(['rating', 'category', 'experience', 'usefulFeatures', 'improvement', 'missingTools', 'createdAt', 'userId']) &&
               data.rating is number && data.rating >= 0 && data.rating <= 5 &&
@@ -164,6 +176,14 @@ service cloud.firestore {
       allow create: if isValidId(messageId) && isValidContactMessage(incoming()) && incoming().status == 'new';
       allow update: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    match /shares/{shareId} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isValidId(shareId) && isValidShare(incoming());
+      allow update: if false;
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
   }
 }

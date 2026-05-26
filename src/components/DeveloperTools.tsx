@@ -86,7 +86,7 @@ const EncoderDecoder = () => {
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         placeholder="Enter text to process..."
-                        className="w-full h-64 bg-gray-900/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary ring-0 outline-none font-mono text-sm leading-relaxed transition-all shadow-inner"
+                        className="w-full h-64 bg-brand-bg/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary ring-0 outline-none font-mono text-sm leading-relaxed transition-all shadow-inner"
                     />
                 </div>
                 <div className="space-y-2">
@@ -152,7 +152,7 @@ const Hasher = () => {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     placeholder={`Enter string to hash with ${algorithm}...`}
-                    className="w-full h-48 bg-gray-900/50 p-6 rounded-[2.5rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner"
+                    className="w-full h-48 bg-brand-bg/50 p-6 rounded-[2.5rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner"
                 />
                 <button 
                     onClick={generateHash} 
@@ -221,7 +221,7 @@ const JsonFormatter = () => {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     placeholder='{"id": 1, "status": "active"}'
-                    className="w-full h-[32rem] bg-gray-900/50 p-6 rounded-[3rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm leading-relaxed shadow-inner resize-none"
+                    className="w-full h-[32rem] bg-brand-bg/50 p-6 rounded-[3rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm leading-relaxed shadow-inner resize-none"
                 />
                 <div className="flex gap-3">
                     <button 
@@ -296,7 +296,7 @@ const EpochConverter = () => {
                         type="text"
                         value={epoch}
                         onChange={e => setEpoch(e.target.value)}
-                        className="flex-1 bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-xl font-bold shadow-inner"
+                        className="flex-1 bg-brand-bg/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-xl font-bold shadow-inner"
                     />
                     <button 
                         onClick={() => setEpoch(Math.floor(Date.now() / 1000).toString())}
@@ -361,7 +361,7 @@ const CaseConverter = () => {
                     value={text}
                     onChange={e => setText(e.target.value)}
                     placeholder="Enter keywords or phrases..."
-                    className="w-full bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-xl font-bold shadow-inner"
+                    className="w-full bg-brand-bg/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-xl font-bold shadow-inner"
                 />
             </div>
 
@@ -418,7 +418,7 @@ const ColorSuite = () => {
                             type="text"
                             value={color}
                             onChange={e => setColor(e.target.value)}
-                            className="flex-1 bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-2xl font-bold shadow-inner"
+                            className="flex-1 bg-brand-bg/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-2xl font-bold shadow-inner"
                         />
                     </div>
                 </div>
@@ -484,7 +484,7 @@ const VisualDiff = () => {
                         value={left}
                         onChange={e => setLeft(e.target.value)}
                         placeholder="Paste original content..."
-                        className="w-full h-48 bg-gray-900/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner resize-none"
+                        className="w-full h-48 bg-brand-bg/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner resize-none"
                     />
                 </div>
                 <div className="space-y-2">
@@ -493,7 +493,7 @@ const VisualDiff = () => {
                         value={right}
                         onChange={e => setRight(e.target.value)}
                         placeholder="Paste modified content..."
-                        className="w-full h-48 bg-gray-900/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner resize-none"
+                        className="w-full h-48 bg-brand-bg/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner resize-none"
                     />
                 </div>
             </div>
@@ -549,7 +549,7 @@ const JwtDecoder = () => {
                     value={token}
                     onChange={e => setToken(e.target.value)}
                     placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..."
-                    className="w-full h-32 bg-gray-900/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner break-all resize-none"
+                    className="w-full h-32 bg-brand-bg/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner break-all resize-none"
                 />
             </div>
             
@@ -627,7 +627,7 @@ const RegexTester = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-3 space-y-2">
                     <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2">RegExp Pattern</label>
-                    <div className="flex items-center bg-gray-900/50 rounded-2xl border border-brand-border focus-within:border-brand-primary focus-within:ring-1 focus-within:ring-brand-primary/20 transition-all shadow-inner px-4 overflow-hidden">
+                    <div className="flex items-center bg-brand-bg/50 rounded-2xl border border-brand-border focus-within:border-brand-primary focus-within:ring-1 focus-within:ring-brand-primary/20 transition-all shadow-inner px-4 overflow-hidden">
                         <span className="text-brand-text-secondary font-mono opacity-30 text-xl">/</span>
                         <input
                             type="text"
@@ -646,7 +646,7 @@ const RegexTester = () => {
                         value={flags}
                         onChange={e => setFlags(e.target.value)}
                         placeholder="gim..."
-                        className="w-full bg-gray-900/50 p-4 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-lg text-brand-secondary shadow-inner"
+                        className="w-full bg-brand-bg/50 p-4 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-lg text-brand-secondary shadow-inner"
                     />
                 </div>
             </div>
@@ -658,7 +658,7 @@ const RegexTester = () => {
                         value={testString}
                         onChange={e => setTestString(e.target.value)}
                         placeholder="Paste text to test against logic..."
-                        className="w-full h-64 bg-gray-900/50 p-6 rounded-[2.5rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner resize-none"
+                        className="w-full h-64 bg-brand-bg/50 p-6 rounded-[2.5rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner resize-none"
                     />
                 </div>
                 <div className="space-y-2">
@@ -709,7 +709,7 @@ const UuidGenerator = () => {
                         max="100"
                         value={quantity}
                         onChange={e => setQuantity(Number(e.target.value) || 1)}
-                        className="w-full bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-xl font-bold shadow-inner"
+                        className="w-full bg-brand-bg/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-xl font-bold shadow-inner"
                     />
                 </div>
                 <button 
@@ -769,7 +769,7 @@ const UrlParser = () => {
                     value={urlInput}
                     onChange={e => setUrlInput(e.target.value)}
                     placeholder="https://..."
-                    className="w-full bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner break-all resize-none h-24"
+                    className="w-full bg-brand-bg/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-sm shadow-inner break-all resize-none h-24"
                 />
             </div>
 

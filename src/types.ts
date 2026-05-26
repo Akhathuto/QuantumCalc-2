@@ -20,6 +20,7 @@ export interface Explanation {
 
 export type AppTab =
   | 'landing'
+  | 'explore'
   | 'calculator'
   | 'graphing'
   | 'periodic'
@@ -42,7 +43,9 @@ export type AppTab =
   | 'terms'
   | 'settings'
   | 'help'
+  | 'exercise-references'
   | 'feedback'
   | 'privacy'
   | 'core-license'
-  | 'support';
+  | 'support'
+  | 'sandbox';

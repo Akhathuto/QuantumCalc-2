@@ -14,7 +14,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: true,
+      disable: false,
       registerType: 'autoUpdate',
       includeAssets: [],
       manifest: {

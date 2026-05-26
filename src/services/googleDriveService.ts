@@ -11,6 +11,7 @@ export interface UserProfileData {
   lastSynced?: string;
   calcHistory?: string;
   quantum_notes?: string;
+  localStorageDump?: Record<string, string>;
 }
 
 export const googleDriveService = {
@@ -104,6 +105,37 @@ export const googleDriveService = {
       return await response.json();
     } catch (error) {
       return null;
+    }
+  },
+
+  async triggerAutoSync(accessToken: string): Promise<void> {
+    const autoSyncEnabled = localStorage.getItem('google_drive_auto_sync') === 'true';
+    if (!autoSyncEnabled) return;
+
+    try {
+      const dump: Record<string, string> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key !== 'google_access_token' && !key.includes('firebase:authUser') && !key.startsWith('firebase:')) {
+          const val = localStorage.getItem(key);
+          if (val !== null) {
+            dump[key] = val;
+          }
+        }
+      }
+
+      const fullBackupData = {
+        role: localStorage.getItem('profile_role') || 'normal_user',
+        onboarded: true,
+        calcHistory: localStorage.getItem('calcHistory') || '',
+        quantum_notes: localStorage.getItem('quantum_notes') || '',
+        localStorageDump: dump
+      };
+
+      await this.saveProfile(accessToken, fullBackupData);
+      console.log('Google Drive Background Auto-Sync Completed.');
+    } catch (err) {
+      console.warn('Silent auto-sync failed:', err);
     }
   }
 };

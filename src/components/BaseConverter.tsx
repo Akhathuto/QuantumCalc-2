@@ -26,7 +26,7 @@ const InputField = ({ base, value, onChange }: InputFieldProps) => {
                 id={base}
                 value={value}
                 onChange={(e) => onChange(base, e.target.value)}
-                className="w-full bg-gray-900/70 border-gray-600 rounded-md p-3 font-mono text-lg focus:ring-brand-primary focus:border-brand-primary"
+                className="w-full bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-xl p-3 font-mono text-lg focus:ring-2 focus:ring-brand-primary outline-none transition-all"
             />
         </div>
     );

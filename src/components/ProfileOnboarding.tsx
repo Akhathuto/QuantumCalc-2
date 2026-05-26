@@ -17,7 +17,10 @@ import {
   Braces,
   RefreshCw,
   ShieldCheck,
-  Cloud
+  Cloud,
+  FileText,
+  Square,
+  CheckSquare
 } from 'lucide-react';
 
 import { googleDriveService } from '../services/googleDriveService';
@@ -32,12 +35,13 @@ const roles = [
 
 const ProfileOnboarding: React.FC = () => {
   const { user, accessToken, logout } = useAuth();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // Start at step 0 for Terms and Conditions
   const [role, setRole] = useState('');
   const [grade, setGrade] = useState('');
   const [school, setSchool] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleRoleSelect = (roleId: string) => {
     setRole(roleId);
@@ -94,6 +98,70 @@ const ProfileOnboarding: React.FC = () => {
 
   const renderStep = () => {
     switch (step) {
+      case 0:
+        return (
+          <div className="space-y-8">
+            <div className="text-center space-y-3">
+              <div className="inline-block p-3 rounded-2xl bg-brand-primary/10 text-brand-primary mb-2 shadow-[0_0_30px_-5px_rgba(var(--color-primary-rgb),0.3)]">
+                <FileText size={32} />
+              </div>
+              <h2 className="text-4xl font-black tracking-tight text-brand-text italic">Protocol Agreement</h2>
+              <p className="text-brand-text-secondary font-light">End User License Agreement & Data Terms.</p>
+            </div>
+            
+            <div className="bg-brand-surface/40 backdrop-blur-md border border-brand-border/60 rounded-[2rem] p-6 space-y-5 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 blur-[50px] -translate-y-1/2 translate-x-1/2 custom-scrollbar"></div>
+              
+              <div className="h-48 overflow-y-auto pr-2 custom-scrollbar text-xs font-mono leading-relaxed text-brand-text-secondary space-y-4">
+                <p>
+                  <strong className="text-brand-primary">1. ACCEPTANCE OF INITIALIZATION</strong>
+                  <br />
+                  By accessing QuantumCalc ("The Workspace"), you agree to be bound by these functional parameters. You represent that you possess the necessary authorization to initialize these protocols.
+                </p>
+                <p>
+                  <strong className="text-brand-primary">2. DATA SOVEREIGNTY</strong>
+                  <br />
+                  All calculation histories, structural definitions, and personal metrics are encrypted and safely stored in the designated nodes. The Workspace does not lay claim to your telemetry.
+                </p>
+                <p>
+                  <strong className="text-brand-primary">3. AI PROCESSING (GEMINI VISION)</strong>
+                  <br />
+                  Utilizing the AI engines implies your consent to transmit viewport fragments and equation structures solely for the purpose of dynamic resolution and problem-solving generation. No data is used to train overarching models without explicitly configured consent.
+                </p>
+                <p>
+                  <strong className="text-brand-primary">4. LIMITATION OF LIABILITY</strong>
+                  <br />
+                  The Workspace is provided "AS-IS". The operators assume no liability for catastrophic miscalculations stemming from extreme edge-case permutations or user-injected errors.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-brand-border/60">
+                <button
+                  type="button"
+                  onClick={() => setAcceptedTerms(!acceptedTerms)}
+                  className="flex items-center gap-3 w-full text-left p-3 rounded-xl hover:bg-brand-surface transition-colors group cursor-pointer"
+                >
+                  <div className={`p-1 rounded transition-colors ${acceptedTerms ? 'bg-brand-primary text-brand-bg' : 'border border-brand-text-secondary/50 text-transparent group-hover:border-brand-primary/50'}`}>
+                    {acceptedTerms ? <CheckSquare size={16} /> : <Square size={16} />}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${acceptedTerms ? 'text-brand-text' : 'text-brand-text-secondary'}`}>
+                    I acknowledge and accept the Protocol Agreement.
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-2">
+              <button 
+                onClick={() => setStep(1)}
+                disabled={!acceptedTerms}
+                className="w-full flex items-center justify-center gap-2 px-8 py-5 rounded-2xl bg-brand-primary text-brand-bg font-black uppercase tracking-widest text-xs hover:shadow-lg hover:shadow-brand-primary/20 active:scale-[0.98] transition-all disabled:opacity-30 disabled:hover:shadow-none disabled:active:scale-100"
+              >
+                AUTHORIZE PROTOCOL <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        );
       case 1:
         return (
           <div className="space-y-8">
@@ -347,7 +415,7 @@ const ProfileOnboarding: React.FC = () => {
         </AnimatePresence>
 
         <div className="mt-12 flex justify-center gap-2">
-          {[1, 2, 3, 4].map((s) => (
+          {[0, 1, 2, 3, 4].map((s) => (
             <div 
               key={s} 
               className={`h-1.5 rounded-full transition-all duration-300 ${

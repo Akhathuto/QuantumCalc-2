@@ -66,15 +66,18 @@
       // Immediately apply theme from localStorage to prevent FOUC
       (function() {
         try {
-          if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-            document.documentElement.classList.add('light');
-          } else {
-            document.documentElement.classList.remove('light');
+          var theme = localStorage.getItem('theme');
+          if (theme) {
+            if (theme === 'dark') {
+              document.documentElement.removeAttribute('class');
+            } else {
+              document.documentElement.setAttribute('class', theme);
+            }
+          } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.setAttribute('class', 'light');
           }
         } catch (e) {
           console.error('Could not apply theme from localStorage', e);
-          // Defaults to dark theme if localStorage is unavailable
-          document.documentElement.classList.remove('light');
         }
       })();
     </script>

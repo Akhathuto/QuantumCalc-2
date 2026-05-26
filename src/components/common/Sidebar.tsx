@@ -23,7 +23,10 @@ import {
   BookOpen,
   Smartphone,
   MessageSquare,
-  Smile
+  Smile,
+  Terminal,
+  Compass,
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Logo from './Logo';
@@ -60,6 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
 
   const navItems = [
     { id: 'landing', label: 'Home', Icon: Home },
+    { id: 'explore', label: 'Explore Hub', Icon: Compass },
     { id: 'calculator', label: 'Calculator', Icon: CalculatorIcon },
     { id: 'graphing', label: 'Graphing', Icon: LineChart },
     { id: 'history', label: 'History', Icon: History },
@@ -78,6 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
         { id: 'health', label: 'Health', Icon: HeartPulse },
         { id: 'text', label: 'Text Tools', Icon: FileText },
         { id: 'developer', label: 'Developer', Icon: Code },
+        { id: 'sandbox', label: 'Math Sandbox', Icon: Terminal },
         { id: 'student', label: 'Academic', Icon: GraduationCap },
         { id: 'k5worksheets', label: 'K-5 Math Lab', Icon: Smile },
         { id: 'exercises', label: 'Exercises', Icon: BookOpen },
@@ -212,7 +217,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
            {canInstall && (
              <button 
                 onClick={onInstall}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-brand-primary to-indigo-600 text-brand-bg font-bold shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary text-brand-bg font-bold shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                >
                <Smartphone size={18} />
                <span>Install App</span>
@@ -225,10 +230,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
                <button onClick={() => handleTabClick('settings')} className={`flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:text-brand-text hover:bg-brand-surface ${activeTab === 'settings' ? 'bg-brand-surface text-brand-text' : ''}`}>
                    <SettingsIcon size={14} /> Settings
                </button>
+               <button onClick={() => handleTabClick('about')} className={`flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:text-brand-text hover:bg-brand-surface ${activeTab === 'about' ? 'bg-brand-surface text-brand-text' : ''}`}>
+                   <Info size={14} /> About
+               </button>
+               <button onClick={() => handleTabClick('feedback')} className={`flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:text-brand-text hover:bg-brand-surface ${activeTab === 'feedback' ? 'bg-brand-surface text-brand-text' : ''}`}>
+                   <MessageSquare size={14} /> Feedback
+               </button>
            </div>
-           <button onClick={() => handleTabClick('feedback')} className={`w-full mt-2 flex items-center gap-2 p-2 rounded-lg text-xs transition-colors hover:text-brand-text hover:bg-brand-surface ${activeTab === 'feedback' ? 'bg-brand-surface text-brand-text' : ''}`}>
-               <MessageSquare size={14} /> Feedback
-           </button>
         </div>
       </motion.aside>
     </>

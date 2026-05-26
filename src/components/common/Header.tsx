@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, LogIn, Menu, Search } from 'lucide-react';
+import { LogOut, LogIn, Menu, Search, Cloud } from 'lucide-react';
 import Logo from './Logo';
 import { AppTab } from '../../types';
 import { useAuth } from '../AuthProvider';
@@ -13,7 +13,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, onMenuClick }) => {
-  const { user, userData, logout } = useAuth();
+  const { user, userData, accessToken, logout } = useAuth();
 
   const handleSearchClick = () => {
     const ev = new CustomEvent('open-command-palette');
@@ -77,6 +77,16 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
             {/* Auth/Profile Section */}
             {user ? (
               <div className="flex items-center gap-2">
+                {accessToken && (
+                  <button 
+                    onClick={() => onTabClick('settings')}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/10 transition-colors hidden sm:flex shrink-0"
+                    title="Google Drive Sync Active"
+                  >
+                    <Cloud size={12} className="text-emerald-500 animate-[pulse_2s_infinite]" />
+                    <span>Drive Sync Active</span>
+                  </button>
+                )}
                 <button 
                   onClick={() => onTabClick('settings')}
                   className="flex items-center gap-2 p-1 pl-3 pr-1 rounded-full border border-brand-border transition-all hover:border-brand-primary/50 bg-brand-surface"

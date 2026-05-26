@@ -77,6 +77,22 @@
         "lastUpdated": { "type": "timestamp" }
       },
       "required": ["totalScholars", "lastUpdated"]
+    },
+    "Share": {
+      "title": "Share",
+      "description": "A shared calculation state",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "expression": { "type": "string" },
+        "result": { "type": "string" },
+        "stateData": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "type", "title", "expression", "result", "createdAt"]
     }
   },
   "firestore": {
@@ -103,6 +119,10 @@
     "/notes/{noteId}": {
       "schema": { "$ref": "#/entities/Note" },
       "description": "User notes"
+    },
+    "/shares/{shareId}": {
+      "schema": { "$ref": "#/entities/Share" },
+      "description": "Shared calculation payloads"
     }
   }
 }

@@ -50,12 +50,12 @@ const WordCounter = () => {
     }, [text]);
 
     return (
-        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border/40 space-y-4">
             <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
                 placeholder="Type or paste your text here..."
-                className="w-full h-48 bg-gray-900/70 p-4 rounded-md border border-brand-border focus:ring-brand-primary focus:border-brand-primary font-sans resize-y"
+                className="w-full h-48 bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-2xl p-4 focus:ring-2 focus:ring-brand-primary outline-none font-sans resize-y transition-all placeholder:text-brand-text-secondary/35"
             />
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <ResultCard title="Words" value={stats.words} />
@@ -101,12 +101,12 @@ const CaseConverter = () => {
     };
 
     return (
-        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border/40 space-y-4">
             <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
                 placeholder="Type or paste your text here..."
-                className="w-full h-48 bg-gray-900/70 p-4 rounded-md border border-brand-border focus:ring-brand-primary focus:border-brand-primary font-sans resize-y"
+                className="w-full h-48 bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-2xl p-4 focus:ring-2 focus:ring-brand-primary outline-none font-sans resize-y transition-all placeholder:text-brand-text-secondary/35"
             />
             <div className="flex flex-wrap gap-2 justify-center">
                 <button onClick={() => convertCase('upper')} className="px-4 py-2 bg-brand-bg hover:bg-brand-primary rounded-md transition-colors">UPPERCASE</button>
@@ -150,31 +150,31 @@ const FindAndReplace = () => {
     };
 
     return (
-        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border/40 space-y-4">
             <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
                 placeholder="Type or paste your text here..."
-                className="w-full h-48 bg-gray-900/70 p-4 rounded-md border border-brand-border focus:ring-brand-primary focus:border-brand-primary font-sans resize-y"
+                className="w-full h-48 bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-2xl p-4 focus:ring-2 focus:ring-brand-primary outline-none font-sans resize-y transition-all placeholder:text-brand-text-secondary/35"
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium mb-1">Find</label>
-                    <input type="text" value={find} onChange={e => setFind(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" />
+                    <label className="block text-sm font-medium mb-1 text-brand-text-secondary">Find</label>
+                    <input type="text" value={find} onChange={e => setFind(e.target.value)} className="w-full bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-xl p-3 focus:ring-2 focus:ring-brand-primary outline-none transition-all font-mono" />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium mb-1">Replace With</label>
-                    <input type="text" value={replace} onChange={e => setReplace(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border" />
+                    <label className="block text-sm font-medium mb-1 text-brand-text-secondary">Replace With</label>
+                    <input type="text" value={replace} onChange={e => setReplace(e.target.value)} className="w-full bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-xl p-3 focus:ring-2 focus:ring-brand-primary outline-none transition-all" />
                 </div>
             </div>
-            <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} className="rounded text-brand-primary focus:ring-brand-primary bg-gray-900 border-gray-600" />
-                    <span className="text-sm">Match Case</span>
+            <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} className="rounded border-brand-border text-brand-primary bg-brand-bg focus:ring-brand-primary/50 cursor-pointer h-4 w-4 transition-all" />
+                    <span className="text-sm text-brand-text-secondary">Match Case</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={useRegex} onChange={e => setUseRegex(e.target.checked)} className="rounded text-brand-primary focus:ring-brand-primary bg-gray-900 border-gray-600" />
-                    <span className="text-sm">Use Regex</span>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" checked={useRegex} onChange={e => setUseRegex(e.target.checked)} className="rounded border-brand-border text-brand-primary bg-brand-bg focus:ring-brand-primary/50 cursor-pointer h-4 w-4 transition-all" />
+                    <span className="text-sm text-brand-text-secondary">Use Regex</span>
                 </label>
             </div>
             <button onClick={handleReplace} className="w-full py-2 bg-brand-primary hover:bg-brand-primary/90 rounded-md font-semibold transition-colors">
@@ -216,17 +216,17 @@ const HashGenerator = () => {
     };
 
     return (
-        <div className="bg-brand-surface/50 p-6 rounded-lg space-y-4">
+        <div className="bg-brand-surface/50 p-6 rounded-2xl border border-brand-border/40 space-y-4">
             <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
                 placeholder="Type or paste your text here..."
-                className="w-full h-32 bg-gray-900/70 p-4 rounded-md border border-brand-border focus:ring-brand-primary focus:border-brand-primary font-sans resize-y"
+                className="w-full h-32 bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-2xl p-4 focus:ring-2 focus:ring-brand-primary outline-none font-sans resize-y transition-all placeholder:text-brand-text-secondary/35"
             />
             
             <div>
-                <label className="block text-sm font-medium mb-1">Operation</label>
-                <select value={hashType} onChange={e => setHashType(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border">
+                <label className="block text-sm font-medium mb-1 text-brand-text-secondary">Operation</label>
+                <select value={hashType} onChange={e => setHashType(e.target.value)} className="w-full bg-brand-bg/50 border border-brand-border/60 text-brand-text rounded-xl p-3 focus:ring-2 focus:ring-brand-primary outline-none transition-all cursor-pointer">
                     <option value="base64">Base64 Encode</option>
                     <option value="base64decode">Base64 Decode</option>
                     <option value="urlencode">URL Encode</option>

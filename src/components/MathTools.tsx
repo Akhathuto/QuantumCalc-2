@@ -484,7 +484,7 @@ const ConfidenceIntervalCalculator = () => {
                 <Input label="Sample Size (n)" type="number" value={size} onChange={e => setSize(e.target.value)} />
                 <div>
                     <label className="block text-sm font-medium mb-1 text-brand-text-secondary">Confidence Level</label>
-                    <select value={confidence} onChange={e => setConfidence(e.target.value)} className="w-full bg-gray-900/70 p-2 rounded-md border border-brand-border h-[42px]">
+                    <select value={confidence} onChange={e => setConfidence(e.target.value)} className="w-full bg-brand-bg/50 border border-brand-border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-brand-primary outline-none transition-all h-[42px]">
                         {Object.keys(zScores).map(level => <option key={level} value={level}>{level}%</option>)}
                     </select>
                 </div>
@@ -587,9 +587,9 @@ interface FractionInputProps {
 
 const FractionInput = ({ n, d, setN, setD }: FractionInputProps) => (
     <div className="flex flex-col items-center">
-        <input type="number" value={n} onChange={e=>setN(e.target.value)} className="w-20 bg-gray-900/70 p-1 rounded-md border border-brand-border text-center" />
-        <hr className="w-20 my-1 border-brand-text" />
-        <input type="number" value={d} onChange={e=>setD(e.target.value)} className="w-20 bg-gray-900/70 p-1 rounded-md border border-brand-border text-center" />
+        <input type="number" value={n} onChange={e=>setN(e.target.value)} className="w-20 bg-brand-bg/50 p-2 rounded-xl border border-brand-border text-center font-mono focus:ring-2 focus:ring-brand-primary outline-none transition-all" />
+        <hr className="w-20 my-1.5 border-brand-text/40" />
+        <input type="number" value={d} onChange={e=>setD(e.target.value)} className="w-20 bg-brand-bg/50 p-2 rounded-xl border border-brand-border text-center font-mono focus:ring-2 focus:ring-brand-primary outline-none transition-all" />
     </div>
 );
 

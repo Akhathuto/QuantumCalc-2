@@ -38,14 +38,14 @@ const Keypad: React.FC<KeypadProps> = ({ inputBase, currentInputString, handleIn
     };
 
     return (
-        <div className="grid grid-cols-4 gap-3">
-            <div className="col-span-4 grid grid-cols-6 gap-2 mb-2">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+            <div className="col-span-4 grid grid-cols-6 gap-1 sm:gap-2 mb-2">
                 {hexButtons.map(b => (
                     <button
                         key={b}
                         disabled={inputBase !== 'hex'}
                         onClick={() => handleInputChange('hex', currentInputString + b)}
-                        className={`p-3 rounded-lg font-mono font-bold transition-all ${
+                        className={`p-2 sm:p-3 rounded-md sm:rounded-lg font-mono text-xs sm:text-base font-bold transition-all ${
                             inputBase === 'hex' 
                             ? 'bg-brand-surface hover:bg-brand-primary hover:text-brand-bg text-brand-primary border border-brand-border hover:border-brand-primary shadow-sm' 
                             : 'bg-brand-bg/20 text-brand-text-secondary/10 border border-transparent cursor-not-allowed'
@@ -55,13 +55,13 @@ const Keypad: React.FC<KeypadProps> = ({ inputBase, currentInputString, handleIn
                     </button>
                 ))}
             </div>
-            <div className="col-span-3 grid grid-cols-3 gap-3">
+            <div className="col-span-3 grid grid-cols-3 gap-2 sm:gap-3">
                 {numButtons.map(b => (
                     <button
                         key={b}
                         disabled={isButtonDisabled(b)}
                         onClick={() => handleInputChange(inputBase, currentInputString + b)}
-                        className={`p-5 rounded-2xl font-mono text-2xl font-bold transition-all ${
+                        className={`p-3 sm:p-5 rounded-xl sm:rounded-2xl font-mono text-lg xs:text-xl sm:text-2xl font-bold transition-all ${
                             isButtonDisabled(b)
                             ? 'bg-brand-bg/20 text-brand-text-secondary/10 cursor-not-allowed border border-transparent'
                             : 'bg-brand-surface border border-brand-border hover:border-brand-primary hover:text-brand-primary hover:shadow-lg active:scale-95 text-brand-text'
@@ -72,16 +72,16 @@ const Keypad: React.FC<KeypadProps> = ({ inputBase, currentInputString, handleIn
                 ))}
                 <button 
                     onClick={() => handleInputChange(inputBase, currentInputString.slice(0, -1))}
-                    className="p-5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
+                    className="p-3 sm:p-5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl sm:rounded-2xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
                 >
-                    <Delete size={24} />
+                    <Delete size={20} className="sm:w-6 sm:h-6" />
                 </button>
             </div>
-            <div className="grid grid-cols-1 gap-3">
-                <button onClick={() => performBitwise('LSH')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">LSH</button>
-                <button onClick={() => performBitwise('RSH')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">RSH</button>
-                <button onClick={() => performBitwise('NOT')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NOT</button>
-                <button onClick={() => performBitwise('NEG')} className="p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-2xl font-mono text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NEG</button>
+            <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                <button onClick={() => performBitwise('LSH')} className="p-2 sm:p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-xl sm:rounded-2xl font-mono text-xs sm:text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">LSH</button>
+                <button onClick={() => performBitwise('RSH')} className="p-2 sm:p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-xl sm:rounded-2xl font-mono text-xs sm:text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">RSH</button>
+                <button onClick={() => performBitwise('NOT')} className="p-2 sm:p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-xl sm:rounded-2xl font-mono text-xs sm:text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NOT</button>
+                <button onClick={() => performBitwise('NEG')} className="p-2 sm:p-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/20 rounded-xl sm:rounded-2xl font-mono text-xs sm:text-sm font-bold hover:bg-brand-primary hover:text-brand-bg transition-all shadow-sm">NEG</button>
             </div>
         </div>
     );
@@ -532,7 +532,7 @@ const ProgrammerCalculator: React.FC = () => {
                                                 step="any"
                                                 value={floatValue}
                                                 onChange={e => setFloatValue(Number(e.target.value))}
-                                                className="w-full bg-gray-900/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-2xl font-bold shadow-inner"
+                                                className="w-full bg-brand-bg/50 p-6 rounded-2xl border border-brand-border focus:border-brand-primary outline-none font-mono text-2xl font-bold shadow-inner"
                                             />
                                         </div>
                                     </div>

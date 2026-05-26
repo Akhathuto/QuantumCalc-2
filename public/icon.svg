@@ -1,7 +1,30 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rounded Rect container background matching theme_color -->
   <rect width="512" height="512" rx="128" fill="#0A0A0A"/>
-  <ellipse cx="256" cy="256" rx="200" ry="100" stroke="#3B82F6" stroke-width="20" opacity="0.3"/>
-  <ellipse cx="256" cy="256" rx="100" ry="200" stroke="#A855F7" stroke-width="20" opacity="0.3" transform="rotate(60 256 256)"/>
-  <circle cx="256" cy="256" r="60" fill="#3B82F6"/>
-  <path d="M256 128V160M256 352V384M128 256H160M352 256H384M165.5 165.5L188 188M324 324L346.5 346.5M165.5 346.5L188 324M324 188L346.5 165.5" stroke="#3B82F6" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- Outer Orbits scaled from 100x100 to 512x512 -->
+  <!-- CX: 256, CY: 256, RX: 180, RY: 100 -->
+  <ellipse cx="256" cy="256" rx="180" ry="100" fill="none" stroke="#2563EB" stroke-width="10" opacity="0.35"/>
+  <ellipse cx="256" cy="256" rx="100" ry="180" fill="none" stroke="#7C3AED" stroke-width="10" opacity="0.35" transform="rotate(60 256 256)"/>
+  
+  <!-- Particles situated on the orbits -->
+  <circle cx="76" cy="256" r="16" fill="#3B82F6" />
+  <circle cx="346" cy="100" r="16" fill="#A855F7" />
+
+  <!-- Centered BrainCircuit icon scaled exactly to align with Logo layout -->
+  <g transform="translate(116, 116) scale(11.66667)" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M12 2a10 10 0 0 0-4.3 19.42" />
+    <path d="M12 2a10 10 0 0 1 4.3 19.42" />
+    <path d="M2 12h2" />
+    <path d="M20 12h2" />
+    <path d="M12 2v2" />
+    <path d="M12 20v2" />
+    <path d="M4.93 4.93l1.41 1.41" />
+    <path d="M17.66 17.66l1.41 1.41" />
+    <path d="M4.93 19.07l1.41-1.41" />
+    <path d="M17.66 6.34l1.41-1.41" />
+    <path d="M12 6a6 6 0 0 0-6 6" />
+    <path d="M16 14a2 2 0 0 0-2-2" />
+    <path d="M12 12a4 4 0 0 1 4 4" />
+  </g>
 </svg>

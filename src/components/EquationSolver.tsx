@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { create, all } from 'mathjs';
-import { Brain, TrendingUp, GitCompareArrows, ShieldCheck, Target } from 'lucide-react';
+import { Brain, TrendingUp, GitCompareArrows, ShieldCheck, Target, Download } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 import { motion } from 'motion/react';
 import 'katex/dist/katex.min.css';
@@ -104,6 +104,78 @@ const EquationSolver = () => {
         }
     };
 
+    const handleExportAcademic = () => {
+        if (!solvedDetails) return;
+        const { type, coeffs, discriminant } = solvedDetails;
+        const { a, b, c } = coeffs;
+        
+        let markdownContent = `# Quantum Solver Study Report\n\n`;
+        markdownContent += `**Equation:** $${equation}$\n`;
+        markdownContent += `**Method:** Step-by-Step Algebraic Expansion\n\n`;
+        
+        markdownContent += `## 1. Polynomial Classification & Setup\n`;
+        if (type === 'linear') {
+            markdownContent += `The system has resolved a first-degree **linear equation** of the standard form:\n`;
+            markdownContent += `$$ax + b = 0$$\n\n`;
+            markdownContent += `Where coefficients are identified as:\n`;
+            markdownContent += `- $a = ${a}$\n`;
+            markdownContent += `- $b = ${b}$\n\n`;
+        } else {
+            markdownContent += `The system has resolved a second-degree **quadratic equation** of the standard form:\n`;
+            markdownContent += `$$ax^2 + bx + c = 0$$\n\n`;
+            markdownContent += `Where coefficients are extracted as:\n`;
+            markdownContent += `- $a = ${a}$\n`;
+            markdownContent += `- $b = ${b}$\n`;
+            markdownContent += `- $c = ${c}$\n\n`;
+        }
+        
+        markdownContent += `## 2. Derivation Path & Calculations\n`;
+        if (type === 'linear') {
+            markdownContent += `To isolate the unknown variable $x$, isolate the constant $b$ and divide by $a$:\n`;
+            markdownContent += `$$ax = -b \\implies x = -\\frac{b}{a}$$\n\n`;
+            markdownContent += `Substituting primitive values yields the isolate:\n`;
+            markdownContent += `$$x = -\\frac{${b}}{${a}} = ${(-b / a).toFixed(6)}$$\n\n`;
+        } else {
+            markdownContent += `### Discriminant Resolution ($\\Delta$)\n`;
+            markdownContent += `Solve the discriminant equation to determine target root space:\n`;
+            markdownContent += `$$\\Delta = b^2 - 4ac$$\n`;
+            markdownContent += `$$\\Delta = (${b})^2 - 4(${a})(${c}) = ${discriminant}$$\n\n`;
+            
+            if (discriminant !== undefined) {
+                if (discriminant > 0) {
+                    markdownContent += `Because $\\Delta > 0$, the quadratic system holds **two distinct real roots**.\n\n`;
+                } else if (discriminant === 0) {
+                    markdownContent += `Because $\\Delta = 0$, the quadratic system holds **exactly one real root**.\n\n`;
+                } else {
+                    markdownContent += `Because $\\Delta < 0$, the quadratic system holds **two complex conjugate roots**.\n\n`;
+                }
+            }
+            
+            markdownContent += `### System Root Formulas Application\n`;
+            markdownContent += `$$x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}$$\n`;
+            markdownContent += `$$x = \\frac{-(${b}) \\pm \\sqrt{${discriminant}}}{2(${a})}$$\n\n`;
+        }
+        
+        markdownContent += `## 3. Final Evaluated Solution Set\n`;
+        solutions.forEach((sol, i) => {
+            const valStr = math.format(sol, { notation: 'fixed', precision: 6 });
+            markdownContent += `- **Root $x_{${i + 1}}$:** $${valStr}$\n`;
+        });
+        
+        markdownContent += `\n*Calculations generated securely by Quantum Calculator - Academic Export Module, 2026.*\n`;
+        
+        // Export file setup
+        const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `academic_solution_${type}.md`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const graphData = useMemo(() => {
         if (!solvedDetails) return null;
         const { a, b, c } = solvedDetails.coeffs;
@@ -200,13 +272,23 @@ const EquationSolver = () => {
                                         <Target size={12} /> Solution Buffer
                                     </h3>
                                     {solutions.length > 0 && (
-                                        <button 
-                                            onClick={handleCopy} 
-                                            className="px-4 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-[9px] font-black uppercase tracking-widest hover:text-brand-primary hover:border-brand-primary transition-all flex items-center gap-2"
-                                        >
-                                            {copied ? <ShieldCheck size={12} className="text-green-500" /> : <GitCompareArrows size={12} />}
-                                            {copied ? 'Captured' : 'Capture'}
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={handleExportAcademic}
+                                                className="px-4 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-[9px] font-black uppercase tracking-widest hover:text-brand-primary hover:border-brand-primary transition-all flex items-center gap-2"
+                                                title="Export LaTeX Report"
+                                            >
+                                                <Download size={12} />
+                                                LaTeX Doc
+                                            </button>
+                                            <button 
+                                                onClick={handleCopy} 
+                                                className="px-4 py-1.5 bg-brand-surface border border-brand-border rounded-xl text-[9px] font-black uppercase tracking-widest hover:text-brand-primary hover:border-brand-primary transition-all flex items-center gap-2"
+                                            >
+                                                {copied ? <ShieldCheck size={12} className="text-green-500" /> : <GitCompareArrows size={12} />}
+                                                {copied ? 'Captured' : 'Capture'}
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                                 {error && <p className="text-red-400 font-mono text-sm uppercase tracking-tighter">{error}</p>}

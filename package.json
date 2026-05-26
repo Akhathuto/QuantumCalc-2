@@ -27,6 +27,9 @@
     "react-plotly.js": "^2.6.0",
     "recharts": "^2.12.7"
   },
+  "overrides": {
+    "node-domexception": "npm:domexception@^4.0.0"
+  },
   "devDependencies": {
     "@capacitor/cli": "^8.3.4",
     "@firebase/eslint-plugin-security-rules": "^0.0.2",

@@ -67,6 +67,17 @@ html.cyberpunk {
   --color-border: #5a0071;
 }
 
+html.mobile-touch {
+  --color-bg: #000000;
+  --color-surface: #111111;
+  --color-primary: #bfdbfe; /* Pastel Touch Blue for better high contrast text and UI elements */
+  --color-secondary: #f472b6; /* Vivid Rose */
+  --color-accent: #34d399; /* Emerald accent */
+  --color-text: #ffffff;
+  --color-text-secondary: #94a3b8;
+  --color-border: #27272a;
+}
+
 @layer utilities {
   .animate-spin-slow {
     animation: spin-slow 10s linear infinite;

@@ -251,51 +251,51 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
     switch (calcScale) {
       case 'sm':
         return {
-          btnHeight: 'h-[44px] md:h-[48px]',
-          btnGap: 'gap-1.5 md:gap-2 mt-4',
-          labelSize: 'text-xs md:text-sm',
+          btnHeight: 'h-10 sm:h-[44px] md:h-[48px]',
+          btnGap: 'gap-1 sm:gap-1.5 md:gap-2 mt-3 sm:mt-4',
+          labelSize: 'text-[11px] sm:text-xs md:text-sm',
           secondLabelSize: 'text-[8px]',
-          exprSize: 'text-xs md:text-sm h-6',
-          inputSize: 'text-2xl md:text-4xl min-h-[44px]',
-          cardPadding: 'p-4',
-          cardHeight: 'min-h-[140px]',
+          exprSize: 'text-[10px] sm:text-xs md:text-sm h-5 sm:h-6',
+          inputSize: 'text-lg sm:text-2xl md:text-4xl min-h-[36px] sm:min-h-[44px]',
+          cardPadding: 'p-3 sm:p-4',
+          cardHeight: 'min-h-[120px] sm:min-h-[140px]',
           containerClass: 'max-w-md mx-auto lg:mx-0'
         };
       case 'lg':
         return {
-          btnHeight: 'h-16 md:h-[72px]',
-          btnGap: 'gap-2.5 md:gap-3 mt-6',
-          labelSize: 'text-lg font-extrabold',
-          secondLabelSize: 'text-xs',
-          exprSize: 'text-lg md:text-2xl h-9',
-          inputSize: 'text-5xl md:text-7xl min-h-[72px]',
-          cardPadding: 'p-8',
-          cardHeight: 'min-h-[225px]',
+          btnHeight: 'h-12 sm:h-16 md:h-[72px]',
+          btnGap: 'gap-1.5 sm:gap-2.5 md:gap-3 mt-4 sm:mt-6',
+          labelSize: 'text-sm sm:text-lg font-extrabold',
+          secondLabelSize: 'text-[10px] sm:text-xs',
+          exprSize: 'text-sm sm:text-lg md:text-2xl h-7 sm:h-9',
+          inputSize: 'text-2xl sm:text-5xl md:text-7xl min-h-[50px] sm:min-h-[72px]',
+          cardPadding: 'p-4 sm:p-8',
+          cardHeight: 'min-h-[140px] sm:min-h-[225px]',
           containerClass: 'max-w-2xl'
         };
       case 'colossal':
         return {
-          btnHeight: 'h-20 md:h-24',
-          btnGap: 'gap-3 md:gap-4 mt-8',
-          labelSize: 'text-xl md:text-2xl font-black',
-          secondLabelSize: 'text-sm font-semibold',
-          exprSize: 'text-xl md:text-3xl h-10',
-          inputSize: 'text-6xl md:text-8xl min-h-[96px]',
-          cardPadding: 'p-10',
-          cardHeight: 'min-h-[265px]',
+          btnHeight: 'h-13 sm:h-20 md:h-24',
+          btnGap: 'gap-2 sm:gap-3 md:gap-4 mt-5 sm:mt-8',
+          labelSize: 'text-base sm:text-xl md:text-2xl font-black',
+          secondLabelSize: 'text-xs sm:text-sm font-semibold',
+          exprSize: 'text-sm sm:text-xl md:text-3xl h-8 sm:h-10',
+          inputSize: 'text-3xl sm:text-6xl md:text-8xl min-h-[60px] sm:min-h-[96px]',
+          cardPadding: 'p-5 sm:p-10',
+          cardHeight: 'min-h-[160px] sm:min-h-[265px]',
           containerClass: 'max-w-3xl'
         };
       case 'md':
       default:
         return {
-          btnHeight: 'h-14 md:h-16',
-          btnGap: 'gap-2 md:gap-2.5 mt-6',
-          labelSize: 'text-base font-bold',
-          secondLabelSize: 'text-[10px]',
-          exprSize: 'text-base md:text-xl h-8',
-          inputSize: 'text-4xl md:text-6xl min-h-[60px]',
-          cardPadding: 'p-6',
-          cardHeight: 'min-h-[180px]',
+          btnHeight: 'h-11 sm:h-14 md:h-16',
+          btnGap: 'gap-1.5 sm:gap-2 md:gap-2.5 mt-4 sm:mt-6',
+          labelSize: 'text-xs sm:text-base font-bold',
+          secondLabelSize: 'text-[9px] sm:text-[10px]',
+          exprSize: 'text-xs sm:text-base md:text-xl h-6 sm:h-8',
+          inputSize: 'text-xl sm:text-4xl md:text-6xl min-h-[44px] sm:min-h-[60px]',
+          cardPadding: 'p-4 sm:p-6',
+          cardHeight: 'min-h-[130px] sm:min-h-[180px]',
           containerClass: ''
         };
     }
