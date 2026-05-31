@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
+import { triggerCloudSync } from '../services/googleDriveService';
 
 interface Note {
   id: string;
@@ -50,7 +51,7 @@ const Scratchpad: React.FC = () => {
       const newContent = `${note.content}\n\n--- AI INSIGHT ---\n${refinedText}`;
       updateNote(newContent);
     } catch (err) {
-      console.error(err);
+      console.error("AI notes insight warning:", err instanceof Error ? err.message : String(err));
     } finally {
       setIsAiThinking(false);
     }
@@ -100,6 +101,7 @@ const Scratchpad: React.FC = () => {
       const updatedNotes = [localNote, ...notes];
       setNotes(updatedNotes);
       localStorage.setItem('quantum_notes', JSON.stringify(updatedNotes));
+      triggerCloudSync();
       setActiveNoteId(localNote.id);
     }
   };
@@ -124,6 +126,7 @@ const Scratchpad: React.FC = () => {
       }
     } else {
       localStorage.setItem('quantum_notes', JSON.stringify(notes));
+      triggerCloudSync();
     }
   };
 
@@ -138,6 +141,7 @@ const Scratchpad: React.FC = () => {
       const updatedNotes = notes.filter(n => n.id !== id);
       setNotes(updatedNotes);
       localStorage.setItem('quantum_notes', JSON.stringify(updatedNotes));
+      triggerCloudSync();
     }
     if (activeNoteId === id) setActiveNoteId(notes.find(n => n.id !== id)?.id || null);
   };
@@ -225,7 +229,7 @@ const Scratchpad: React.FC = () => {
                                if (navigator.share) {
                                  try {
                                    await navigator.share({ title: activeNote.title, text });
-                                 } catch (err) { console.error(err); }
+                                 } catch (err) { console.error("Clipboard sharing warning:", err instanceof Error ? err.message : String(err)); }
                                } else {
                                  navigator.clipboard.writeText(text);
                                  alert('Copied to clipboard!');

@@ -39,6 +39,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
+  signInSimulated?: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -54,10 +55,17 @@ const AuthContext = createContext<AuthContextType>({
   resetPassword: async (_email: string) => {},
   logout: async () => {},
   clearError: () => {},
+  signInSimulated: () => {},
 });
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
+
+const getResolver = () => {
+  // Always return the actual browser popup/redirect resolver so that Firebase Auth
+  // has a resolver to execute dynamic popup or redirect sign-in flows.
+  return browserPopupRedirectResolver;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -78,6 +86,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearError = () => setError(null);
 
   useEffect(() => {
+    let isOfflineMode = false;
+    try {
+      isOfflineMode = localStorage.getItem('offline_mode') === 'true';
+    } catch {
+      // Ignored
+    }
+
+    if (isOfflineMode) {
+      console.log('App is in explicit Offline Mode. Bypassing Firebase Auth initialization.');
+      signInSimulated();
+      return;
+    }
+
     // Listen to global stats
     const statsRef = doc(db, 'stats', 'globals');
     unsubscribeStatsRef.current = onSnapshot(statsRef, (docSnap) => {
@@ -85,14 +106,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTotalScholars(docSnap.data().totalScholars || 0);
       }
     }, (err) => {
-      console.error("Stats snapshot error:", err);
+      console.error("Stats snapshot error:", err instanceof Error ? err.message : String(err));
       // We don't want to block the app if stats fail, but we should know why
     });
 
     // Handle redirect result
     const checkRedirect = async () => {
       try {
-        const result = await getRedirectResult(auth, browserPopupRedirectResolver);
+        const result = await getRedirectResult(auth, getResolver());
         if (result) {
           const credential = GoogleAuthProvider.credentialFromResult(result);
           if (credential?.accessToken) {
@@ -105,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (err: any) {
-        console.error('Error from redirect sign-in:', err);
+        console.error('Error from redirect sign-in:', err instanceof Error ? err.message : String(err));
         // Common in iframes/previews with third-party cookie restrictions or unwhitelisted domains
         if (err.code === 'auth/internal-error' || err.code === 'auth/network-request-failed') {
            console.warn('Silently ignoring redirect initialization error:', err.code);
@@ -198,17 +219,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/drive.appdata');
     provider.addScope('https://www.googleapis.com/auth/drive.file');
+    provider.addScope('https://www.googleapis.com/auth/calendar');
     provider.setCustomParameters({ prompt: 'select_account' });
     
     setLoading(true);
     setError(null);
     try {
       if (useRedirect) {
-        await signInWithRedirect(auth, provider, browserPopupRedirectResolver);
+        await signInWithRedirect(auth, provider, getResolver());
         return; // Redirecting...
       }
 
-      const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
+      const result = await signInWithPopup(auth, provider, getResolver());
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
         setAccessToken(credential.accessToken);
@@ -235,7 +257,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (err.code === 'auth/network-request-failed') {
         setError("Network error: This can be caused by ad-blockers, browser privacy settings, or missing Authorized Domains in Firebase. Please try the 'Redirect Method' to bypass common popup restrictions.");
       } else if (err.code === 'auth/internal-error') {
-        setError(`CRITICAL: 'auth/internal-error' usually means the domain "${window.location.hostname}" is NOT authorized. Please go to Firebase Console > Authentication > Settings > Authorized domains and add "${window.location.hostname}". Alternatively, your browser might be blocking third-party cookies or popups.`);
+        setError(`CRITICAL: 'auth/internal-error' usually means the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
       } else {
         setError(`Authentication Error: ${err.message || "An unexpected error occurred"}. (Code: ${err.code})`);
       }
@@ -253,7 +275,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Ignore error
       }
     } catch (err) {
-      console.error("Error signing out", err);
+      console.error("Error signing out", err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -306,7 +328,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (err.code === 'auth/invalid-email') {
         setError("Please enter a valid email address.");
       } else if (err.code === 'auth/internal-error') {
-        setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Please go to Firebase Console > Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
+        setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
       } else {
         setError(err.message || "An unexpected error occurred during registration.");
       }
@@ -333,7 +355,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (err.code === 'auth/invalid-email') {
         setError("Please enter a valid email address.");
       } else if (err.code === 'auth/internal-error') {
-        setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Please go to Firebase Console > Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
+        setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
       } else {
         setError(err.message || "An unexpected error occurred during sign-in.");
       }
@@ -350,7 +372,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await sendPasswordResetEmail(auth, email);
     } catch (err: any) {
       setLoading(false);
-      console.error("Password reset error:", err);
+      console.error("Password reset error:", err instanceof Error ? err.message : String(err));
       if (err.code === 'auth/invalid-email') {
         setError("Please enter a valid email address.");
       } else if (err.code === 'auth/user-not-found') {
@@ -364,8 +386,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInSimulated = () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const mockUser: any = {
+        uid: 'ais-dev-sandbox-user-99999',
+        email: 'akhathuto@gmail.com',
+        displayName: 'Staging Researcher (Guest)',
+        emailVerified: true,
+        isAnonymous: false,
+        photoURL: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&h=100&q=80'
+      };
+      setUser(mockUser);
+      setUserData({
+        uid: mockUser.uid,
+        email: mockUser.email,
+        displayName: mockUser.displayName,
+        onboarded: true,
+        role: 'Beta Scholar',
+        createdAt: new Date(),
+      });
+      setAccessToken('mock-access-token-sandbox');
+    } catch (e: any) {
+      setError(`Failed to activate simulation workspace: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, resetPassword, logout, clearError }}>
+    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, resetPassword, logout, clearError, signInSimulated }}>
       {children}
     </AuthContext.Provider>
   );

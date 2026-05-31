@@ -24,6 +24,7 @@ import ExploreHub from './components/ExploreHub';
 import { AppTab, HistoryEntry } from './types';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import AuthModal from './components/common/AuthModal';
+import { triggerCloudSync } from './services/googleDriveService';
 
 // Lazy-load components with heavy dependencies (like charting libraries) to prevent startup crashes
 const Graph = lazy(() => import('./components/Graph'));
@@ -47,6 +48,7 @@ const PrivacyProtocol = lazy(() => import('./components/PrivacyProtocol'));
 const CoreLicense = lazy(() => import('./components/CoreLicense'));
 const SupportHub = lazy(() => import('./components/SupportHub'));
 const MathSandbox = lazy(() => import('./components/MathSandbox'));
+const GoogleCalendar = lazy(() => import('./components/GoogleCalendar'));
 
 const App = () => {
   const { user, userData, accessToken, loading } = useAuth();
@@ -155,6 +157,21 @@ const App = () => {
     }
   }, [activeTab, accessToken]);
 
+  // Listen for custom trigger-cloud-sync event for real-time saving from any component
+  useEffect(() => {
+    const handleSync = () => {
+      if (accessToken) {
+        import('./services/googleDriveService').then((m) => {
+          m.googleDriveService.triggerAutoSync(accessToken);
+        });
+      }
+    };
+    window.addEventListener('trigger-cloud-sync', handleSync);
+    return () => {
+      window.removeEventListener('trigger-cloud-sync', handleSync);
+    };
+  }, [accessToken]);
+
   const installApp = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -199,7 +216,7 @@ const App = () => {
           localStorage.removeItem('calcHistory');
         }
       } catch (err: any) {
-        console.error("Local-to-Auth history database reconciliation failed:", err);
+        console.error("Local-to-Auth history database reconciliation failed:", err instanceof Error ? err.message : String(err));
       }
     };
 
@@ -233,6 +250,7 @@ const App = () => {
     if (!user) {
       try {
         localStorage.setItem('calcHistory', JSON.stringify(history));
+        triggerCloudSync();
       } catch (error) {
         console.error("Failed to save history to localStorage:", error);
       }
@@ -403,6 +421,9 @@ const App = () => {
         break;
       case 'sandbox':
         TabComponent = <MathSandbox />;
+        break;
+      case 'calendar':
+        TabComponent = <GoogleCalendar />;
         break;
       default:
         TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} setActiveTab={setActiveTab} />;

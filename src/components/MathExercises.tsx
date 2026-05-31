@@ -20,6 +20,7 @@ import {
 import Latex from 'react-latex-next';
 import ReactMarkdown from 'react-markdown';
 import { getExerciseAiExplanation } from '../services/geminiService';
+import { triggerCloudSync } from '../services/googleDriveService';
 
 interface DrillProblem {
   id: number;
@@ -32,7 +33,7 @@ interface DrillProblem {
   stepByStepSolution: string;
 }
 
-const CATEGORIES = ["All Categories", "Calculus & Limits", "Algebraic Systems", "Trig Identities", "Fractions & Core Arithmetic", "Geometry", "Statistics & Probability"];
+const CATEGORIES = ["All Categories", "Calculus & Limits", "Algebraic Systems", "Trig Identities", "Fractions & Core Arithmetic", "Geometry", "Statistics & Probability", "Linear Algebra", "Complex Numbers", "Differential Equations"];
 
 export const MathExercises: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState("All Categories");
@@ -162,7 +163,7 @@ export const MathExercises: React.FC = () => {
       );
       setAiAnswer(response);
     } catch (err: any) {
-      console.error(err);
+      console.error("Math exercises coach error:", err instanceof Error ? err.message : String(err));
       setAiError(err?.message || "Could not reach the AI Coach at this moment.");
     } finally {
       setAiLoading(false);
@@ -488,6 +489,158 @@ export const MathExercises: React.FC = () => {
       }
     }
 
+    // Category 7: Linear Algebra
+    if (cat === 'All Categories' || cat === 'Linear Algebra') {
+      if (level === 'basic') {
+        deck.push({
+          id: 701,
+          category: "Linear Algebra",
+          difficulty: 'basic',
+          title: "Dot Product",
+          latexQuery: `[${a}, ${b}] \\cdot [${c}, ${a}]`,
+          correctAnswer: [`${a * c + b * a}`],
+          hints: [
+            "Multiply corresponding components and add them together.",
+            `Calculate $(${a} \\times ${c}) + (${b} \\times ${a})$.`,
+            `The result is ${a * c} + ${b * a}.`
+          ],
+          stepByStepSolution: `(${a})(${c}) + (${b})(${a}) = ${a * c} + ${b * a} = ${a * c + b * a}.`
+        });
+      } else if (level === 'intermediate') {
+        const det2x2 = a * c - b * b;
+        deck.push({
+          id: 702,
+          category: "Linear Algebra",
+          difficulty: 'intermediate',
+          title: "Determinant of 2x2 Matrix",
+          latexQuery: `\\det \\begin{pmatrix} ${a} & ${b} \\\\ ${b} & ${c} \\end{pmatrix}`,
+          correctAnswer: [`${det2x2}`],
+          hints: [
+            "The determinant of a 2x2 matrix is ad - bc.",
+            `Calculate $(${a} \\times ${c}) - (${b} \\times ${b})$.`,
+            `The result is ${a * c} - ${b * b}.`
+          ],
+          stepByStepSolution: `\\det = (${a})(${c}) - (${b})(${b}) = ${a * c} - ${b * b} = ${det2x2}.`
+        });
+      } else {
+        const trace = a + c + a;
+        deck.push({
+          id: 703,
+          category: "Linear Algebra",
+          difficulty: 'advanced',
+          title: "Trace of 3x3 Matrix",
+          latexQuery: `\\text{Tr} \\begin{pmatrix} ${a} & 1 & 2 \\\\ 3 & ${c} & 4 \\\\ 5 & 6 & ${a} \\end{pmatrix}`,
+          correctAnswer: [`${trace}`],
+          hints: [
+            "The trace is the sum of the elements on the main diagonal.",
+            `Add the diagonal elements: ${a} + ${c} + ${a}.`,
+            `The result is ${trace}.`
+          ],
+          stepByStepSolution: `\\text{Tr} = ${a} + ${c} + ${a} = ${trace}.`
+        });
+      }
+    }
+
+    // Category 8: Complex Numbers
+    if (cat === 'All Categories' || cat === 'Complex Numbers') {
+      if (level === 'basic') {
+        deck.push({
+          id: 801,
+          category: "Complex Numbers",
+          difficulty: 'basic',
+          title: "Addition of Complex Numbers",
+          latexQuery: `(${a} + ${b}i) + (${c} - ${b - 1}i)`,
+          correctAnswer: [`${a + c} + 1i`, `${a + c}+i`, `${a + c} + i`],
+          hints: [
+            "Add the real parts together, and add the imaginary parts together.",
+            `Real part: ${a} + ${c}.`,
+            `Imaginary part: ${b} - ${b - 1}.`
+          ],
+          stepByStepSolution: `(${a} + ${c}) + (${b} - ${b - 1})i = ${a + c} + 1i.`
+        });
+      } else if (level === 'intermediate') {
+        deck.push({
+          id: 802,
+          category: "Complex Numbers",
+          difficulty: 'intermediate',
+          title: "Multiplication of Complex Numbers",
+          latexQuery: `(${a} + i)(${b} - i)`,
+          correctAnswer: [`${a * b + 1} + ${b - a}i`, `${a * b + 1}+${b - a}i`],
+          hints: [
+            "Use FOIL (First, Outer, Inner, Last) method.",
+            `Recall that $i^2 = -1$.`,
+            `Calculate $(${a})(${b}) + (${a})(-i) + (i)(${b}) + (i)(-i)$.`
+          ],
+          stepByStepSolution: `(${a})(${b}) - ${a}i + ${b}i - i^2 = ${a * b} + ${b - a}i - (-1) = ${a * b + 1} + ${b - a}i.`
+        });
+      } else {
+         deck.push({
+          id: 803,
+          category: "Complex Numbers",
+          difficulty: 'advanced',
+          title: "Division of Complex Numbers",
+          latexQuery: `\\frac{${a}}{${b}i}`,
+          correctAnswer: [`-${a}/${b}i`, `-${a / b}i`, `${-a}/${b}i`],
+          hints: [
+             "Multiply the numerator and denominator by the complex conjugate of the denominator.",
+             "The complex conjugate of $bi$ is $-bi$.",
+             `Recall that $i^2 = -1$.`
+          ],
+          stepByStepSolution: `\\frac{${a} \\cdot (-${b}i)}{${b}i \\cdot (-${b}i)} = \\frac{-${a * b}i}{-${b * b}i^2} = \\frac{-${a * b}i}{${b * b}} = -\\frac{${a}}{${b}}i.`
+        });
+      }
+    }
+
+    // Category 9: Differential Equations
+    if (cat === 'All Categories' || cat === 'Differential Equations') {
+      if (level === 'basic') {
+        deck.push({
+          id: 901,
+          category: "Differential Equations",
+          difficulty: 'basic',
+          title: "Separation of Variables",
+          latexQuery: `\\frac{dy}{dx} = ${a}x`,
+          correctAnswer: [`${a / 2}x^2 + C`, `${a / 2}x^2+C`],
+          hints: [
+            "Separate the variables: $dy = ${a}x dx$.",
+            "Integrate both sides.",
+            "Remember to add the constant of integration, C."
+          ],
+          stepByStepSolution: `\\int dy = \\int ${a}x dx \\Rightarrow y = \\frac{${a}}{2}x^2 + C.`
+        });
+      } else if (level === 'intermediate') {
+        deck.push({
+          id: 902,
+          category: "Differential Equations",
+          difficulty: 'intermediate',
+          title: "Integrating Factor",
+          latexQuery: `y' + \\frac{1}{x}y = ${a}`,
+          correctAnswer: [`x`],
+          hints: [
+            "The equation is in standard linear form $y' + P(x)y = Q(x)$.",
+            "The integrating factor is $\\mu(x) = e^{\\int P(x)dx}$.",
+            `Calculate $e^{\\int (1/x)dx}$.`
+          ],
+          stepByStepSolution: `\\mu(x) = e^{\\int \\frac{1}{x}dx} = e^{\\ln(x)} = x.`
+        });
+      } else {
+        deck.push({
+          id: 903,
+          category: "Differential Equations",
+          difficulty: 'advanced',
+          title: "Characteristic Equation",
+          latexQuery: `y'' - ${a * 2}y' + ${a * a}y = 0`,
+          correctAnswer: [`r^2 - ${a * 2}r + ${a * a} = 0`, `r^2-${a * 2}r+${a * a}=0`],
+          hints: [
+            "Assume a solution of the form $y = e^{rx}$.",
+            "Substitute $y = e^{rx}$, $y' = re^{rx}$, and $y'' = r^2e^{rx}$ into the differential equation.",
+            "Divide out the common factor $e^{rx}$."
+          ],
+          stepByStepSolution: `r^2e^{rx} - ${a * 2}re^{rx} + ${a * a}e^{rx} = 0 \\Rightarrow e^{rx}(r^2 - ${a * 2}r + ${a * a}) = 0 \\Rightarrow r^2 - ${a * 2}r + ${a * a} = 0.`
+        });
+      }
+    }
+
     // Fallback if empty
     if (deck.length === 0) {
       deck.push({
@@ -528,6 +681,7 @@ export const MathExercises: React.FC = () => {
         setHighStreak(nextStreak);
         try {
           localStorage.setItem('quantum_drill_highstreak', nextStreak.toString());
+          triggerCloudSync();
         } catch (e) {
           console.warn("Storage write restricted.", e);
         }

@@ -3,6 +3,7 @@ import { Mail, MapPin, Send, CheckCircle2 } from 'lucide-react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
+import { Recapture } from './common/Recapture';
 
 const Contact: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const Contact: React.FC = () => {
         message: ''
     });
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -20,6 +22,7 @@ const Contact: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!isVerified) return;
         
         try {
             await addDoc(collection(db, 'contact_messages'), {
@@ -29,6 +32,7 @@ const Contact: React.FC = () => {
             });
             
             setIsSubmitted(true);
+            setIsVerified(false);
             setFormData({ name: '', email: '', subject: '', message: '' });
             setTimeout(() => setIsSubmitted(false), 5000);
         } catch (error) {
@@ -166,10 +170,15 @@ const Contact: React.FC = () => {
                                     ></textarea>
                                 </div>
 
+                                <div className="space-y-3 mb-6">
+                                    <Recapture onVerify={setIsVerified} />
+                                </div>
+
                                 <div className="pt-4">
                                     <button
                                         type="submit"
-                                        className="relative group/btn w-full md:w-auto overflow-hidden"
+                                        disabled={!isVerified}
+                                        className={`relative group/btn w-full md:w-auto overflow-hidden transition-opacity duration-300 ${!isVerified ? 'opacity-40 cursor-not-allowed' : 'opacity-100'}`}
                                     >
                                         <div className="absolute inset-0 bg-brand-primary rounded-2xl blur-lg opacity-20 group-hover/btn:opacity-50 transition-opacity" />
                                         <div className="relative flex items-center justify-center gap-3 px-12 py-5 bg-brand-primary text-brand-bg font-black uppercase tracking-widest text-[10px] rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl">

@@ -3,6 +3,12 @@ const DRIVE_API_URL = 'https://www.googleapis.com/drive/v3/files';
 const UPLOAD_API_URL = 'https://www.googleapis.com/upload/drive/v3/files';
 const FILE_NAME = 'quantum_calc_profile.json';
 
+// Global state trackers for coalesced sync saving
+let syncDebounceTimeout: any = null;
+let activeSyncPromise: Promise<void> | null = null;
+let lastSyncTime = 0;
+const MIN_SYNC_INTERVAL = 8000; // At most once every 8 seconds to guard API rates
+
 export interface UserProfileData {
   role: string;
   grade?: string;
@@ -108,9 +114,39 @@ export const googleDriveService = {
     }
   },
 
-  async triggerAutoSync(accessToken: string): Promise<void> {
+  triggerAutoSync(accessToken: string): void {
     const autoSyncEnabled = localStorage.getItem('google_drive_auto_sync') === 'true';
     if (!autoSyncEnabled) return;
+
+    if (syncDebounceTimeout) {
+      clearTimeout(syncDebounceTimeout);
+    }
+
+    syncDebounceTimeout = setTimeout(() => {
+      this.executeAutoSync(accessToken);
+    }, 3500); // 3.5 seconds silence debounce
+  },
+
+  async executeAutoSync(accessToken: string): Promise<void> {
+    if (activeSyncPromise) {
+      // If a sync operation is currently active, queue another cycle after it finishes
+      activeSyncPromise.then(() => {
+        this.triggerAutoSync(accessToken);
+      });
+      return;
+    }
+
+    const now = Date.now();
+    const elapsedSinceLastSync = now - lastSyncTime;
+    if (elapsedSinceLastSync < MIN_SYNC_INTERVAL) {
+      // Rate-limit guard: defer execution to respect Google API quota buckets
+      const waitTime = MIN_SYNC_INTERVAL - elapsedSinceLastSync;
+      if (syncDebounceTimeout) clearTimeout(syncDebounceTimeout);
+      syncDebounceTimeout = setTimeout(() => {
+        this.executeAutoSync(accessToken);
+      }, waitTime);
+      return;
+    }
 
     try {
       const dump: Record<string, string> = {};
@@ -132,10 +168,24 @@ export const googleDriveService = {
         localStorageDump: dump
       };
 
-      await this.saveProfile(accessToken, fullBackupData);
-      console.log('Google Drive Background Auto-Sync Completed.');
-    } catch (err) {
-      console.warn('Silent auto-sync failed:', err);
+      console.log('[Google Drive] Initiating coalesced background backup cycle...');
+      activeSyncPromise = this.saveProfile(accessToken, fullBackupData);
+      await activeSyncPromise;
+      lastSyncTime = Date.now();
+      console.log('[Google Drive] Background backup sync executed successfully.');
+    } catch (err: any) {
+      console.warn('[Google Drive] Coalesced write warning:', err.message || err);
+    } finally {
+      activeSyncPromise = null;
     }
   }
 };
+
+export function triggerCloudSync(): void {
+  try {
+    window.dispatchEvent(new CustomEvent('trigger-cloud-sync'));
+  } catch (e) {
+    console.warn('Sync trigger event delivery failed:', e);
+  }
+}
+

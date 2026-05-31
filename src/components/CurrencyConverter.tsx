@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { ArrowRightLeft, Loader, AlertTriangle, TrendingUp, AlertCircle } from 'lucide-react';
 import { getCurrencyForecast } from '../services/geminiService';
+import { triggerCloudSync } from '../services/googleDriveService';
 import { AppTab } from '../types';
 
 const API_URL = 'https://open.exchangerate-api.com/v6/latest';
@@ -224,6 +225,7 @@ const CurrencyConverter: React.FC<{ setActiveTab: (tab: AppTab) => void }> = ({ 
     try {
       localStorage.setItem('fromCurrency', fromCurrency);
       localStorage.setItem('toCurrency', toCurrency);
+      triggerCloudSync();
     } catch (error) {
       console.error("Failed to save currency preferences to localStorage:", error);
     }

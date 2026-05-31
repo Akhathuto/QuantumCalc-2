@@ -9,6 +9,11 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        serif: ['Space Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif']
+      },
       gridTemplateColumns: {
         '18': 'repeat(18, minmax(0, 1fr))',
       },

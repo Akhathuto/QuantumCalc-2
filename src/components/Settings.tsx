@@ -23,6 +23,7 @@ const themes = [
     { id: 'royal', name: 'Royal Purple', color: 'bg-[#1a0b2e]' },
     { id: 'terminal', name: 'Matrix Green', color: 'bg-black border border-green-500' },
     { id: 'cyberpunk', name: 'Cyberpunk', color: 'bg-[#130019]' },
+    { id: 'cosmic', name: 'Cosmic Slate', color: 'bg-[#030014] border border-[#1e1b4b]' },
     { id: 'mobile-touch', name: 'Mobile Tactile', color: 'bg-black border-2 border-dashed border-blue-400' },
 ];
 
@@ -34,7 +35,9 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     const { user, userData, accessToken } = useAuth();
     const [toastMessage, setToastMessage] = useState('');
-    const [currentThemeId, setCurrentThemeId] = useState(() => localStorage.getItem('theme') || 'dark');
+    const [currentThemeId, setCurrentThemeId] = useState(() => {
+        try { return localStorage.getItem('theme') || 'dark'; } catch(e) { return 'dark'; }
+    });
     const [isDarkMode, setIsDarkMode] = useState(() => {
         try {
             const savedTheme = localStorage.getItem('theme');
@@ -52,7 +55,11 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     });
 
     const [numberFormat, setNumberFormat] = useState(() => {
-        return localStorage.getItem('numberFormat') || 'us';
+        try {
+            return localStorage.getItem('numberFormat') || 'us';
+        } catch {
+            return 'us';
+        }
     });
 
     const handleFormatChange = (format: string) => {
@@ -172,13 +179,27 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
 
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isRestoring, setIsRestoring] = useState(false);
-    const [autoSyncEnabled, setAutoSyncEnabled] = useState(() => localStorage.getItem('google_drive_auto_sync') === 'true');
+    const [autoSyncEnabled, setAutoSyncEnabled] = useState(() => { try { return localStorage.getItem('google_drive_auto_sync') === 'true'; } catch(e) { return false; } });
+    const [offlineModeEnabled, setOfflineModeEnabled] = useState(() => { try { return localStorage.getItem('offline_mode') === 'true'; } catch(e) { return false; } });
 
     const handleAutoSyncToggle = () => {
         const nextVal = !autoSyncEnabled;
         setAutoSyncEnabled(nextVal);
         localStorage.setItem('google_drive_auto_sync', nextVal ? 'true' : 'false');
         showToast(nextVal ? "Real-time Google Drive auto-sync is now active!" : "Real-time auto-sync disabled.");
+    };
+
+    const handleOfflineModeToggle = () => {
+        const nextVal = !offlineModeEnabled;
+        setOfflineModeEnabled(nextVal);
+        localStorage.setItem('offline_mode', nextVal ? 'true' : 'false');
+        if (nextVal) {
+            showToast("Sandbox Offline Mode ENABLED. Reloading to bypass Firebase Auth...");
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast("Sandbox Offline Mode DISABLED. Reloading to connect to Firebase Sandbox...");
+            setTimeout(() => window.location.reload(), 1500);
+        }
     };
 
     const [editRole, setEditRole] = useState(userData?.role || '');
@@ -192,8 +213,8 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
 
     // Modern Advanced AI Settings States
     const [selectedModel, setSelectedModel] = useState(() => getGeminiModel());
-    const [aiTone, setAiTone] = useState(() => localStorage.getItem('CUSTOM_AI_TONE') || 'academic');
-    const [hapticEnabled, setHapticEnabled] = useState(() => localStorage.getItem('CUSTOM_HAPTIC_ENABLED') === 'true');
+    const [aiTone, setAiTone] = useState(() => { try { return localStorage.getItem('CUSTOM_AI_TONE') || 'academic'; } catch(e) { return 'academic'; } });
+    const [hapticEnabled, setHapticEnabled] = useState(() => { try { return localStorage.getItem('CUSTOM_HAPTIC_ENABLED') === 'true'; } catch { return false; } });
     const [apiTestStatus, setApiTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
     const [apiTestMessage, setApiTestMessage] = useState('');
     const [smartInputText, setSmartInputText] = useState('');
@@ -204,12 +225,12 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     const [isNativeApp, setIsNativeApp] = useState(false);
 
     // Enhanced math engine & performance controls
-    const [decimalPlaces, setDecimalPlaces] = useState(() => localStorage.getItem('calcDecimalPlaces') || 'auto');
-    const [angleUnit, setAngleUnit] = useState(() => localStorage.getItem('calcAngleUnit') || 'rad');
-    const [soundFXEnabled, setSoundFXEnabled] = useState(() => localStorage.getItem('allowSoundFX') === 'true');
-    const [voiceSpeechEnabled, setVoiceSpeechEnabled] = useState(() => localStorage.getItem('allowVoiceSpeech') === 'true');
-    const [reducedMotionEnabled, setReducedMotionEnabled] = useState(() => localStorage.getItem('reducedMotion') === 'true');
-    const [maxHistoryRows, setMaxHistoryRows] = useState(() => localStorage.getItem('calcMaxHistoryRows') || '100');
+    const [decimalPlaces, setDecimalPlaces] = useState(() => { try { return localStorage.getItem('calcDecimalPlaces') || 'auto'; } catch { return 'auto'; } });
+    const [angleUnit, setAngleUnit] = useState(() => { try { return localStorage.getItem('calcAngleUnit') || 'rad'; } catch { return 'rad'; } });
+    const [soundFXEnabled, setSoundFXEnabled] = useState(() => { try { return localStorage.getItem('allowSoundFX') === 'true'; } catch { return false; } });
+    const [voiceSpeechEnabled, setVoiceSpeechEnabled] = useState(() => { try { return localStorage.getItem('allowVoiceSpeech') === 'true'; } catch { return false; } });
+    const [reducedMotionEnabled, setReducedMotionEnabled] = useState(() => { try { return localStorage.getItem('reducedMotion') === 'true'; } catch { return false; } });
+    const [maxHistoryRows, setMaxHistoryRows] = useState(() => { try { return localStorage.getItem('calcMaxHistoryRows') || '100'; } catch { return '100'; } });
 
     useEffect(() => {
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
@@ -1311,6 +1332,40 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                         <p className="text-xs text-indigo-500/80 leading-relaxed italic">
                             <b>Did you know?</b> PWAs represent the next generation of native software, avoiding clunky system updates entirely. The client retains identical cached datasets, operates lightning fast, takes up under ~1MB, and syncs smoothly.
                         </p>
+                    </div>
+                </div>
+            </motion.div>
+
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+                <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500">
+                        <Cloud size={24} />
+                    </div>
+                    Network & Connectivity
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <h4 className="font-bold text-brand-text">Sandbox Offline Mode</h4>
+                        <p className="text-brand-text-secondary text-sm font-light leading-relaxed">
+                            Bypass all Firebase authentication and cloud sync logic on startup. Prevents network errors and iframe origin warnings in isolated preview environments.
+                        </p>
+                    </div>
+                    <div className="flex items-center justify-start md:justify-end">
+                        <button
+                            onClick={handleOfflineModeToggle}
+                            className={`relative inline-flex items-center h-10 w-20 rounded-full transition-colors duration-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-brand-bg shrink-0 shadow-inner ${
+                                offlineModeEnabled ? 'bg-emerald-500' : 'bg-gray-400/50'
+                            }`}
+                        >
+                            <span
+                                className={`inline-block w-8 h-8 transform bg-white rounded-full shadow-lg transition-transform duration-500 ease-in-out ${
+                                    offlineModeEnabled ? 'translate-x-11' : 'translate-x-1'
+                                } flex items-center justify-center`}
+                            >
+                                {offlineModeEnabled && <Check size={14} className="text-emerald-500" />}
+                            </span>
+                        </button>
                     </div>
                 </div>
             </motion.div>

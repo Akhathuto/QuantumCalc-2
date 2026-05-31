@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { HistoryEntry, Explanation, AppTab } from '../types';
 import { getFormulaExplanation } from '../services/geminiService';
+import { triggerCloudSync } from '../services/googleDriveService';
 import { formatNumber } from '../lib/formatters';
 import { create, all } from 'mathjs';
 import { Copy, Check, Loader, Brain, FlaskConical, AlertCircle, Share2, Volume2, VolumeX, Sliders, Keyboard, Sparkles } from 'lucide-react';
@@ -188,6 +189,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   useEffect(() => {
     try {
       localStorage.setItem('calc_angleMode', angleMode);
+      triggerCloudSync();
     } catch { console.error("Failed to solve angle mode"); }
   }, [angleMode]);
   const [memory, setMemory] = useState<number | null>(null);
@@ -202,6 +204,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   useEffect(() => {
     try {
       localStorage.setItem('calc_clickSound', clickVolume);
+      triggerCloudSync();
     } catch { console.error("Failed to save clickSound"); }
   }, [clickVolume]);
 
@@ -221,6 +224,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   useEffect(() => {
     try {
       localStorage.setItem('calc_scale', calcScale);
+      triggerCloudSync();
     } catch { console.error("Failed to save calculator scale"); }
   }, [calcScale]);
 

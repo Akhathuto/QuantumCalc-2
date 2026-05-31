@@ -5,11 +5,13 @@ import { db } from '../firebase';
 import { collection, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from './AuthProvider';
 import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
+import { Recapture } from './common/Recapture';
 
 const FeedbackPage = () => {
     const { user } = useAuth();
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
     const [rating, setRating] = useState(0);
     const [category, setCategory] = useState('');
     const [survey, setSurvey] = useState({
@@ -21,6 +23,7 @@ const FeedbackPage = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!isVerified) return;
         setLoading(true);
         
         try {
@@ -36,8 +39,9 @@ const FeedbackPage = () => {
                 userId: user?.uid || null
             });
             setSubmitted(true);
+            setIsVerified(false);
         } catch (error) {
-            console.error("Failed to submit feedback:", error);
+            console.error("Failed to submit feedback:", error instanceof Error ? error.message : String(error));
             handleFirestoreError(error, OperationType.CREATE, 'feedback');
         } finally {
             setLoading(false);
@@ -192,10 +196,14 @@ const FeedbackPage = () => {
                                 </div>
                             </div>
 
+                            <div className="mb-8">
+                                <Recapture onVerify={setIsVerified} />
+                            </div>
+
                             <button 
                                 type="submit"
-                                disabled={loading}
-                                className="w-full py-8 bg-brand-text text-brand-bg font-black uppercase tracking-[0.6em] text-xs rounded-3xl hover:bg-brand-primary hover:text-white transition-all shadow-2xl flex items-center justify-center gap-6 group disabled:opacity-50"
+                                disabled={loading || !isVerified}
+                                className={`w-full py-8 text-brand-bg font-black uppercase tracking-[0.6em] text-xs rounded-3xl hover:bg-brand-primary hover:text-white transition-all shadow-2xl flex items-center justify-center gap-6 group ${loading || !isVerified ? 'bg-brand-text/40 opacity-40 cursor-not-allowed' : 'bg-brand-text'}`}
                             >
                                 {loading ? (
                                     <Sparkles className="animate-spin" size={24} />

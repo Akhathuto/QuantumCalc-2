@@ -48,4 +48,5 @@ export type AppTab =
   | 'privacy'
   | 'core-license'
   | 'support'
-  | 'sandbox';
+  | 'sandbox'
+  | 'calendar';

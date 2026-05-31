@@ -543,10 +543,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-brand-text leading-[1.1] font-sans"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-[76px] font-bold tracking-[-0.03em] text-brand-text leading-[1.05] font-serif"
               >
                 Solve problems <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-brand-primary via-brand-primary to-brand-secondary inline-block py-1">
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-brand-primary via-[#a855f7] to-brand-secondary inline-block py-2">
                   step-by-step.
                 </span>
               </motion.h1>
@@ -555,7 +555,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-brand-text-secondary text-base sm:text-lg md:text-xl font-light leading-relaxed relative z-10"
+                className="text-brand-text-secondary text-base sm:text-lg md:text-xl font-light leading-relaxed relative z-10 font-sans mt-2"
               >
                 {getGreeting()} <br />
                 Your unified workspace for mathematics, science, and development.
@@ -639,7 +639,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest w-max mb-6 border border-brand-primary/10">
                   <GraduationCap size={14} className="animate-pulse" /> AI Problem Solver
                 </div>
-                <h2 className="text-4xl md:text-5xl font-extrabold text-brand-text mb-4 tracking-tight leading-[1.1] font-sans">
+                <h2 className="text-4xl md:text-5xl font-bold font-serif text-brand-text mb-4 tracking-tight leading-[1.1]">
                   {userData?.school ? `Solve anything at ${userData.school}.` : 'Access the AI Math Workspace.'}
                 </h2>
                 <p className="text-brand-text-secondary text-lg md:text-xl max-w-lg mb-8 leading-relaxed font-light">
@@ -727,7 +727,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest w-max mb-5 border border-emerald-500/10">
                     <Printer size={13} className="animate-pulse" /> Homework Studio
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-extrabold text-brand-text mb-3 tracking-tight">
+                  <h3 className="text-2xl md:text-3xl font-bold text-brand-text mb-3 tracking-tight font-serif">
                     Elementary K-5 Homework Builder
                   </h3>
                   <p className="text-brand-text-secondary text-[14.5px] max-w-xl mb-6 leading-relaxed font-light">
@@ -757,7 +757,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-widest w-max mb-5 border border-amber-500/10">
                     <Award size={13} /> Curriculum Practice Arena
                   </div>
-                  <h3 className="text-2xl font-extrabold text-brand-text mb-3 tracking-tight">
+                  <h3 className="text-2xl font-bold text-brand-text mb-3 tracking-tight font-serif">
                     Practice exams &amp; Diplomas
                   </h3>
                   <p className="text-brand-text-secondary text-[13.5px] mb-6 leading-relaxed font-light font-sans">
@@ -822,10 +822,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
           <div className="absolute inset-x-0 bottom-0 top-[60%] bg-gradient-to-t from-brand-primary/5 to-transparent pointer-events-none" />
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-brand-border/25">
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-brand-text mb-2 font-sans">
+              <h2 className="text-3xl font-bold tracking-tight text-brand-text mb-2 font-serif">
                 {searchQuery ? 'Search Workspaces' : 'Comprehensive Modules'}
               </h2>
-              <p className="text-brand-text-secondary text-sm font-light">Explore specialized workspaces: currency rate tickers, matrix solvers, health guides, coordinate scales, and educator panels.</p>
+              <p className="text-brand-text-secondary text-sm font-light leading-relaxed">Explore specialized workspaces: currency rate tickers, matrix solvers, health guides, coordinate scales, and educator panels.</p>
             </div>
           </div>
 
@@ -884,10 +884,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
             <div className="absolute -top-[20rem] -left-[20rem] w-[50rem] h-[50rem] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none opacity-50 group-hover:opacity-75 transition-opacity duration-1000" />
             <div className="absolute -bottom-[20rem] -right-[20rem] w-[50rem] h-[50rem] bg-brand-secondary/10 rounded-full blur-[120px] pointer-events-none opacity-50 group-hover:opacity-75 transition-opacity duration-1000" />
             
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-brand-text mb-6 tracking-tighter leading-[1.15] relative z-10">
-              Ready to unbox the <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">QuantumCalc Universe</span>?
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold font-serif text-brand-text mb-6 tracking-tight leading-[1.15] relative z-10">
+              Ready to unbox the <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-[#a855f7]">QuantumCalc Universe</span>?
             </h2>
-            <p className="text-brand-text-secondary text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light relative z-10">
+            <p className="text-brand-text-secondary text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light relative z-10 font-sans">
               Create your account to restore calculation states from history instantly, access workspace helpers, export printed materials safely, and gain premium options. Completely free.
             </p>
             <div className="flex justify-center mb-10 relative z-10 flex-wrap gap-5">

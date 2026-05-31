@@ -10,6 +10,7 @@ import Plotly from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
+import { triggerCloudSync } from '../services/googleDriveService';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -1472,6 +1473,7 @@ const Graph = ({ onLoginClick }: { onLoginClick: () => void }) => {
 
     useEffect(() => { 
         localStorage.setItem('graphing_activeChartType', chartType);
+        triggerCloudSync();
     }, [chartType]);
 
     const renderChart = () => {

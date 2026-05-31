@@ -11,6 +11,7 @@ import {
 import Latex from 'react-latex-next';
 import { GoogleGenAI } from "@google/genai";
 import { getApiKey, getGeminiModel, getSystemInstructionSuffix } from '../services/geminiService';
+import { triggerCloudSync } from '../services/googleDriveService';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 
 interface QueryStep {
@@ -56,6 +57,7 @@ export const WolframHub: React.FC = () => {
     setHistory(nextHistory);
     try {
       localStorage.setItem('quantum_wolfram_history', JSON.stringify(nextHistory));
+      triggerCloudSync();
     } catch (e) {
       console.warn("Storage restricted.", e);
     }
@@ -65,6 +67,7 @@ export const WolframHub: React.FC = () => {
     setHistory([]);
     try {
       localStorage.removeItem('quantum_wolfram_history');
+      triggerCloudSync();
     } catch (e) {
       console.warn("Storage delete failed", e);
     }
@@ -160,7 +163,7 @@ export const WolframHub: React.FC = () => {
         throw new Error("Invalid format returned from model computation engine.");
       }
     } catch (err: any) {
-      console.error(err);
+      console.error("Wolfram computation error:", err instanceof Error ? err.message : String(err));
       setError(`Computation limits reached or syntax issue: ${err.message || err}. Falling back to standard offline analyzer.`);
       const backupResult = getSimulatedSteppedResult(queryText);
       setResult(backupResult);
