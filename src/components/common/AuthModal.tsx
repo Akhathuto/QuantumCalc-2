@@ -6,6 +6,12 @@ import {
   Compass, 
   Sparkles,
   Shield,
+  GraduationCap,
+  School,
+  Building2,
+  BookOpen,
+  ArrowRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
 import { Recapture } from './Recapture';
@@ -101,6 +107,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   const [activeTab, setActiveTab] = useState<'google' | 'email' | 'guest'>('guest');
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [googleMode, setGoogleMode] = useState<'signin' | 'signup'>('signin');
   const [showReset, setShowReset] = useState<boolean>(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -108,6 +115,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [localError, setLocalError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  
+  // Custom states for data collection on sign-up
+  const [signUpStep, setSignUpStep] = useState<1 | 2>(1);
+  const [role, setRole] = useState<string>('student');
+  const [grade, setGrade] = useState<string>('');
+  const [school, setSchool] = useState<string>('');
+  const [primaryInterest, setPrimaryInterest] = useState<string>('general');
   
   const handleGoogleSignIn = async () => {
     setLocalError(null);
@@ -156,19 +170,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    if (isSignUp && !displayName) {
-      setLocalError("Please enter a display name.");
-      return;
-    }
-
-    if (isSignUp && !isVerified) {
-      setLocalError("Please complete the Quantum Recapture human verification.");
-      return;
+    if (isSignUp) {
+      if (!displayName) {
+        setLocalError("Please enter your full name.");
+        return;
+      }
+      if (signUpStep === 1) {
+        setSignUpStep(2);
+        return;
+      }
+      if (!isVerified) {
+        setLocalError("Please complete the Quantum Recapture human verification.");
+        return;
+      }
     }
 
     try {
       if (isSignUp) {
-        await signUpWithEmail(email, password, displayName);
+        const extraData = {
+          role,
+          grade: ['student', 'teacher'].includes(role) ? grade : null,
+          school: school || null,
+          primaryInterest,
+          onboarded: true
+        };
+        await signUpWithEmail(email, password, displayName, extraData);
       } else {
         await signInWithEmail(email, password);
       }
@@ -275,7 +301,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     }`}
                   >
                     <span>Guest Access</span>
-                    <span className="text-[7px] text-[10px] scale-75 opacity-85 text-brand-secondary font-mono tracking-normal lowercase">⚡ iframe safe</span>
+                    <span className="text-[8px] scale-75 opacity-85 text-brand-secondary font-mono tracking-normal lowercase">⚡ iframe safe</span>
                   </button>
                   <button
                     type="button"
@@ -290,7 +316,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     }`}
                   >
                     <span>Google SSO</span>
-                    <span className="text-[7px] text-[10px] scale-75 opacity-85 text-brand-primary font-mono tracking-normal lowercase">🚀 live popups</span>
+                    <span className="text-[8px] scale-75 opacity-85 text-brand-primary font-mono tracking-normal lowercase">🚀 live popups</span>
                   </button>
                   <button
                     type="button"
@@ -305,7 +331,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     }`}
                   >
                     <span>Email Key</span>
-                    <span className="text-[7px] text-[10px] scale-75 opacity-85 text-[#9C27B0] font-mono tracking-normal lowercase">🔒 sandbox ok</span>
+                    <span className="text-[8px] scale-75 opacity-85 text-[#9C27B0] font-mono tracking-normal lowercase">🔒 sandbox ok</span>
                   </button>
                 </div>
 
@@ -403,7 +429,45 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             )}
                           </div>
                         ) : (
-                          <div className="flex flex-col gap-3.5 py-2">
+                          <div className="flex flex-col gap-3.5 py-1">
+                            {/* Inner google sub-toggle */}
+                            <div className="flex bg-brand-bg/50 p-1 rounded-xl border border-brand-border/25 max-w-[190px] mx-auto select-none mb-1">
+                              <button
+                                type="button"
+                                onClick={() => setGoogleMode('signin')}
+                                className={`flex-1 py-1 px-2.5 text-center font-black text-[8.5px] uppercase tracking-wider rounded-lg transition-all duration-200 cursor-pointer ${
+                                  googleMode === 'signin'
+                                    ? 'bg-brand-surface text-brand-primary border border-brand-border/20 shadow-sm'
+                                    : 'text-brand-text-secondary hover:text-brand-text'
+                                }`}
+                              >
+                                Sign In
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setGoogleMode('signup')}
+                                className={`flex-1 py-1 px-2.5 text-center font-black text-[8.5px] uppercase tracking-wider rounded-lg transition-all duration-200 cursor-pointer ${
+                                  googleMode === 'signup'
+                                    ? 'bg-brand-surface text-brand-primary border border-brand-border/20 shadow-sm'
+                                    : 'text-brand-text-secondary hover:text-brand-text'
+                                }`}
+                              >
+                                Sign Up
+                              </button>
+                            </div>
+
+                            <div className="text-center max-w-xs mx-auto mb-1">
+                              <h4 className="text-[10px] font-black uppercase tracking-wider text-brand-text">
+                                {googleMode === 'signin' ? "Access Workspace" : "Create Scholar Profile"}
+                              </h4>
+                              <p className="text-[9.5px] text-brand-text-secondary mt-0.5 leading-relaxed">
+                                {googleMode === 'signin' 
+                                  ? "Sign in with Google to synchronize your formulas, computation history and active settings."
+                                  : "Instantiate a new secure scholar cloud profile synchronized instantly with Google SSO."
+                                }
+                              </p>
+                            </div>
+
                             <button
                               type="button"
                               onClick={handleGoogleSignIn}
@@ -416,7 +480,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                               </svg>
-                              <span>Connect with Google ID</span>
+                              <span>{googleMode === 'signin' ? "Google ID Sign In" : "Google ID Sign Up"}</span>
                             </button>
 
                             <button
@@ -424,13 +488,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                               onClick={handleGoogleRedirectSignIn}
                               disabled={loading}
                               className="w-full h-10 flex items-center justify-center gap-2.5 px-5 bg-brand-bg hover:bg-brand-border/40 text-brand-text border border-brand-border/60 font-extrabold text-[9px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 cursor-pointer"
-                              title="Sign in with Redirect"
+                              title="Sign in with Redirect Alternative"
                             >
-                              <span>Direct Redirect Method</span>
+                              <span>{googleMode === 'signin' ? "Direct Redirect Login" : "Direct Redirect Register"}</span>
                             </button>
                             
-                            <p className="text-[8.5px] text-center text-brand-text-secondary mt-1">
-                              * Redirect maps secure fallback credentials to support aggressive adblock/privacy firewalls.
+                            <p className="text-[8.5px] text-center text-brand-text-secondary">
+                              * Fallback direct redirect method maps secure cross-origin tokens bypass rules.
                             </p>
                           </div>
                         )}
@@ -490,38 +554,131 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             </div>
                           ) : (
                             <div className="space-y-3">
-                              {isSignUp && (
-                                <div>
-                                  <input
-                                    type="text"
-                                    placeholder="Your Full Name"
-                                    required
-                                    value={displayName}
-                                    onChange={(e) => setDisplayName(e.target.value)}
-                                    className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
-                                  />
-                                </div>
+                              {(!isSignUp || signUpStep === 1) && (
+                                <>
+                                  {isSignUp && (
+                                    <div>
+                                      <input
+                                        type="text"
+                                        placeholder="Your Full Name"
+                                        required
+                                        value={displayName}
+                                        onChange={(e) => setDisplayName(e.target.value)}
+                                        className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
+                                      />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <input
+                                      type="email"
+                                      placeholder="Email Address"
+                                      required
+                                      value={email}
+                                      onChange={(e) => setEmail(e.target.value)}
+                                      className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
+                                    />
+                                  </div>
+                                  <div>
+                                    <input
+                                      type="password"
+                                      placeholder="Password Passphrase"
+                                      required
+                                      value={password}
+                                      onChange={(e) => setPassword(e.target.value)}
+                                      className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
+                                    />
+                                  </div>
+                                </>
                               )}
-                              <div>
-                                <input
-                                  type="email"
-                                  placeholder="Email Address"
-                                  required
-                                  value={email}
-                                  onChange={(e) => setEmail(e.target.value)}
-                                  className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
-                                />
-                              </div>
-                              <div>
-                                <input
-                                  type="password"
-                                  placeholder="Password Passphrase"
-                                  required
-                                  value={password}
-                                  onChange={(e) => setPassword(e.target.value)}
-                                  className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
-                                />
-                              </div>
+
+                              {isSignUp && signUpStep === 2 && (
+                                <motion.div 
+                                  initial={{ opacity: 0, x: 20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  className="space-y-3 text-left bg-brand-bg/30 p-3 rounded-xl border border-brand-border/20"
+                                >
+                                  <div>
+                                    <label className="block text-[9.5px] font-black uppercase tracking-wider text-brand-text mb-1.5 flex items-center gap-1">
+                                      <GraduationCap size={11} className="text-brand-secondary" />
+                                      Academic/Professional Role
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                      {[
+                                        { id: 'student', title: 'Student', icon: GraduationCap },
+                                        { id: 'teacher', title: 'Teacher/Educator', icon: School },
+                                        { id: 'researcher', title: 'Researcher', icon: Compass },
+                                        { id: 'business_owner', title: 'Professional/Biz', icon: Building2 },
+                                      ].map((r) => (
+                                        <button
+                                          key={r.id}
+                                          type="button"
+                                          onClick={() => setRole(r.id)}
+                                          className={`py-1.5 px-2 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+                                            role === r.id
+                                              ? 'bg-brand-primary/10 border-brand-primary text-brand-primary'
+                                              : 'bg-brand-bg/50 border-brand-border/30 text-brand-text-secondary hover:text-brand-text hover:border-brand-border/70'
+                                          }`}
+                                        >
+                                          <r.icon size={11} />
+                                          <span className="truncate">{r.title}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {['student', 'teacher'].includes(role) && (
+                                    <div>
+                                      <label className="block text-[9.5px] font-black uppercase tracking-wider text-brand-text mb-1 flex items-center gap-1">
+                                        <School size={11} className="text-brand-primary" />
+                                        Educational Grade level
+                                      </label>
+                                      <select
+                                        value={grade}
+                                        onChange={(e) => setGrade(e.target.value)}
+                                        className="w-full px-2.5 py-1.5 bg-brand-bg/85 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-lg text-xs focus:outline-none focus:border-brand-primary/80 transition-all font-mono"
+                                      >
+                                        <option value="">-- Choose Division --</option>
+                                        <option value="k5">Primary / K-5 Elementary</option>
+                                        <option value="middle">Middle School (6-8)</option>
+                                        <option value="high">High School (9-12)</option>
+                                        <option value="undergrad">Undergraduate (College)</option>
+                                        <option value="postgrad">Postgraduate / PH.D</option>
+                                      </select>
+                                    </div>
+                                  )}
+
+                                  <div>
+                                    <label className="block text-[9.5px] font-black uppercase tracking-wider text-brand-text mb-1 flex items-center gap-1">
+                                      <BookOpen size={11} className="text-brand-secondary" />
+                                      Primary Math Interest
+                                    </label>
+                                    <select
+                                      value={primaryInterest}
+                                      onChange={(e) => setPrimaryInterest(e.target.value)}
+                                      className="w-full px-2.5 py-1.5 bg-brand-bg/85 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-lg text-xs focus:outline-none focus:border-brand-secondary/80 transition-all font-mono"
+                                    >
+                                      <option value="general">Comprehensive & General Math</option>
+                                      <option value="bases">Base Conversions & Binary Logic</option>
+                                      <option value="calculus">Algebra, Formulae, & Calculus</option>
+                                      <option value="statistics">Finance, Statistics, & Graphs</option>
+                                      <option value="physics">Physics & Quantum Theory</option>
+                                    </select>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[9.5px] font-black uppercase tracking-wider text-brand-text mb-1">
+                                      Institution / School Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="e.g. Cambridge Academy, MIT, Optional"
+                                      value={school}
+                                      onChange={(e) => setSchool(e.target.value)}
+                                      className="w-full px-3 py-1.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-lg text-xs placeholder-brand-text-secondary/50 focus:outline-none focus:border-brand-primary/80 transition-all"
+                                    />
+                                  </div>
+                                </motion.div>
+                              )}
 
                               <div className="flex items-center justify-between pt-1 text-[8.5px]">
                                 <button
@@ -538,6 +695,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                   type="button"
                                   onClick={() => {
                                     setIsSignUp(!isSignUp);
+                                    setSignUpStep(1);
                                     setLocalError(null);
                                     setIsVerified(false);
                                   }}
@@ -547,19 +705,47 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 </button>
                               </div>
 
-                              {isSignUp && (
+                              {isSignUp && signUpStep === 2 && (
                                 <div className="py-1">
                                   <Recapture onVerify={setIsVerified} />
                                 </div>
                               )}
 
-                              <button
-                                type="submit"
-                                disabled={loading || (isSignUp && !isVerified)}
-                                className={`w-full h-10 mt-1 flex items-center justify-center font-extrabold text-[10px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 shadow-md transition-all cursor-pointer ${loading || (isSignUp && !isVerified) ? 'bg-brand-secondary/40 text-brand-bg/60 opacity-50 cursor-not-allowed' : 'bg-brand-secondary hover:bg-brand-secondary/90 text-brand-bg'}`}
-                              >
-                                <span>{loading ? "Authenticating Master Signature..." : isSignUp ? "Establish Secure Account" : "Access Workspace"}</span>
-                              </button>
+                              <div className="flex gap-2 w-full mt-1.5">
+                                {isSignUp && signUpStep === 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setSignUpStep(1)}
+                                    className="px-3.5 bg-brand-bg hover:bg-brand-border/30 border border-brand-border/50 text-brand-text font-black text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center gap-1.5 transition-all"
+                                  >
+                                    <ArrowLeft size={12} />
+                                    Back
+                                  </button>
+                                )}
+
+                                <button
+                                  type="submit"
+                                  disabled={loading || (isSignUp && signUpStep === 2 && !isVerified)}
+                                  className={`flex-1 h-10 flex items-center justify-center gap-1.5 font-extrabold text-[10px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 shadow-md transition-all cursor-pointer ${
+                                    loading || (isSignUp && signUpStep === 2 && !isVerified) 
+                                      ? 'bg-brand-secondary/40 text-brand-bg/60 opacity-50 cursor-not-allowed' 
+                                      : 'bg-brand-secondary hover:bg-brand-secondary/90 text-brand-bg'
+                                  }`}
+                                >
+                                  {isSignUp ? (
+                                    signUpStep === 1 ? (
+                                      <>
+                                        <span>Next: Core Details</span>
+                                        <ArrowRight size={12} />
+                                      </>
+                                    ) : (
+                                      <span>{loading ? "Establishing System..." : "Establish Secure Account"}</span>
+                                    )
+                                  ) : (
+                                    <span>Access Workspace</span>
+                                  )}
+                                </button>
+                              </div>
                             </div>
                           )}
                         </form>

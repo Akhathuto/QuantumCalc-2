@@ -35,7 +35,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   signInWithGoogle: (useRedirect?: boolean) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, displayName: string, extraData?: any) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInGuest: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -52,7 +52,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   error: null,
   signInWithGoogle: async (_useRedirect?: boolean) => {},
-  signUpWithEmail: async (_email: string, _password: string, _displayName: string) => {},
+  signUpWithEmail: async (_email: string, _password: string, _displayName: string, _extraData?: any) => {},
   signInWithEmail: async (_email: string, _password: string) => {},
   signInGuest: async () => {},
   resetPassword: async (_email: string) => {},
@@ -284,7 +284,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+  const signUpWithEmail = async (email: string, password: string, displayName: string, extraData?: any) => {
     setLoading(true);
     setError(null);
     try {
@@ -298,7 +298,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         uid: userCredential.user.uid,
         email: email,
         displayName: displayName,
-        onboarded: false,
+        onboarded: extraData ? (extraData.onboarded ?? true) : false,
+        role: extraData?.role || 'student',
+        grade: extraData?.grade || null,
+        school: extraData?.school || null,
+        primaryInterest: extraData?.primaryInterest || 'general',
         createdAt: serverTimestamp()
       };
       await setDoc(userRef, initialData);
