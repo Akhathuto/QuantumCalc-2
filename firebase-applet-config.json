@@ -3,6 +3,7 @@
   "appId": "1:933464056635:web:1fb63756ddc014bcbf8d1e",
   "apiKey": "AIzaSyAkjRcLmH2ecduDTpYZSZ73QZO9SkfgtrA",
   "authDomain": "quantum-calculator-9c25e.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-9c9042da-24a3-42b8-a568-fd417e242625",
   "storageBucket": "quantum-calculator-9c25e.firebasestorage.app",
   "messagingSenderId": "933464056635",
   "measurementId": ""

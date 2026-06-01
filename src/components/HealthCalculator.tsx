@@ -4,7 +4,7 @@ import {
     Droplets, Scale, Pizza, Target, Timer, PersonStanding, GlassWater, 
     Baby, Wine, AlertCircle, Dumbbell, Moon, Activity, Stethoscope,
     Smartphone, RefreshCw, Upload, Check, Settings, Info, Heart, Wifi,
-    Cpu, UploadCloud
+    Cpu, UploadCloud, ChevronDown
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
@@ -2267,9 +2267,39 @@ const HealthCalculator: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start">
                 
                 {/* Sideway drawer or left navigation sidebar */}
-                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 bg-brand-bg/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none pb-4 md:pb-0 border-b border-brand-border/20 md:border-none -mx-4 px-4 md:mx-0 md:px-0">
-                    <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-2 pb-2 md:pb-0 mask-fade-edges hover:no-scrollbar">
-                        <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
+                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 mb-4 md:mb-0">
+                    {/* Mobile Navigation Dropdown */}
+                    <div className="md:hidden sticky top-2 z-40 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="rounded-2xl bg-brand-surface/95 border border-brand-primary/20 backdrop-blur-2xl p-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] shadow-brand-bg">
+                            <div className="flex items-center justify-between mb-2 px-2">
+                                <div className="flex items-center gap-2">
+                                    <Activity size={14} className="text-brand-primary" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary">Health Metric</span>
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">{calculators.find(c => c.id === activeCalc)?.label}</span>
+                            </div>
+                            <div className="relative">
+                                <select
+                                    value={activeCalc}
+                                    onChange={(e) => setActiveCalc(e.target.value as HealthCalcType)}
+                                    className="w-full appearance-none bg-brand-bg border border-brand-border/50 hover:border-brand-primary/50 text-brand-text text-sm font-bold rounded-xl px-4 py-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-sm"
+                                >
+                                    {calculators.map(calc => (
+                                        <option key={calc.id} value={calc.id} className="bg-brand-bg text-brand-text font-bold">
+                                            {calc.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-brand-text">
+                                    <ChevronDown size={18} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Desktop Navigation List */}
+                    <div className="hidden md:flex flex-col gap-2 pb-0 mask-fade-edges hover:no-scrollbar overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
+                        <div className="flex flex-col gap-2">
                             {calculators.map(calc => (
                                  <SubNavButton 
                                     key={calc.id}

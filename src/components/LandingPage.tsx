@@ -19,7 +19,20 @@ import {
   Coins,
   ArrowRightLeft,
   Printer,
-  Award
+  Award,
+  RefreshCw,
+  Quote,
+  Sparkles,
+  Cpu,
+  Orbit,
+  Brain,
+  Infinity as InfinityIcon,
+  Heart,
+  Volume2,
+  Copy,
+  Check,
+  Trash2,
+  Bookmark
 } from 'lucide-react';
 import { AppTab, HistoryEntry } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -406,11 +419,516 @@ const ScientificSandbox3D: React.FC = () => {
   );
 };
 
+interface CuratedFact {
+  text: string;
+  category: 'math' | 'physics' | 'computing' | 'space' | 'brain';
+  badge: string; 
+}
+const INSIGHT_FACTS: CuratedFact[] = [
+  // --- MATHEMATICS ---
+  {
+    category: 'math',
+    badge: 'Exponential Scaling',
+    text: 'If you fold a standard piece of printer paper exactly 42 times, the accumulated thickness would reach the moon. Fold it 103 times, and it would exceed the diameter of the observable universe.'
+  },
+  {
+    category: 'math',
+    badge: 'Number Theory',
+    text: 'A "googolplex" is 1 followed by a googol of zeros. It is so mathematically vast that there is not enough space nor atoms in the observable universe to write the digits down in full.'
+  },
+  {
+    category: 'math',
+    badge: 'Geometry',
+    text: 'A perfect circle is mathematically composed of an infinite number of infinitely small straight lines, beautifully resolving the dimensional relationship between curved and linear space.'
+  },
+  {
+    category: 'math',
+    badge: 'Golden Spiral',
+    text: 'The Fibonacci sequence is so deeply engrained in nature that the number of spirals in a pinecone, sunflower, or pineapple almost always corresponds to a Fibonacci number.'
+  },
+  {
+    category: 'math',
+    badge: 'Probability Theory',
+    text: 'In a room of just 23 completely random people, there is a 50.7% mathematical probability that at least two of them share the exact same calendar birthday.'
+  },
+  {
+    category: 'math',
+    badge: 'Mathematical Symbols',
+    text: 'The symbol for division (÷) is officially known as an "obelus", while the symbol for infinity (∞) is known as a "lemniscate".'
+  },
+  {
+    category: 'math',
+    badge: 'Prime Distribution',
+    text: 'The prime number theorem reveals that primes grow less frequent as numbers get larger, yet they remain infinitely distributed, forming the fundamental building blocks of all integers.'
+  },
+  {
+    category: 'math',
+    badge: 'Sheldon Prime',
+    text: 'The number 73 is the 21st prime number. Its mirror, 37, is the 12th prime number, whose mirror 21 is the result of multiplying 7 and 3, which is also binary 1001001—a palindrome.'
+  },
+  {
+    category: 'math',
+    badge: 'Infinity Sizes',
+    text: 'There are different sizes of infinity - for example, the infinity of real decimal numbers is strictly larger than the infinity of counting integers, as proven by Cantor\'s diagonal argument.'
+  },
+  {
+    category: 'math',
+    badge: 'Perfect Numbers',
+    text: 'A perfect number equals the sum of its proper divisors. The first is 6 (1+2+3), followed by 28 (1+2+4+7+14), preserving a rare and beautiful arithmetic balance.'
+  },
+  {
+    category: 'math',
+    badge: 'Pi Randomness',
+    text: 'The digits of Pi are completely normal, containing every single phone number, birthday, and even the complete binary code of all books ever written.'
+  },
+  {
+    category: 'math',
+    badge: 'Monty Hall Paradox',
+    text: 'In the famous Monty Hall problem, if you are shown three doors with a prize behind one and you switch doors after one empty door is revealed, your mathematical odds of winning double from one-third to two-thirds.'
+  },
+  {
+    category: 'math',
+    badge: 'Billion Counter',
+    text: 'If you were to count out loud non-stop at a steady rate of one number per second, it would take you approximately 31.7 years to reach the number one billion.'
+  },
+  {
+    category: 'math',
+    badge: 'Zero Division',
+    text: 'The concept of zero took thousands of years to accept, and dividing any number by zero remains completely undefined because it breaks the fundamental arithmetic laws.'
+  },
+  {
+    category: 'math',
+    badge: 'Googol Origin',
+    text: 'The term googol was coined in 1938 by a nine-year-old boy named Milton Sirotta, who was the nephew of American mathematician Edward Kasner.'
+  },
+  {
+    category: 'math',
+    badge: 'Six Degrees',
+    text: 'Any two people on Earth can be connected through an average of just six acquaintances, a mathematical concept known as the six degrees of separation web.'
+  },
+  // --- PHYSICS ---
+  {
+    category: 'physics',
+    badge: 'Relativity',
+    text: 'Due to gravitational time dilation, time passes marginally faster at the summit of mountains than at sea level. This means your head is technically older than your feet.'
+  },
+  {
+    category: 'physics',
+    badge: 'Cosmology',
+    text: 'Every single hydrogen atom currently in your organic cells was synthesized in the intense core furnace of the Big Bang, approximately 13.8 billion years ago.'
+  },
+  {
+    category: 'physics',
+    badge: 'Quantum Densities',
+    text: 'Neutron stars are so incredibly dense that a single teaspoon of their material would weigh about 6 billion tons on Earth—approximately equal to the weight of all humanity.'
+  },
+  {
+    category: 'physics',
+    badge: 'Cosmic Limit',
+    text: 'The speed of light traveling in a vacuum is exactly 299,792,458 meters per second. This is an absolute cosmic speed limit - nothing with mass can ever match or exceed it.'
+  },
+  {
+    category: 'physics',
+    badge: 'Atomic Space',
+    text: 'If we removed all the empty acoustic space from the individual atoms making up the entire human race, all 8 billion people would fit inside the volume of a single sugar cube.'
+  },
+  {
+    category: 'physics',
+    badge: 'Quantum Duality',
+    text: 'Light behaves simultaneously as both a packet of energy (photon) and a continuous wave, a quantum duality famously illustrated by the double-slit experiment.'
+  },
+  {
+    category: 'physics',
+    badge: 'Acoustic Vacuum',
+    text: 'The universe is completely silent because sound requires a physical medium like air or water to propagate, while light and radio waves can travel freely through empty space.'
+  },
+  {
+    category: 'physics',
+    badge: 'Spacetime Warp',
+    text: 'Black holes can slow time down to an absolute standstill for an outside observer because of their extreme, infinite gravitational warping of the spacetime continuum.'
+  },
+  {
+    category: 'physics',
+    badge: 'Glass Flow Myth',
+    text: 'Contrary to popular belief, antique cathedral glass is not thicker at the bottom because glass flows like a slow liquid - it is simply due to the uneven medieval crown glass manufacturing process.'
+  },
+  {
+    category: 'physics',
+    badge: 'Time in Orbit',
+    text: 'Astronauts on the International Space Station age slightly slower than people on Earth because they are moving at 27,600 km/h, experiencing time dilation.'
+  },
+  {
+    category: 'physics',
+    badge: 'Magnetic Pillars',
+    text: 'Earth\'s magnetic poles are not static, constantly migrating at about 55 kilometers per year, and they completely reverse polarities every few hundred thousand years.'
+  },
+  {
+    category: 'physics',
+    badge: 'Banana Radiation',
+    text: 'Bananas contain naturally occurring potassium isotopes, making them slightly radioactive, though you would need to eat roughly ten million bananas at once to suffer severe radiation poisoning.'
+  },
+  {
+    category: 'physics',
+    badge: 'Cosmic Microwave',
+    text: 'The static hiss you hear when tuning an old analog television or radio to empty frequencies is partially caused by the lingering echo of the Big Bang cosmic microwave background radiation.'
+  },
+  {
+    category: 'physics',
+    badge: 'Lightning Power',
+    text: 'A single bolt of lightning contains enough electrical energy to power an average home for up to three full months, or toast over one hundred thousand slices of bread.'
+  },
+  {
+    category: 'physics',
+    badge: 'Sound of Speed',
+    text: 'Sound travels about four times faster in water than it does in air, and up to fifteen times faster through solid steel, as atoms propagate kinetic energy quicker when closely bonded.'
+  },
+  {
+    category: 'physics',
+    badge: 'Outer Space Drive',
+    text: 'If you could drive your car straight upward at eighty kilometers per hour, you would reach the physical boundary of outer space in just over one single hour.'
+  },
+  // --- COMPUTING ---
+  {
+    category: 'computing',
+    badge: 'Computer History',
+    text: 'The first actual computer "bug" was a real moth found trapped inside a hardware relay of the Harvard Mark II computer by legendary mathematician Grace Hopper in 1947.'
+  },
+  {
+    category: 'computing',
+    badge: 'Digital Commerce',
+    text: 'Approximately 92% of the money on Earth exists purely in digital databases on computer server arrays. Only around 8% of all global currency exists as physical paper notes or mint coins.'
+  },
+  {
+    category: 'computing',
+    badge: 'Nanotech Limits',
+    text: 'Modern silicon microchip transistors are under 3 nanometers wide. This is smaller than a single strand of human DNA, operating close to active physical quantum limits.'
+  },
+  {
+    category: 'computing',
+    badge: 'Neural Bandwidth',
+    text: 'If our human brain were a digital hard drive, its total storage capacity would be approximately 2.5 petabytes, which is equivalent to about 3 million hours of high-definition video.'
+  },
+  {
+    category: 'computing',
+    badge: 'Turing Filters',
+    text: 'The CAPTCHA acronym actually stands for "Completely Automated Public Turing test to tell Computers and Humans Apart", acting as an everyday filter for machine intelligence.'
+  },
+  {
+    category: 'computing',
+    badge: 'The Halting Problem',
+    text: 'In 1936, visionary mathematician Alan Turing proved that it is mathematically impossible for a computer program to perfectly predict whether another program will run forever or finish.'
+  },
+  {
+    category: 'computing',
+    badge: 'Pioneering Hardware',
+    text: 'The first electronic desktop computer, the ENIAC, occupied an entire 1,800 square foot room, weighed over 30 tons, and consumed 150 kilowatts of absolute electrical power.'
+  },
+  {
+    category: 'computing',
+    badge: 'Superposition',
+    text: 'Quantum computers use qubits instead of traditional binary bits, allowing them to exist in states of 0, 1, or both simultaneously to solve specific complex algorithms instantly.'
+  },
+  {
+    category: 'computing',
+    badge: 'First Programmer',
+    text: 'The world\'s first computer programmer was Ada Lovelace, an English mathematician who wrote an algorithm for Charles Babbage\'s mechanical Analytical Engine in 1843.'
+  },
+  {
+    category: 'computing',
+    badge: 'Spam Mail Origin',
+    text: 'The term "spam" for junk email was inspired by a 1970 Monty Python comedy sketch where characters repetitively shout the word "Spam" to drown out all other conversations.'
+  },
+  {
+    category: 'computing',
+    badge: 'The Millionth Pixel',
+    text: 'In 2005, a student created "The Million Dollar Homepage", selling 1 million pixels of web space for 1 dollar each to advertisers, earning exactly 1 million dollars in months.'
+  },
+  {
+    category: 'computing',
+    badge: 'First Video Game',
+    text: 'The first recognized digital computer video game, called Spacewar, was created in 1962 by a team of researchers at MIT using a system with only 9 kilobytes of operational computer memory.'
+  },
+  {
+    category: 'computing',
+    badge: 'Password Physics',
+    text: 'A standard twelve-character password with mixed uppercase letters, numbers, and special symbols takes a modern high-performance desktop computer about 226 years to crack using brute-force methods.'
+  },
+  {
+    category: 'computing',
+    badge: 'Wooden Mouse',
+    text: 'The first mechanical computer mouse invented by Douglas Engelbart in 1964 was carved out of a single block of wood and used two metallic wheels to track coordinate positions.'
+  },
+  {
+    category: 'computing',
+    badge: 'Bot Traffic',
+    text: 'Over fifty percent of all daily internet traffic is generated by automated bots, software scripts, and security scanners rather than real human browsing sessions.'
+  },
+  {
+    category: 'computing',
+    badge: 'Apollo Memory',
+    text: 'The Guidance Computer that navigated Apollo 11 to the moon in 1969 possessed only sixty-four kilobytes of memory, which is vastly weaker than the microchip in a modern electronic car key.'
+  },
+  // --- SPACE ---
+  {
+    category: 'space',
+    badge: 'Planetary Dynamics',
+    text: 'One single natural day on the planet Venus is longer than its entire orbital year - it takes Venus 243 Earth days to complete a rotation but only 225 Earth days to orbit the sun.'
+  },
+  {
+    category: 'space',
+    badge: 'Cosmic Scales',
+    text: 'There are approximately 3 trillion trees on Earth, which vastly exceeds the estimated 100 to 400 billion stars present in our entire home Milky Way galaxy.'
+  },
+  {
+    category: 'space',
+    badge: 'Solar Mass',
+    text: 'Our Sun is so incredibly massive that it accounts for exactly 99.86% of the total matter in the entire Solar System, with planets occupying only the remaining 0.14%.'
+  },
+  {
+    category: 'space',
+    badge: 'Solar Transit',
+    text: 'Light from the Sun takes approximately 8 minutes and 20 seconds to travel across the vast celestial vacuum of space before finally reaching the surface of Earth.'
+  },
+  {
+    category: 'space',
+    badge: 'Exo-Geology',
+    text: 'The largest known volcano in the solar system is Olympus Mons on Mars. It stands 21 kilometers high, which is more than twice the height of Mount Everest.'
+  },
+  {
+    category: 'space',
+    badge: 'Thermal Runaway',
+    text: 'Venus is the hottest planet in our solar system, with a surface temperature reaching over 460 degrees Celsius—hot enough to melt lead—due to a dense runaway greenhouse atmosphere.'
+  },
+  {
+    category: 'space',
+    badge: 'Exploration Gear',
+    text: 'An astronaut\'s spacesuit costs approximately 12 million dollars to create, with 70% of that total cost dedicated entirely to the complex life-support systems and electronics.'
+  },
+  {
+    category: 'space',
+    badge: 'Lunar Preservation',
+    text: 'The footprint impressions left behind by Apollo astronauts on the Moon will likely persist for over 100 million years because there is no wind, water, or active atmospheric erosion.'
+  },
+  {
+    category: 'space',
+    badge: 'Extreme Gravity',
+    text: 'If you fell into a stellar-mass black hole, your body would undergo "spaghettification", getting stretched into a long, thin string due to extreme tidal gravity variations.'
+  },
+  {
+    category: 'space',
+    badge: 'Silent Collision',
+    text: 'In about 4.5 billion years, our Milky Way galaxy will collide with the Andromeda galaxy, but because space is so vast, almost no stars will actually hit each other.'
+  },
+  {
+    category: 'space',
+    badge: 'Diamond Rain',
+    text: 'Deep inside the intense atmospheric pressures of Jupiter and Saturn, it literally rains diamonds composed of highly compressed carbon soot.'
+  },
+  {
+    category: 'space',
+    badge: 'Cold Welding',
+    text: 'If two clean pieces of identical metal touch each other in the vacuum of outer space, they will instantly fuse and lock together in a physical phenomenon known as cold welding.'
+  },
+  {
+    category: 'space',
+    badge: 'Cosmic Water',
+    text: 'Astronomers have discovered a giant floating reservoir of water vapor in deep space that holds over 140 trillion times the total volume of all liquid water in Earth\'s oceans combined.'
+  },
+  {
+    category: 'space',
+    badge: 'Space Silence',
+    text: 'Because there is no sound medium in outer space, the violent explosion of a giant stellar supernova or collision of two massive stars occurs in absolute, eerie silence.'
+  },
+  {
+    category: 'space',
+    badge: 'Pluto Orbit Year',
+    text: 'One single year on Pluto is equivalent to 248 Earth years, which means Pluto has still not completed one full orbit around our Sun since its original discovery in 1930.'
+  },
+  {
+    category: 'space',
+    badge: 'Scent of Space',
+    text: 'Astronauts report that open space smells like seared steak, hot welding fumes, and ozone molecules clinging to their spacesuits after returning from a spacewalk.'
+  },
+  // --- BRAIN & PRODUCTIVITY ---
+  {
+    category: 'brain',
+    badge: 'Neurology',
+    text: 'The human brain consumes about 20% of your body\'s total resting energy and oxygen intake, despite constituting only 2% of your average overall physical body weight.'
+  },
+  {
+    category: 'brain',
+    badge: 'Psychology',
+    text: 'The "Zeigarnik Effect" reveals that human working memory holds onto incomplete or interrupted tasks with significantly greater clarity than completed ones.'
+  },
+  {
+    category: 'brain',
+    badge: 'Cognition',
+    text: 'Walking outside in a natural environment for just 10 minutes increases dynamic creative brainstorming by nearly 60%, compared to thinking in static indoor offices.'
+  },
+  {
+    category: 'brain',
+    badge: 'Cognitive Load',
+    text: 'Our short-term working memory is naturally optimized to store approximately 4 to 7 individual items or informational chunks at any single moment.'
+  },
+  {
+    category: 'brain',
+    badge: 'Prefrontal Limits',
+    text: 'The brain cannot actually multitask - instead, it performs rapid "task-switching", which consumes significant energy and reduces cognitive performance by up to 40%.'
+  },
+  {
+    category: 'brain',
+    badge: 'Neuroplasticity',
+    text: 'Deep learning and physical skill retention occur predominantly during the rapid eye movement (REM) and deep stages of night sleep, reinforcing neural connections.'
+  },
+  {
+    category: 'brain',
+    badge: 'Tactile Memory',
+    text: 'Writing your notes, plans, and equations down by hand on physical paper triggers vastly superior conceptual neural processing and long-term encoding than typing on a keyboard.'
+  },
+  {
+    category: 'brain',
+    badge: 'Attention Spans',
+    text: 'Taking brief, scheduled, structured breaks—often known as the Pomodoro technique—preserves stamina, sharpens focal clarity, and staves off cognitive exhaustion.'
+  },
+  {
+    category: 'brain',
+    badge: 'Feynman Trick',
+    text: 'The Feynman Technique suggests that to truly master any complex scientific concept, you must attempt to explain it simply to an eight-year-old child.'
+  },
+  {
+    category: 'brain',
+    badge: 'Memory Palace',
+    text: 'The "Method of Loci" or Memory Palace dates back to ancient Greece, allowing you to memorize lists by mentally placing items in familiar physical settings.'
+  },
+  {
+    category: 'brain',
+    badge: 'Dopamine Loop',
+    text: 'Social media notifications trigger a short burst of dopamine, creating a seeking loop that makes your brain anticipate novelty rather than focus on long-term goals.'
+  },
+  {
+    category: 'brain',
+    badge: 'Brain Powerhouse',
+    text: 'An active fully functioning human brain generates about 20 watts of electrical energy, which is enough electrical power to run a low-wattage LED light bulb.'
+  },
+  {
+    category: 'brain',
+    badge: 'Sleep Cleaning',
+    text: 'During sleep, your brain cells literally shrink by about 60% to allow cerebrospinal fluid to wash through and clear out toxic cognitive waste products accumulated during the day.'
+  },
+  {
+    category: 'brain',
+    badge: 'Brain Painless',
+    text: 'The actual brain tissue contains zero physical pain receptors, allowing surgeons to perform delicate brain surgeries while the patient remains conscious and talking.'
+  },
+  {
+    category: 'brain',
+    badge: 'Language Buffer',
+    text: 'Learning and actively speaking two or more languages acts as a powerful cognitive buffer, delay-alerting age-related dementia symptoms by up to five full years.'
+  },
+  {
+    category: 'brain',
+    badge: 'Fake Smile Effect',
+    text: 'The simple physical act of holding a smile, even when entirely forced, triggers immediate chemical releases that reduce heart rates and tell the brain to feel happier.'
+  }
+];
+
+const CATEGORY_ITEMS = [
+  { id: 'math', icon: InfinityIcon, label: 'Math' },
+  { id: 'physics', icon: Orbit, label: 'Physics' },
+  { id: 'computing', icon: Cpu, label: 'Computing' },
+  { id: 'space', icon: Sparkles, label: 'Space' },
+  { id: 'brain', icon: Brain, label: 'Brain' }
+] as const;
+
 const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) => {
   const { user, userData, totalScholars } = useAuth();
-  const [mathFact, setMathFact] = useState<string>('Loading a brain-teasing fact...');
-  const [isLoadingFact, setIsLoadingFact] = useState(true);
+  
+  // High fidelity states
+  const [selectedCategory, setSelectedCategory] = useState<'math' | 'physics' | 'computing' | 'space' | 'brain'>('math');
+  const [mathFact, setMathFact] = useState<string>('If you fold a standard piece of printer paper exactly 42 times, the accumulated thickness would reach the moon. Fold it 103 times, and it would exceed the diameter of the observable universe.');
+  const [factSource, setFactSource] = useState<'curated' | 'ai'>('curated');
+  const [factBadge, setFactBadge] = useState<string>('Exponential Scaling');
+  const [isLoadingFact, setIsLoadingFact] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Track viewed facts globally to keep selections overlaps-free and fresh
+  const [viewedFacts, setViewedFacts] = useState<string[]>([
+    'If you fold a standard piece of printer paper exactly 42 times, the accumulated thickness would reach the moon. Fold it 103 times, and it would exceed the diameter of the observable universe.'
+  ]);
+
+  // Premium Insight state enhancements
+  const [favoritedFacts, setFavoritedFacts] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('quantumcalc_fav_facts') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [activeInsightView, setActiveInsightView] = useState<'discover' | 'saved'>('discover');
+  const [hasCopied, setHasCopied] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('quantumcalc_fav_facts', JSON.stringify(favoritedFacts));
+  }, [favoritedFacts]);
+
+  // Track the history of audio playback
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const isFactFavorited = (text: string) => favoritedFacts.includes(text);
+
+  const toggleFavoriteFact = (text: string) => {
+    setFavoritedFacts(prev => {
+      if (prev.includes(text)) {
+        return prev.filter(t => t !== text);
+      } else {
+        return [...prev, text];
+      }
+    });
+  };
+
+  const handleCopyFact = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setHasCopied(true);
+    setTimeout(() => setHasCopied(false), 2000);
+  };
+
+  const handleSpeakFact = (text: string) => {
+    if (!window.speechSynthesis) return;
+    if (isPlayingAudio) {
+      window.speechSynthesis.cancel();
+      setIsPlayingAudio(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => {
+      setIsPlayingAudio(false);
+    };
+    utterance.onerror = () => {
+      setIsPlayingAudio(false);
+    };
+    
+    // Choose a nice high-quality native voice if possible
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoice = voices.find(v => v.lang.startsWith('en-') && !v.name.includes('Google'));
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+    } catch (e) {
+      // ignore
+    }
+    
+    setIsPlayingAudio(true);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const getGreeting = () => {
     if (!userData?.role) return `Hello, ${user?.displayName?.split(' ')[0] || 'Explorer'}.`;
@@ -430,23 +948,80 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
     tools: cat.tools.filter(tool => tool.name.toLowerCase().includes(searchQuery.toLowerCase()))
   })).filter(cat => cat.tools.length > 0);
 
-  useEffect(() => {
-    const fetchFact = async () => {
-      try {
-        const ai = new GoogleGenAI({ apiKey: getApiKey() });
-        const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
-          contents: "Provide a one-sentence fun and surprising fact about mathematics, physics, or productivity. Keep it engaging and concise.",
-        });
-        setMathFact(response.text || 'Mathematics is the language of the universe.');
-      } catch (error) {
-        setMathFact('A googol is the number 1 followed by 100 zeros.');
-      } finally {
-        setIsLoadingFact(false);
-      }
-    };
+  const getRandomCuratedFact = (cat: typeof selectedCategory, currentViewed: string[] = []) => {
+    const filtered = INSIGHT_FACTS.filter(f => f.category === cat && !currentViewed.includes(f.text));
+    const pool = filtered.length > 0 ? filtered : INSIGHT_FACTS.filter(f => f.category === cat);
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    return pool[randomIndex];
+  };
 
-    fetchFact();
+  const handleCategoryChange = (catId: typeof selectedCategory) => {
+    setSelectedCategory(catId);
+    const localFact = getRandomCuratedFact(catId, viewedFacts);
+    setMathFact(localFact.text);
+    setFactSource('curated');
+    setFactBadge(localFact.badge);
+    setViewedFacts(prev => {
+      const nextViewed = [...prev.filter(t => t !== localFact.text), localFact.text];
+      // Reset history if capacity reaches max curated facts inside this category
+      const catFactsCount = INSIGHT_FACTS.filter(f => f.category === catId).length;
+      if (nextViewed.filter(t => INSIGHT_FACTS.some(f => f.category === catId && f.text === t)).length >= catFactsCount) {
+        return nextViewed.filter(t => !INSIGHT_FACTS.some(f => f.category === catId && f.text === t)).concat(localFact.text);
+      }
+      return nextViewed;
+    });
+  };
+
+  const handleNextCurated = () => {
+    const localFact = getRandomCuratedFact(selectedCategory, viewedFacts);
+    setMathFact(localFact.text);
+    setFactSource('curated');
+    setFactBadge(localFact.badge);
+    setViewedFacts(prev => {
+      const nextViewed = [...prev, localFact.text];
+      const catFactsCount = INSIGHT_FACTS.filter(f => f.category === selectedCategory).length;
+      if (nextViewed.filter(t => INSIGHT_FACTS.some(f => f.category === selectedCategory && f.text === t)).length >= catFactsCount) {
+        return nextViewed.filter(t => !INSIGHT_FACTS.some(f => f.category === selectedCategory && f.text === t)).concat(localFact.text);
+      }
+      return nextViewed;
+    });
+  };
+
+  const fetchFact = async (categoryOverride?: typeof selectedCategory) => {
+    setIsLoadingFact(true);
+    const cat = categoryOverride || selectedCategory;
+    const catLabel = cat === 'math' ? 'mathematics or algebra' :
+                     cat === 'physics' ? 'quantum physics or relativity' :
+                     cat === 'computing' ? 'computer science or computation' :
+                     cat === 'space' ? 'astronomy or galaxy science' :
+                     'cognitive brain science, human neuro-system or productivity hacks';
+    try {
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: `Provide a single-sentence mind-blowing, fun and surprising fact about ${catLabel}. Keep it highly educational, engaging, and concise. Do not use quotes around the output. Avoid conversational introductions or generic phrasing. Length limit: under 200 characters. Absolutely do not include any semicolons in the sentence.`,
+      });
+      const text = response.text?.replace(/^"|"$/g, '').trim();
+      if (text) {
+        setMathFact(text);
+        setFactSource('ai');
+        setFactBadge('AI Streamed');
+      } else {
+        throw new Error('Empty response');
+      }
+    } catch (error) {
+      // fallback to curated fact
+      const localFact = getRandomCuratedFact(cat, viewedFacts);
+      setMathFact(localFact.text);
+      setFactSource('curated');
+      setFactBadge(localFact.badge);
+    } finally {
+      setIsLoadingFact(false);
+    }
+  };
+
+  useEffect(() => {
+    // Initial fetch is skipped because we pre-populated mathematical curated state, preventing layouts jumps on mount!
   }, []);
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -668,41 +1243,254 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
             className="md:col-span-4"
           >
             <TiltCard
-              className="h-full w-full bg-brand-surface/80 backdrop-blur-sm rounded-[32px] p-8 border border-brand-border/45 flex flex-col relative overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-500"
+              className="h-full w-full bg-gradient-to-br from-brand-secondary/10 via-brand-surface to-brand-surface rounded-[32px] p-8 border border-brand-secondary/20 flex flex-col relative overflow-hidden group shadow-sm hover:shadow-xl hover:shadow-brand-secondary/10 transition-all duration-500"
             >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2 text-brand-secondary">
-                  <div className="p-2 bg-brand-secondary/10 rounded-full text-brand-secondary">
-                    <Lightbulb size={20} />
+              <div 
+                className="absolute -top-6 -right-6 text-brand-secondary rotate-12 pointer-events-none transition-transform duration-700 group-hover:rotate-6 group-hover:scale-110"
+                style={{ opacity: 0.035 }}
+              >
+                <Quote size={130} />
+              </div>
+
+              <div className="flex flex-col gap-4 mb-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-brand-secondary">
+                    <div className="p-2 bg-brand-secondary/10 rounded-full text-brand-secondary">
+                      <Lightbulb size={20} />
+                    </div>
+                    <h3 className="font-bold text-xs tracking-widest uppercase text-brand-text/90">Insight Core</h3>
                   </div>
-                  <h3 className="font-bold text-xs tracking-widest uppercase">Insight</h3>
+                  
+                  {/* Topic Indicator */}
+                  {activeInsightView === 'discover' && (
+                    <span className={`text-[9.5px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full transition-all duration-300 ${
+                      factSource === 'ai' 
+                        ? 'bg-brand-primary/15 text-brand-primary border border-brand-primary/20' 
+                        : 'bg-brand-secondary/15 text-brand-secondary border border-brand-secondary/20'
+                    }`}>
+                      {factBadge}
+                    </span>
+                  )}
+                </div>
+
+                {/* Sub-Tabs: Discover vs Saved */}
+                <div className="grid grid-cols-2 p-1 bg-brand-secondary/5 border border-brand-secondary/10 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setActiveInsightView('discover')}
+                    className={`flex items-center justify-center gap-2 py-2 rounded-xl text-[11px] font-bold transition-all duration-300 outline-none cursor-pointer ${
+                      activeInsightView === 'discover'
+                        ? 'bg-brand-surface border border-brand-secondary/10 text-brand-secondary shadow-sm'
+                        : 'text-brand-text-secondary hover:text-brand-text'
+                    }`}
+                  >
+                    <Sparkles size={11.5} />
+                    <span>Discover</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveInsightView('saved')}
+                    className={`flex items-center justify-center gap-2 py-2 rounded-xl text-[11px] font-bold transition-all duration-300 outline-none cursor-pointer ${
+                      activeInsightView === 'saved'
+                        ? 'bg-brand-surface border border-brand-secondary/10 text-rose-500 shadow-sm'
+                        : 'text-brand-text-secondary hover:text-rose-400'
+                    }`}
+                  >
+                    <Heart size={11.5} fill={favoritedFacts.length > 0 ? "currentColor" : "none"} className={favoritedFacts.length > 0 ? "text-rose-500" : ""} />
+                    <span>Saved ({favoritedFacts.length})</span>
+                  </button>
                 </div>
               </div>
-              
-              <div className="flex-grow flex items-center relative z-10 my-4">
-                <AnimatePresence mode="wait">
-                  {isLoadingFact ? (
-                    <motion.div key="loader" className="space-y-4 w-full">
-                      <div className="h-4 bg-brand-border/40 rounded-full w-full animate-pulse" />
-                      <div className="h-4 bg-brand-border/40 rounded-full w-5/6 animate-pulse" />
-                      <div className="h-4 bg-brand-border/40 rounded-full w-4/6 animate-pulse" />
-                    </motion.div>
-                  ) : (
-                    <motion.p 
-                      key="fact"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="text-brand-text text-[17.5px] font-serif italic leading-relaxed font-medium text-left"
+
+              {activeInsightView === 'discover' ? (
+                <>
+                  {/* Category selector tabs */}
+                  <div className="flex items-center gap-1.5 mb-5 overflow-x-auto no-scrollbar relative z-10 py-1 border-b border-brand-secondary/10 pb-3">
+                    {CATEGORY_ITEMS.map(cat => {
+                      const Icon = cat.icon;
+                      const isSelected = selectedCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => handleCategoryChange(cat.id)}
+                          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold cursor-pointer transition-all duration-300 whitespace-nowrap outline-none ${
+                            isSelected 
+                              ? 'bg-brand-secondary text-brand-bg shadow-md shadow-brand-secondary/20 scale-102' 
+                              : 'bg-brand-secondary/5 hover:bg-brand-secondary/10 text-brand-text-secondary hover:text-brand-text'
+                          }`}
+                        >
+                          <Icon size={11} />
+                          <span>{cat.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Dynamic Fact viewbox */}
+                  <div className="flex-grow flex flex-col justify-center relative z-10 my-2 min-h-[140px]">
+                    <AnimatePresence mode="wait">
+                      {isLoadingFact ? (
+                        <motion.div key="loader" className="space-y-4 w-full">
+                          <div className="h-4 bg-brand-secondary/20 rounded-full w-full animate-pulse" />
+                          <div className="h-4 bg-brand-secondary/20 rounded-full w-5/6 animate-pulse" />
+                          <div className="h-4 bg-brand-secondary/20 rounded-full w-4/6 animate-pulse" />
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          key={mathFact}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.25 }}
+                          className="relative pl-5 border-l-[3px] border-brand-secondary/40 py-1.5 flex flex-col justify-between h-full"
+                        >
+                          <div>
+                            <p className="text-brand-text text-[15px] sm:text-base leading-relaxed font-serif font-medium text-left">
+                              "{mathFact}"
+                            </p>
+                            
+                            <div className="mt-3 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[9px] uppercase tracking-wider font-mono text-brand-text-secondary/40 font-bold">Source:</span>
+                                <span className="text-[9px] uppercase tracking-wider font-mono font-extrabold text-brand-text-secondary/70">
+                                  {factSource === 'ai' ? 'Gemini 3.5 AI Model' : 'QuantumCurator Engine'}
+                                </span>
+                              </div>
+
+                              {/* Interactive utilities */}
+                              <div className="flex items-center gap-1.5 shrink-0 z-20">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); toggleFavoriteFact(mathFact); }}
+                                  className={`p-1.5 rounded-lg border transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                                    isFactFavorited(mathFact) 
+                                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 hover:bg-rose-500/20' 
+                                      : 'bg-brand-secondary/5 border-brand-secondary/15 text-brand-text-secondary hover:text-brand-text hover:bg-brand-secondary/10'
+                                  }`}
+                                  title={isFactFavorited(mathFact) ? "Remove from Saved" : "Save Fact"}
+                                >
+                                  <Heart size={12} fill={isFactFavorited(mathFact) ? "currentColor" : "none"} />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleSpeakFact(mathFact); }}
+                                  className={`p-1.5 rounded-lg border transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                                    isPlayingAudio 
+                                      ? 'bg-brand-primary/15 border-brand-primary/30 text-brand-primary hover:bg-brand-primary/25 animate-pulse' 
+                                      : 'bg-brand-secondary/5 border-brand-secondary/15 text-brand-text-secondary hover:text-brand-text hover:bg-brand-secondary/10'
+                                  }`}
+                                  title={isPlayingAudio ? "Stop Narrator" : "Listen to Fact"}
+                                >
+                                  <Volume2 size={12} />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleCopyFact(mathFact); }}
+                                  className={`p-1.5 rounded-lg border transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                                    hasCopied 
+                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                                      : 'bg-brand-secondary/5 border-brand-secondary/15 text-brand-text-secondary hover:text-brand-text hover:bg-brand-secondary/10'
+                                  }`}
+                                  title="Copy to Clipboard"
+                                >
+                                  {hasCopied ? <Check size={12} /> : <Copy size={12} />}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Action tabs */}
+                  <div className="grid grid-cols-2 gap-2 mt-4 relative z-10">
+                    <button
+                      type="button"
+                      onClick={handleNextCurated}
+                      disabled={isLoadingFact}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-brand-border/60 hover:bg-brand-secondary/5 text-brand-text font-bold text-[11px] font-sans transition-all duration-200 active:scale-95 disabled:opacity-50 cursor-pointer"
+                      title="Cycle standard local fun facts"
                     >
-                      "{mathFact}"
-                    </motion.p>
+                      <RefreshCw size={12} className={isLoadingFact ? "animate-spin" : ""} />
+                      Local Shuffle
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fetchFact()}
+                      disabled={isLoadingFact}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-brand-secondary text-brand-bg hover:scale-[1.02] font-extrabold text-[11px] font-sans shadow-md shadow-brand-secondary/15 transition-all duration-200 active:scale-95 disabled:opacity-50 cursor-pointer"
+                      title="Generate a brand new fact with AI"
+                    >
+                      <Sparkles size={12} className="text-brand-bg" />
+                      Gemini Flash
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Saved / Favorited view container */
+                <div className="flex-grow flex flex-col justify-start relative z-10 my-2 min-h-[220px] max-h-[260px] overflow-y-auto pr-1 no-scrollbar space-y-3">
+                  {favoritedFacts.length === 0 ? (
+                    <div className="flex-grow flex flex-col items-center justify-center text-center py-8 px-4 space-y-3">
+                      <div className="p-3 bg-brand-secondary/5 border border-brand-secondary/10 rounded-full text-brand-text-secondary/40">
+                        <Bookmark size={24} />
+                      </div>
+                      <div>
+                        <p className="text-[12.5px] font-bold text-brand-text/80">Cabinet is empty</p>
+                        <p className="text-[10px] text-brand-text-secondary/60 mt-1 max-w-[200px] leading-relaxed mx-auto">
+                          Click the heart icon on standard facts to preserve them inside your local dashboard!
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {favoritedFacts.map((fav, i) => (
+                        <motion.div
+                          key={fav}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="p-3 bg-brand-surface border border-brand-secondary/10 rounded-2xl flex flex-col gap-2 relative group/item hover:border-brand-secondary/20 transition-all duration-300"
+                        >
+                          <p className="text-[12px] text-brand-text/90 leading-relaxed font-sans font-medium text-left">
+                            "{fav}"
+                          </p>
+                          <div className="flex items-center justify-between border-t border-brand-secondary/10 pt-2 mt-1">
+                            <span className="text-[9px] font-mono font-bold text-brand-text-secondary/40">
+                              Saved Discoveries #{favoritedFacts.length - i}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleCopyFact(fav)}
+                                className="p-1 rounded bg-brand-secondary/5 hover:bg-brand-secondary/10 text-brand-text-secondary hover:text-brand-text transition-all cursor-pointer"
+                                title="Copy"
+                              >
+                                <Copy size={10} />
+                              </button>
+                              <button
+                                onClick={() => handleSpeakFact(fav)}
+                                className="p-1 rounded bg-brand-secondary/5 hover:bg-brand-secondary/10 text-brand-text-secondary hover:text-brand-primary transition-all cursor-pointer"
+                                title="Narrate"
+                              >
+                                <Volume2 size={10} />
+                              </button>
+                              <button
+                                onClick={() => toggleFavoriteFact(fav)}
+                                className="p-1 rounded bg-rose-500/5 hover:bg-rose-500/10 text-brand-text-secondary hover:text-rose-500 transition-all cursor-pointer"
+                                title="Remove / Trash"
+                              >
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   )}
-                </AnimatePresence>
-              </div>
+                </div>
+              )}
               
-              <div className="mt-8 pt-6 border-t border-brand-border/25 flex items-center justify-between">
-                 <p className="text-[10px] text-brand-text-secondary uppercase tracking-widest font-semibold">Fact of the moment</p>
+              <div className="mt-6 pt-5 border-t border-brand-secondary/20 flex items-center justify-between relative z-10">
+                 <p className="text-[9px] text-brand-text-secondary uppercase tracking-widest font-extrabold flex items-center gap-1.5">
+                    <Sparkles size={11} className="text-brand-secondary" /> Daily Discovery
+                 </p>
                  <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse" />
                     <span className="text-[10px] font-mono font-bold text-brand-primary">{totalScholars?.toLocaleString()} Scholars Online</span>

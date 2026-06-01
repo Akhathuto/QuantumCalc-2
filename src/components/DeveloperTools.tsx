@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
     Braces, 
     Key,
@@ -14,10 +14,17 @@ import {
     Terminal,
     AlertTriangle,
     Fingerprint,
-    Link
+    Link,
+    ChevronDown,
+    AlignLeft,
+    Calendar,
+    FileText
 } from 'lucide-react';
 
 import { motion, AnimatePresence } from 'motion/react';
+import cronstrue from 'cronstrue';
+import cronParser from 'cron-parser';
+import ReactMarkdown from 'react-markdown';
 
 const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     const [copied, setCopied] = useState(false);
@@ -818,6 +825,158 @@ const UrlParser = () => {
 };
 
 
+const CronParserTool = () => {
+    const [input, setInput] = useState('*/5 * * * *');
+    const [explanation, setExplanation] = useState('');
+    const [nextRuns, setNextRuns] = useState<string[]>([]);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        try {
+            if (!input.trim()) {
+                setExplanation('');
+                setNextRuns([]);
+                setError('');
+                return;
+            }
+            const desc = cronstrue.toString(input, { throwExceptionOnParseError: true });
+            setExplanation(desc);
+            
+            const interval = cronParser.parseExpression(input);
+            const runs = [];
+            for (let i = 0; i < 5; i++) {
+                runs.push(interval.next().toString());
+            }
+            setNextRuns(runs);
+            setError('');
+        } catch (err: any) {
+            setError(err.message || 'Invalid cron expression format');
+            setExplanation('');
+            setNextRuns([]);
+        }
+    }, [input]);
+
+    return (
+        <div className="space-y-6 max-w-3xl mx-auto">
+            <div className="space-y-2">
+                <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2">Cron Expression</label>
+                <input
+                    type="text"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    placeholder="* * * * *"
+                    className="w-full bg-brand-bg/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary ring-0 outline-none font-mono text-xl text-center shadow-inner tracking-[0.5em]"
+                />
+            </div>
+            
+            {error ? (
+                <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-[2rem] text-red-500 flex items-center gap-3 font-mono text-sm shadow-inner">
+                    <AlertTriangle size={16} /> {error}
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    <div className="p-8 bg-brand-primary/10 border border-brand-primary/30 rounded-[2.5rem] shadow-xl text-center">
+                        <div className="text-[10px] uppercase font-black text-brand-primary tracking-widest mb-3">Human Readable Interval</div>
+                        <h4 className="text-2xl font-black text-brand-text">{explanation}</h4>
+                    </div>
+                    
+                    <div className="bg-brand-bg border border-brand-border p-6 rounded-[2rem] space-y-4 shadow-inner">
+                        <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2 border-b border-brand-border/30 pb-3 flex items-center gap-2">
+                            <Clock size={12} className="text-brand-primary" /> Next Predicted Executions
+                        </div>
+                        <div className="space-y-2">
+                            {nextRuns.map((time, i) => (
+                                <div key={i} className="flex items-center justify-between p-3 bg-brand-surface/30 rounded-xl border border-brand-border/20 font-mono text-sm">
+                                    <span className="text-brand-text-secondary text-xs">Run {i + 1}</span>
+                                    <span className="text-brand-primary bg-brand-primary/10 px-3 py-1 rounded-lg">{time}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const LoremGenerator = () => {
+    const [paragraphs, setParagraphs] = useState(3);
+    const [output, setOutput] = useState('');
+    const generate = React.useCallback(() => {
+        const corpus = ["lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua", "enim", "ad", "minim", "veniam", "quis", "nostrud", "exercitation", "ullamco", "laboris", "nisi", "ut", "aliquip", "ex", "ea", "commodo", "consequat", "duis", "aute", "irure", "dolor", "in", "reprehenderit", "in", "voluptate", "velit", "esse", "cillum", "dolore", "eu", "fugiat", "nulla", "pariatur", "excepteur", "sint", "occaecat", "cupidatat", "non", "proident", "sunt", "in", "culpa", "qui", "officia", "deserunt", "mollit", "anim", "id", "est", "laborum"];
+        
+        const result = Array.from({ length: paragraphs }).map(() => {
+            const sentenceCount = 4 + Math.floor(Math.random() * 4);
+            const sentences = Array.from({ length: sentenceCount }).map(() => {
+                const wordCount = 6 + Math.floor(Math.random() * 8);
+                const words = Array.from({ length: wordCount }).map(() => corpus[Math.floor(Math.random() * corpus.length)]);
+                words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+                return words.join(' ') + '.';
+            });
+            return sentences.join(' ');
+        });
+        setOutput(result.join('\n\n'));
+    }, [paragraphs]);
+    
+    useEffect(() => { generate(); }, [generate]);
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row gap-6 items-end">
+                <div className="space-y-2 flex-1 w-full">
+                    <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] ml-2">Paragraph Count</label>
+                    <div className="flex items-center gap-4 bg-brand-surface/40 p-2 rounded-[1.5rem] border border-brand-border/50">
+                        <input type="range" min="1" max="20" value={paragraphs} onChange={e => setParagraphs(parseInt(e.target.value))} className="flex-1 accent-brand-primary ml-4" />
+                        <span className="w-12 h-12 bg-brand-primary text-brand-bg rounded-xl flex items-center justify-center font-black text-lg">{paragraphs}</span>
+                    </div>
+                </div>
+                <button onClick={generate} className="px-8 h-16 w-full md:w-auto bg-brand-surface border border-brand-border rounded-[1.5rem] font-black uppercase tracking-widest hover:border-brand-primary hover:text-brand-primary group transition-all shrink-0">
+                    <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500 inline-block mr-3" /> Regenerate
+                </button>
+            </div>
+            
+            <div className="relative">
+                <div className="absolute top-4 right-4 z-10"><CopyButton text={output} /></div>
+                <textarea
+                    readOnly
+                    value={output}
+                    className="w-full h-80 bg-brand-bg/50 p-8 pt-16 rounded-[2rem] border border-brand-border ring-0 outline-none text-brand-text font-serif text-lg leading-relaxed shadow-inner custom-scrollbar"
+                />
+            </div>
+        </div>
+    );
+};
+
+const MarkdownPreviewer = () => {
+    const [input, setInput] = useState('# Hello Developer\n\nWrite your **markdown** here to preview it in real-time.\n\n- Quick rendering\n- GitHub flavored syntax\n\n```js\nconsole.log("Syntax highlighting included!");\n```');
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[500px]">
+            <div className="space-y-2 flex flex-col h-full">
+                <div className="flex justify-between items-center px-2">
+                    <label className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em]">Markdown Editor</label>
+                    <CopyButton text={input} />
+                </div>
+                <textarea
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    className="w-full flex-1 bg-brand-bg/50 p-6 rounded-[2rem] border border-brand-border focus:border-brand-primary outline-none font-mono text-sm leading-relaxed shadow-inner min-h-[400px] resize-none"
+                    placeholder="Enter markdown..."
+                />
+            </div>
+            <div className="space-y-2 flex flex-col h-full">
+                <div className="flex justify-between items-center px-2">
+                    <label className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em]">Rendered Preview</label>
+                </div>
+                <div className="w-full flex-1 bg-brand-surface/30 p-8 rounded-[2rem] border border-brand-border/50 shadow-inner overflow-auto min-h-[400px] prose prose-invert prose-brand max-w-none">
+                    <ReactMarkdown>{input}</ReactMarkdown>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const tools = [
     { id: 'json', label: 'JSON Formatter', Icon: Braces, desc: 'Format, minify, and validate JSON data.', category: 'Formatting' },
     { id: 'jwt', label: 'JWT Decoder', Icon: Key, desc: 'Decode JSON Web Tokens and inspect payloads.', category: 'Security' },
@@ -830,6 +989,9 @@ const tools = [
     { id: 'hasher', label: 'Hash Generator', Icon: Lock, desc: 'Generate SHA-256 and SHA-512 checksums.', category: 'Security' },
     { id: 'epoch', label: 'Epoch Time', Icon: Clock, desc: 'Convert Unix timestamps to human-readable.', category: 'Utilities' },
     { id: 'case', label: 'String Case', Icon: CaseSensitive, desc: 'camelCase, snake_case, CONSTANT variables.', category: 'Formatting' },
+    { id: 'cron', label: 'Cron Parser', Icon: Calendar, desc: 'Explain crons and predict next executions.', category: 'Utilities' },
+    { id: 'lorem', label: 'Lorem Ipsum', Icon: AlignLeft, desc: 'Generate placeholder text dynamically.', category: 'Formatting' },
+    { id: 'markdown', label: 'Markdown Preview', Icon: FileText, desc: 'Live preview GitHub flavored markdown.', category: 'Formatting' },
 ];
 
 const DeveloperTools: React.FC = () => {
@@ -855,6 +1017,9 @@ const DeveloperTools: React.FC = () => {
             case 'regex': component = <RegexTester />; break;
             case 'diff': component = <VisualDiff />; break;
             case 'color': component = <ColorSuite />; break;
+            case 'cron': component = <CronParserTool />; break;
+            case 'lorem': component = <LoremGenerator />; break;
+            case 'markdown': component = <MarkdownPreviewer />; break;
         }
 
         return (
@@ -896,16 +1061,57 @@ const DeveloperTools: React.FC = () => {
 
             <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start">
                 {/* Sidebar Navigation */}
-                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 bg-brand-bg/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none pb-4 md:pb-0 border-b border-brand-border/20 md:border-none -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 mb-4 md:mb-0">
                     <div className="flex flex-col gap-4">
                         <input 
                             type="text"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                             placeholder="Search tools..."
-                            className="w-full bg-brand-surface/20 border border-brand-border rounded-2xl p-4 text-sm text-white focus:border-brand-primary outline-none"
+                            className="w-full bg-brand-surface/20 border border-brand-border rounded-2xl p-4 text-sm text-white focus:border-brand-primary outline-none hidden md:block"
                         />
-                        <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-8 pb-2 md:pb-0 mask-fade-edges">
+
+                        {/* Mobile Navigation Dropdown */}
+                        <div className="md:hidden sticky top-2 z-40 mb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+                            <div className="rounded-2xl bg-brand-surface/95 border border-brand-primary/20 backdrop-blur-2xl p-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] shadow-brand-bg">
+                                <div className="flex items-center justify-between mb-2 px-2">
+                                    <div className="flex items-center gap-2">
+                                        <Code size={14} className="text-brand-primary" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary">Utility</span>
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">{filteredTools.find(t => t.id === activeTool)?.label || 'Select Tool'}</span>
+                                </div>
+                                <div className="relative">
+                                    <select
+                                        value={activeTool}
+                                        onChange={(e) => setActiveTool(e.target.value)}
+                                        className="w-full appearance-none bg-brand-bg border border-brand-border/50 hover:border-brand-primary/50 text-brand-text text-sm font-bold rounded-xl px-4 py-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-sm"
+                                    >
+                                        {Object.entries(
+                                            filteredTools.reduce((acc, tool) => {
+                                                if (!acc[tool.category]) acc[tool.category] = [];
+                                                acc[tool.category].push(tool);
+                                                return acc;
+                                            }, {} as Record<string, typeof filteredTools>)
+                                        ).map(([category, catTools]) => (
+                                            <optgroup key={category} label={category} className="bg-brand-surface font-black text-brand-text-secondary">
+                                                {catTools.map(tool => (
+                                                    <option key={tool.id} value={tool.id} className="bg-brand-bg text-brand-text font-bold">
+                                                        {tool.label}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-brand-text">
+                                        <ChevronDown size={18} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Desktop Navigation List */}
+                        <div className="hidden md:flex flex-col gap-8 pb-0 mask-fade-edges hover:no-scrollbar overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar">
                             {Object.entries(
                                 filteredTools.reduce((acc, tool) => {
                                     if (!acc[tool.category]) acc[tool.category] = [];

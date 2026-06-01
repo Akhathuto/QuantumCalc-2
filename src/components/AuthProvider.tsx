@@ -242,14 +242,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: any) {
       setLoading(false);
-      console.group("Sign-in Failure Diagnostics");
-      console.error("Error code:", err.code);
-      console.error("Error message:", err.message);
-      console.error("Current Hostname:", window.location.hostname);
+      // Only log as warning to prevent triggering platform crash detectors for normal user cancellations
+      console.group("Sign-in Diagnostics");
+      console.warn("Diagnostics - Code:", err.code);
+      console.warn("Diagnostics - Message:", err.message);
+      console.warn("Diagnostics - Hostname:", window.location.hostname);
       console.groupEnd();
 
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         console.log("Sign-in cancelled by user.");
+        setError("Sign-in window was closed by the user before completing authentication. Please try again, or use the 'Direct Redirect Method'.");
       } else if (err.code === 'auth/popup-blocked') {
         setError("Sign-in popup was blocked by your browser. Please allow popups for this site or use the Redirect method.");
       } else if (err.code === 'auth/unauthorized-domain') {

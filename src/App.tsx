@@ -54,6 +54,14 @@ const App = () => {
   const { user, userData, accessToken, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<AppTab>('landing');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Scroll to top when activeTab changes
+  useEffect(() => {
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      mainElement.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [activeTab]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
     try {
@@ -453,22 +461,67 @@ const App = () => {
       <Sidebar activeTab={activeTab} onTabClick={setActiveTab} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} canInstall={!!deferredPrompt} onInstall={installApp} />
       <div className="flex-1 flex flex-col min-w-0 max-h-[100dvh] overflow-hidden relative">
         <Header activeTab={activeTab} onTabClick={setActiveTab} onLoginClick={() => setIsAuthModalOpen(true)} onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto px-4 pb-24 lg:pb-8 pt-4 custom-scrollbar">
-          <div className="container mx-auto max-w-7xl">
+        <main className="flex-1 overflow-y-auto px-0 pt-4 custom-scrollbar flex flex-col relative w-full overflow-x-hidden">
+          <div className="container mx-auto max-w-7xl px-4 flex-1">
             {renderActiveTab()}
           </div>
-        </main>
-        <footer className="py-6 border-t border-brand-border/30 shrink-0 mb-16 lg:mb-0">
-          <div className="container mx-auto max-w-7xl px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-brand-text-secondary">
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-              <button onClick={() => setActiveTab('privacy')} className="hover:text-brand-text transition-colors">Privacy Protocol</button>
-              <button onClick={() => setActiveTab('core-license')} className="hover:text-brand-text transition-colors">Core License</button>
-              <button onClick={() => setActiveTab('support')} className="hover:text-brand-text transition-colors">Support Hub</button>
-              <button onClick={() => setActiveTab('terms')} className="hover:text-brand-text transition-colors">Terms of Service</button>
+          <footer className="py-12 pb-32 lg:pb-12 border-t border-brand-border/30 bg-brand-surface/20 shrink-0 mt-16 relative overflow-hidden w-full">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+            <div className="container mx-auto max-w-7xl px-4 relative z-10 w-full">
+                <div className="flex flex-col md:flex-row gap-12 md:gap-8 mb-12">
+                    <div className="space-y-6 flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary/20 to-transparent flex items-center justify-center border border-brand-primary/30 shadow-inner">
+                                <CalcIcon size={20} className="text-brand-primary" />
+                            </div>
+                            <span className="font-black text-brand-text tracking-[0.2em] uppercase">QuantumCalc</span>
+                        </div>
+                        <p className="text-sm text-brand-text-secondary max-w-md leading-relaxed px-4 md:px-0">
+                            Advanced computational utilities, financial models, and specialized developer tools engineered for speed and precision.
+                        </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:flex md:flex-row justify-center md:justify-end gap-x-4 gap-y-12 md:gap-16 lg:gap-24 w-full md:w-auto">
+                        <div className="space-y-6 text-left flex flex-col items-start min-w-[120px]">
+                            <h4 className="text-[10px] font-black tracking-[0.2em] uppercase text-brand-primary">Platform</h4>
+                            <div className="flex flex-col gap-2">
+                                <button onClick={() => setActiveTab('explore')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit py-2">Explore Tools</button>
+                                <button onClick={() => setActiveTab('support')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit py-2">Support Hub</button>
+                                <button onClick={() => setActiveTab('feedback')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit py-2">Submit Feedback</button>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-6 text-left flex flex-col items-start min-w-[120px]">
+                            <h4 className="text-[10px] font-black tracking-[0.2em] uppercase text-brand-primary">Company</h4>
+                            <div className="flex flex-col gap-2">
+                                <button onClick={() => setActiveTab('about')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit py-2">About Us</button>
+                                <button onClick={() => setActiveTab('contact')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit py-2">Contact Us</button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 text-left flex flex-col items-start min-w-[120px] col-span-2 md:col-span-1">
+                            <h4 className="text-[10px] font-black tracking-[0.2em] uppercase text-brand-primary">Legal</h4>
+                            <div className="grid grid-cols-2 md:flex md:flex-col gap-x-4 gap-y-2 w-full">
+                                <button onClick={() => setActiveTab('privacy')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit text-left py-2">Privacy Protocol</button>
+                                <button onClick={() => setActiveTab('core-license')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit text-left py-2">Core License</button>
+                                <button onClick={() => setActiveTab('terms')} className="text-sm text-brand-text-secondary hover:text-brand-primary hover:-translate-y-0.5 active:scale-95 transition-all w-fit text-left py-2">Terms of Service</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="pt-8 border-t border-brand-border/30 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="text-xs text-brand-text-secondary text-center md:text-left">
+                        &copy; {new Date().getFullYear()} Edgtec. All rights reserved.
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center md:justify-end gap-6 text-brand-text-secondary">
+                      <span className="text-[10px] font-mono hover:text-brand-text transition-colors cursor-pointer">STATUS: ONLINE</span>
+                      <span className="text-[10px] font-mono text-brand-primary/50 tracking-[0.2em] bg-brand-primary/5 px-3 py-1 rounded-full border border-brand-primary/10">SYS.VER.2.0</span>
+                    </div>
+                </div>
             </div>
-            <div>Powered by Edgtec 2026</div>
-          </div>
-        </footer>
+          </footer>
+        </main>
       </div>
 
       {/* Mobile Bottom Navigation Bar - Exclusive Mobile Theme Enhancements */}

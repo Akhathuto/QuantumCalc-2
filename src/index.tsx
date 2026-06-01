@@ -28,6 +28,27 @@ console.error = (...args) => {
   }
 };
 
+// Global protection against circular JSON payloads crashing the app overlay
+const originalStringify = JSON.stringify;
+JSON.stringify = function(value, replacer, space) {
+  try {
+    return originalStringify(value, replacer as any, space);
+  } catch (e) {
+    if (e instanceof TypeError && e.message.includes('circular')) {
+      const cache = new Set();
+      return originalStringify(value, (key, val) => {
+        if (typeof val === 'object' && val !== null) {
+          if (cache.has(val)) return '[Circular Reference]';
+          cache.add(val);
+        }
+        if (typeof replacer === 'function') return (replacer as any)(key, val);
+        return val;
+      }, space);
+    }
+    throw e;
+  }
+};
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");

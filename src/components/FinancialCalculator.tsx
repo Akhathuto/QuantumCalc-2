@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import {
     Home, Car, Landmark, TrendingUp, PiggyBank, Table, HandCoins, Percent, Receipt, Wind,
-    Calculator, Briefcase, Banknote, Bot, AlertCircle, Sparkles, Users, RefreshCw, Plus, Minus
+    Calculator, Briefcase, Banknote, Bot, AlertCircle, Sparkles, Users, RefreshCw, Plus, Minus, ChevronDown
 } from 'lucide-react';
 import { getAutoLoanAnalysis, AutoLoanDetails, getFinancialInsight } from '../services/geminiService';
 import { AppTab } from '../types';
@@ -1603,12 +1603,167 @@ const InflationCalculator = ({ currency }: CalculatorProps) => {
     );
 };
 
-const FinanceCalculator: FC<CalculatorProps> = () => (
-    <div className="text-center text-brand-text-secondary p-8 bg-brand-bg rounded-lg">
-        <Calculator size={48} className="mx-auto mb-4 text-brand-primary" />
-        <p>A full Time Value of Money (TVM) solver is coming soon to handle complex financial calculations for N, I/Y, PV, PMT, and FV.</p>
-    </div>
-);
+const FinanceCalculator: FC<CalculatorProps> = ({ currency }) => {
+    const [solveFor, setSolveFor] = useState<'N' | 'I' | 'PV' | 'PMT' | 'FV'>('FV');
+    const [N, setN] = useState('120'); // Number of periods
+    const [I, setI] = useState('5'); // Annual Rate
+    const [PV, setPV] = useState('0'); // Present Value
+    const [PMT, setPMT] = useState('-1000'); // Payment
+    const [FV, setFV] = useState('0'); // Future Value
+    const [compounding, setCompounding] = useState<'12' | '1' | '4'>('12'); // Monthly Default
+    
+    // Engine computations
+    const calculateTVM = () => {
+        let nObj = parseFloat(N);
+        let iObj = parseFloat(I) / 100 / parseFloat(compounding);
+        let pvObj = parseFloat(PV);
+        let pmtObj = parseFloat(PMT);
+        let fvObj = parseFloat(FV);
+        
+        if (isNaN(iObj) || iObj === 0) iObj = 1e-10; // Avoid divide by zero
+        if (isNaN(nObj)) nObj = 0;
+        if (isNaN(pvObj)) pvObj = 0;
+        if (isNaN(pmtObj)) pmtObj = 0;
+        if (isNaN(fvObj)) fvObj = 0;
+        
+        try {
+            if (solveFor === 'FV') {
+                const res = -(pvObj * Math.pow(1 + iObj, nObj) + pmtObj * ((Math.pow(1 + iObj, nObj) - 1) / iObj));
+                return { value: res, label: 'Future Value', isCurrency: true };
+            }
+            if (solveFor === 'PV') {
+                const res = -(fvObj + pmtObj * ((Math.pow(1 + iObj, nObj) - 1) / iObj)) / Math.pow(1 + iObj, nObj);
+                return { value: res, label: 'Present Value', isCurrency: true };
+            }
+            if (solveFor === 'PMT') {
+                const res = -(fvObj + pvObj * Math.pow(1 + iObj, nObj)) / ((Math.pow(1 + iObj, nObj) - 1) / iObj);
+                return { value: res, label: 'Periodic Payment', isCurrency: true };
+            }
+            if (solveFor === 'N') {
+                const num = -fvObj + (pmtObj / iObj);
+                const den = pvObj + (pmtObj / iObj);
+                if (num / den <= 0) return { value: NaN, label: 'Periods (N)', isCurrency: false };
+                const res = Math.log(num/den) / Math.log(1 + iObj);
+                return { value: res, label: 'Periods (N)', isCurrency: false };
+            }
+            if (solveFor === 'I') {
+                let rate = 0.05;
+                for (let iter = 0; iter < 100; iter++) {
+                    const f = fvObj + pvObj*Math.pow(1+rate, nObj) + pmtObj*((Math.pow(1+rate, nObj)-1)/rate);
+                    const fPrime = nObj*pvObj*Math.pow(1+rate, nObj-1) + pmtObj*(nObj*rate*Math.pow(1+rate, nObj-1) - Math.pow(1+rate, nObj) + 1)/(rate*rate);
+                    const nextRate = rate - f/fPrime;
+                    if (Math.abs(nextRate - rate) < 1e-7) { rate = nextRate; break; }
+                    rate = nextRate;
+                }
+                const annualRate = rate * parseFloat(compounding) * 100;
+                return { value: annualRate, label: 'Annual Rate (I/Y)', isCurrency: false, suffix: '%' };
+            }
+        } catch {
+            return { value: NaN, label: 'Calculation Error', isCurrency: false };
+        }
+        return { value: NaN, label: '', isCurrency: false };
+    };
+
+    const result = calculateTVM();
+
+    return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col items-center justify-center p-8 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary mb-2">Target Variable Computed</p>
+                <div className="text-5xl font-black text-brand-text font-mono tracking-tighter">
+                   {isNaN(result.value) || !isFinite(result.value) ? 'ERR' : 
+                    result.isCurrency 
+                      ? formatCurrency(result.value, currency) 
+                      : `${result.value.toFixed(2)}${result.suffix || ''}`}
+                </div>
+                <p className="text-sm font-bold text-brand-text-secondary mt-2">{result.label}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 border-b border-brand-border/30 pb-4">
+                        <Calculator size={18} className="text-brand-primary" />
+                        <h3 className="font-bold text-sm uppercase tracking-widest text-brand-text">Solvable Metrics</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-5 gap-2">
+                         {['N', 'I', 'PV', 'PMT', 'FV'].map((v) => (
+                             <button
+                                key={v}
+                                onClick={() => setSolveFor(v as any)}
+                                className={`py-3 text-xs font-black rounded-xl border transition-all ${
+                                    solveFor === v 
+                                        ? 'bg-brand-primary border-brand-primary text-brand-bg shadow-md' 
+                                        : 'bg-brand-surface border-brand-border/40 text-brand-text-secondary hover:text-brand-text'
+                                }`}
+                             >
+                                 {v}
+                             </button>
+                         ))}
+                    </div>
+
+                    <p className="text-[10px] uppercase font-bold text-brand-text-secondary">Note: Use negative values for cash outflows (payments/deposits) and positive for inflows.</p>
+
+                    <div className="space-y-4">
+                        {solveFor !== 'N' && (
+                            <InputField label="Periods (N)" id="tvm-n" type="number" step="any" value={N} onChange={e => setN(e.target.value)} />
+                        )}
+                        {solveFor !== 'I' && (
+                            <InputField label="Annual Interest (I/Y) %" id="tvm-i" type="number" step="any" value={I} onChange={e => setI(e.target.value)} />
+                        )}
+                        {solveFor !== 'PV' && (
+                            <InputField label="Present Value (PV)" id="tvm-pv" type="number" step="any" value={PV} onChange={e => setPV(e.target.value)} />
+                        )}
+                        {solveFor !== 'PMT' && (
+                            <InputField label="Payment (PMT)" id="tvm-pmt" type="number" step="any" value={PMT} onChange={e => setPMT(e.target.value)} />
+                        )}
+                        {solveFor !== 'FV' && (
+                            <InputField label="Future Value (FV)" id="tvm-fv" type="number" step="any" value={FV} onChange={e => setFV(e.target.value)} />
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 border-b border-brand-border/30 pb-4">
+                        <RefreshCw size={18} className="text-brand-primary" />
+                        <h3 className="font-bold text-sm uppercase tracking-widest text-brand-text">Engine Parameters</h3>
+                    </div>
+                    
+                    <div className="space-y-4 bg-brand-surface/30 p-6 rounded-2xl border border-brand-border/30">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-secondary mb-3">Compounding Frequency</label>
+                        <div className="flex gap-2 text-center">
+                             <button
+                                onClick={() => setCompounding('1')}
+                                className={`flex-1 py-3 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all ${compounding === '1' ? 'bg-brand-primary/20 text-brand-primary border border-brand-primary/30' : 'bg-brand-surface text-brand-text-secondary border border-brand-border/30 hover:bg-brand-bg'}`}
+                             >
+                                 Annually
+                             </button>
+                             <button
+                                onClick={() => setCompounding('4')}
+                                className={`flex-1 py-3 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all ${compounding === '4' ? 'bg-brand-primary/20 text-brand-primary border border-brand-primary/30' : 'bg-brand-surface text-brand-text-secondary border border-brand-border/30 hover:bg-brand-bg'}`}
+                             >
+                                 Quarterly
+                             </button>
+                             <button
+                                onClick={() => setCompounding('12')}
+                                className={`flex-1 py-3 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all ${compounding === '12' ? 'bg-brand-primary/20 text-brand-primary border border-brand-primary/30' : 'bg-brand-surface text-brand-text-secondary border border-brand-border/30 hover:bg-brand-bg'}`}
+                             >
+                                 Monthly
+                             </button>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-brand-primary/5 border border-brand-primary/20 p-6 rounded-2xl">
+                        <h4 className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-3 flex items-center gap-2"><Sparkles size={12}/> TVM Solver Architecture</h4>
+                        <p className="text-xs text-brand-text-secondary leading-relaxed">
+                            The Time Value of Money engine computes complex inter-temporal financial constraints. Use solving variables to project savings trajectories, bond yields to maturity, mortgage durations, or reverse-calculate balloon loan parameters. Cash outflow must be denoted with a minus (e.g. initial deposits).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const IncomeTaxCalculator: FC<CalculatorProps> = ({ currency }) => {
     const TAX_BRACKETS_2024 = useMemo(() => ({
@@ -2006,12 +2161,44 @@ const FinancialCalculator = ({ setActiveTab }: { setActiveTab: (tab: AppTab) => 
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Sidebar Navigation */}
-                <div className="lg:col-span-3 space-y-2 sticky top-24">
-                    <div className="p-4 mb-4 rounded-2xl bg-brand-primary/5 border border-brand-primary/10">
+                <div className="lg:col-span-3 space-y-2 lg:sticky lg:top-24 lg:z-20">
+                    <div className="hidden lg:block p-4 mb-4 rounded-2xl bg-brand-primary/5 border border-brand-primary/10">
                         <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary mb-1">Calculator Categories</p>
                         <p className="text-xs text-brand-text-secondary italic">Select a tool to begin analysis</p>
                     </div>
-                    <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-2 pb-4 lg:pb-0 scrollbar-hide">
+
+                    {/* Mobile Navigation Dropdown */}
+                    <div className="lg:hidden sticky top-2 z-40 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="rounded-2xl bg-brand-surface/95 border border-brand-primary/20 backdrop-blur-2xl p-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] shadow-brand-bg">
+                            <div className="flex items-center justify-between mb-2 px-2">
+                                <div className="flex items-center gap-2">
+                                    <Calculator size={14} className="text-brand-primary" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary">Calculator Mode</span>
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">{calculatorList.find(c => c.value === activeCalc)?.label} Active</span>
+                            </div>
+                            <div className="relative">
+                                <select
+                                    id="mobile-calc-select"
+                                    value={activeCalc}
+                                    onChange={(e) => setActiveCalc(e.target.value)}
+                                    className="w-full appearance-none bg-brand-bg border border-brand-border/50 hover:border-brand-primary/50 text-brand-text text-sm font-bold rounded-xl px-4 py-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-sm"
+                                >
+                                    {calculatorList.map(calc => (
+                                        <option key={calc.value} value={calc.value} className="bg-brand-bg text-brand-text font-bold">
+                                            {calc.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-brand-text">
+                                    <ChevronDown size={18} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Desktop Navigation List */}
+                    <div className="hidden lg:flex flex-col gap-2 pb-0">
                         {calculatorList.map((calc) => {
                             const Icon = calc.Icon;
                             const isActive = activeCalc === calc.value;
@@ -2019,7 +2206,7 @@ const FinancialCalculator = ({ setActiveTab }: { setActiveTab: (tab: AppTab) => 
                                 <button
                                     key={calc.value}
                                     onClick={() => setActiveCalc(calc.value)}
-                                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all duration-300 group shrink-0 whitespace-nowrap min-w-[180px] lg:min-w-0 ${
+                                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all duration-300 group shrink-0 ${
                                         isActive 
                                             ? 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20 scale-[1.02]' 
                                             : 'bg-brand-surface/40 hover:bg-brand-surface text-brand-text-secondary hover:text-brand-text hover:translate-x-1 border border-brand-border/30'

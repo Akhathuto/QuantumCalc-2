@@ -3679,8 +3679,61 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
 
             <div className="flex flex-col md:flex-row gap-8 items-start relative">
                 {/* Navigation Sidebar */}
-                <div className="w-full md:w-64 shrink-0 flex flex-col gap-6 relative z-10">
-                    <div className="bg-brand-surface border border-brand-border/50 p-4 rounded-3xl shadow-2xl backdrop-blur-3xl md:sticky md:top-24 max-h-[50vh] md:max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
+                <div className="w-full md:w-64 shrink-0 flex flex-col gap-6 relative z-10 md:sticky md:top-24 mb-4 md:mb-0">
+                    {/* Mobile Navigation Dropdown */}
+                    <div className="md:hidden sticky top-2 z-40 mb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="rounded-2xl bg-brand-surface/95 border border-brand-primary/20 backdrop-blur-2xl p-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] shadow-brand-bg">
+                            <div className="flex items-center justify-between mb-2 px-2">
+                                <div className="flex items-center gap-2">
+                                    <GraduationCap size={14} className="text-brand-primary" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary">Terminal Module</span>
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
+                                    {activeTool === 'gpa' ? 'GPA Calculator' :
+                                    activeTool === 'elements' ? 'Periodic Table' :
+                                    activeTool === 'tutor' ? 'AI Tutor' :
+                                    activeTool === 'equation' ? 'Equation Solver' :
+                                    activeTool === 'wolfram' ? 'Wolfram Computational' :
+                                    activeTool === 'mathexercises' ? 'Math Drills' :
+                                    activeTool === 'k5worksheets' ? 'K5 Worksheets' :
+                                    activeTool.charAt(0).toUpperCase() + activeTool.slice(1)}
+                                </span>
+                            </div>
+                            <div className="relative">
+                                <select
+                                    value={activeTool}
+                                    onChange={(e) => setActiveTool(e.target.value as ToolID)}
+                                    className="w-full appearance-none bg-brand-bg border border-brand-border/50 hover:border-brand-primary/50 text-brand-text text-sm font-bold rounded-xl px-4 py-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-sm"
+                                >
+                                    {categories.map(cat => (
+                                        <optgroup key={cat.id} label={cat.label} className="bg-brand-surface font-black text-brand-text-secondary">
+                                            {cat.types.map(type => {
+                                                const label = type === 'gpa' ? 'GPA Calculator' :
+                                                    type === 'elements' ? 'Periodic Table' :
+                                                    type === 'tutor' ? 'AI Tutor' :
+                                                    type === 'equation' ? 'Equation Solver' :
+                                                    type === 'wolfram' ? 'Wolfram Computational' :
+                                                    type === 'mathexercises' ? 'Math Drills' :
+                                                    type === 'k5worksheets' ? 'K5 Worksheets' :
+                                                    type.charAt(0).toUpperCase() + type.slice(1);
+                                                return (
+                                                    <option key={type} value={type} className="bg-brand-bg text-brand-text font-bold">
+                                                        {label}
+                                                    </option>
+                                                );
+                                            })}
+                                        </optgroup>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-brand-text">
+                                    <ChevronDown size={18} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Desktop Navigation List */}
+                    <div className="hidden md:block bg-brand-surface border border-brand-border/50 p-4 rounded-3xl shadow-2xl backdrop-blur-3xl max-h-[50vh] md:max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
                         
                         {/* Interactive Sidebar Search */}
                         <div className="relative mb-6">

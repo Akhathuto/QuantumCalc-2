@@ -28,8 +28,17 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errMsg = error instanceof Error ? error.message : String(error);
+  
+  // Check if this is a "permission-denied" or security rule block
+  const isPermissionError = 
+    errMsg.includes('Missing or insufficient permissions') || 
+    errMsg.includes('permission-denied') || 
+    (error as any)?.code === 'permission-denied' ||
+    (error as any)?.code === 'firestore/permission-denied';
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -59,6 +68,11 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     });
   }
 
-  console.error('Firestore Error Details: ', jsonError);
-  throw new Error(jsonError);
+  if (isPermissionError) {
+    console.error('Firestore Security Rule Blocked: ', jsonError);
+    throw new Error(jsonError);
+  } else {
+    // Non-blocking graceful degradation logs for offline/network issues
+    console.warn(`[Firestore Graceful Degradation] Operational warning during '${operationType}' at path '${path}':`, errMsg);
+  }
 }

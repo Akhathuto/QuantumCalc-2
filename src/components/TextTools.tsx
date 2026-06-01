@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Hash, CaseSensitive, Replace, FileText, Type } from 'lucide-react';
+import { Hash, CaseSensitive, Replace, FileText, Type, ChevronDown } from 'lucide-react';
 import { motion } from 'motion/react';
 
 // Reusable UI Components
@@ -294,9 +294,39 @@ const TextTools: React.FC = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start">
-                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 bg-brand-bg/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none pb-4 md:pb-0 border-b border-brand-border/20 md:border-none -mx-4 px-4 md:mx-0 md:px-0">
-                    <div className="flex md:flex-col overflow-x-auto no-scrollbar gap-2 pb-2 md:pb-0 mask-fade-edges">
-                        <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
+                <div className="w-full md:w-64 flex-shrink-0 md:sticky top-[100px] z-30 mb-4 md:mb-0">
+                    {/* Mobile Navigation Dropdown */}
+                    <div className="md:hidden sticky top-2 z-40 mb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="rounded-2xl bg-brand-surface/95 border border-brand-primary/20 backdrop-blur-2xl p-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] shadow-brand-bg">
+                            <div className="flex items-center justify-between mb-2 px-2">
+                                <div className="flex items-center gap-2">
+                                    <Type size={14} className="text-brand-primary" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary">Text Engine</span>
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">{tools.find(t => t.id === activeTool)?.label}</span>
+                            </div>
+                            <div className="relative">
+                                <select
+                                    value={activeTool}
+                                    onChange={(e) => setActiveTool(e.target.value)}
+                                    className="w-full appearance-none bg-brand-bg border border-brand-border/50 hover:border-brand-primary/50 text-brand-text text-sm font-bold rounded-xl px-4 py-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-sm"
+                                >
+                                    {tools.map(tool => (
+                                        <option key={tool.id} value={tool.id} className="bg-brand-bg text-brand-text font-bold">
+                                            {tool.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-brand-text">
+                                    <ChevronDown size={18} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Desktop Navigation List */}
+                    <div className="hidden md:flex flex-col gap-2 pb-0 mask-fade-edges hover:no-scrollbar overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
+                        <div className="flex flex-col gap-2">
                             {tools.map(tool => (
                                  <SubNavButton 
                                     key={tool.id}

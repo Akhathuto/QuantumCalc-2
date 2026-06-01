@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { ArrowRightLeft, Sparkles, Loader2, Info, Ruler, Weight, Thermometer, Clock, Database, ChevronRight, Target } from 'lucide-react';
+import { ArrowRightLeft, Sparkles, Loader2, Info, Ruler, Weight, Thermometer, Clock, Database, ChevronRight, Target, ChevronDown } from 'lucide-react';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from 'motion/react';
@@ -174,12 +174,43 @@ export const UnitConverter = () => {
         
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Col: Categories */}
-        <div className="lg:col-span-3 space-y-6">
-            <h3 className="text-xs font-black text-brand-text-secondary uppercase tracking-[0.3em] px-2 flex items-center gap-2">
+        <div className="lg:col-span-3 space-y-6 lg:sticky lg:top-24 lg:z-20">
+            <h3 className="hidden lg:flex text-xs font-black text-brand-text-secondary uppercase tracking-[0.3em] px-2 items-center gap-2">
                 <ChevronRight size={14} className="text-brand-primary" />
                 Dimensions
             </h3>
-            <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 no-scrollbar">
+            
+            {/* Mobile Navigation Dropdown */}
+            <div className="lg:hidden sticky top-2 z-40 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div className="rounded-2xl bg-brand-surface/95 border border-brand-primary/20 backdrop-blur-2xl p-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] shadow-brand-bg">
+                    <div className="flex items-center justify-between mb-2 px-2">
+                        <div className="flex items-center gap-2">
+                            <Target size={14} className="text-brand-primary" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary">Dimension</span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">{category}</span>
+                    </div>
+                    <div className="relative">
+                        <select
+                            value={category}
+                            onChange={(e) => handleCategoryChange(e.target.value as Category)}
+                            className="w-full appearance-none bg-brand-bg border border-brand-border/50 hover:border-brand-primary/50 text-brand-text text-sm font-bold rounded-xl px-4 py-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-sm"
+                        >
+                            {(Object.keys(CONVERSION_DATA) as Category[]).map(cat => (
+                                <option key={cat} value={cat} className="bg-brand-bg text-brand-text font-bold">
+                                    {cat}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-brand-text">
+                            <ChevronDown size={18} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop Navigation List */}
+            <div className="hidden lg:flex flex-col gap-2 pb-0">
                 {(Object.entries(CONVERSION_DATA) as [Category, any][]).map(([cat, data]) => (
                     <button
                         key={cat}
