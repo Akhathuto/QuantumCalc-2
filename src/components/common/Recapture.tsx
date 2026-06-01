@@ -72,7 +72,7 @@ export const Recapture: React.FC<RecaptureProps> = ({ onVerify, className = '' }
   };
 
   const handleVerifyChallenge = () => {
-    const tolerance = 4;
+    const tolerance = 12; // Increased tolerance for much easier usability
     const isCorrect = Math.abs(sliderVal - targetVal) <= tolerance;
 
     if (isCorrect) {
