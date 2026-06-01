@@ -90,6 +90,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     signInWithGoogle, 
     signUpWithEmail,
     signInWithEmail,
+    signInGuest,
     resetPassword,
     loading, 
     user,
@@ -98,7 +99,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     signInSimulated
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'google' | 'email'>('google');
+  const [activeTab, setActiveTab] = useState<'google' | 'email' | 'guest'>('guest');
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
   const [showReset, setShowReset] = useState<boolean>(false);
   const [email, setEmail] = useState('');
@@ -256,24 +257,40 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="col-span-1 md:col-span-7 p-5 sm:p-7 md:p-8 flex flex-col justify-center">
                 <div className="text-center mb-5">
                   <h3 className="text-base font-black text-brand-text tracking-tight uppercase tracking-wider">Access Your Workspace</h3>
-                  <p className="text-[10px] text-brand-text-secondary mt-1">Connect using Google SSO or create a secure email keyphrase.</p>
+                  <p className="text-[10px] text-brand-text-secondary mt-1">Select your preferred login pipeline to preserve your profiles and computations.</p>
                 </div>
 
-                {/* Tab Toggles */}
-                <div className="flex bg-brand-bg/60 p-1 rounded-xl border border-brand-border/30 mb-5">
+                {/* Enhanced Tab Toggles with custom indicators */}
+                <div className="flex bg-brand-bg/65 p-1 rounded-xl border border-brand-border/30 mb-6 relative select-none">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('guest');
+                      setLocalError(null);
+                    }}
+                    className={`flex-1 py-2 px-1 text-center font-black text-[9px] uppercase tracking-wider rounded-lg transition-all duration-200 cursor-pointer relative flex flex-col items-center justify-center gap-0.5 ${
+                      activeTab === 'guest'
+                        ? 'bg-brand-surface text-brand-secondary shadow-md border border-brand-border/20 scale-[1.02]'
+                        : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/20'
+                    }`}
+                  >
+                    <span>Guest Access</span>
+                    <span className="text-[7px] text-[10px] scale-75 opacity-85 text-brand-secondary font-mono tracking-normal lowercase">⚡ iframe safe</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
                       setActiveTab('google');
                       setLocalError(null);
                     }}
-                    className={`flex-1 py-1.5 text-center font-extrabold text-[9px] uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
+                    className={`flex-1 py-2 px-1 text-center font-black text-[9px] uppercase tracking-wider rounded-lg transition-all duration-200 cursor-pointer relative flex flex-col items-center justify-center gap-0.5 ${
                       activeTab === 'google'
-                        ? 'bg-brand-surface text-brand-primary shadow-sm border border-brand-border/25'
-                        : 'text-brand-text-secondary hover:text-brand-text'
+                        ? 'bg-brand-surface text-brand-primary shadow-md border border-brand-border/20 scale-[1.02]'
+                        : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/20'
                     }`}
                   >
-                    Google SSO
+                    <span>Google SSO</span>
+                    <span className="text-[7px] text-[10px] scale-75 opacity-85 text-brand-primary font-mono tracking-normal lowercase">🚀 live popups</span>
                   </button>
                   <button
                     type="button"
@@ -281,206 +298,275 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       setActiveTab('email');
                       setLocalError(null);
                     }}
-                    className={`flex-1 py-1.5 text-center font-extrabold text-[9px] uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
+                    className={`flex-1 py-2 px-1 text-center font-black text-[9px] uppercase tracking-wider rounded-lg transition-all duration-200 cursor-pointer relative flex flex-col items-center justify-center gap-0.5 ${
                       activeTab === 'email'
-                        ? 'bg-brand-surface text-brand-secondary shadow-sm border border-brand-border/25'
-                        : 'text-brand-text-secondary hover:text-brand-text'
+                        ? 'bg-brand-surface text-brand-secondary shadow-md border border-brand-border/20 scale-[1.02]'
+                        : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface/20'
                     }`}
                   >
-                    Email Method
+                    <span>Email Key</span>
+                    <span className="text-[7px] text-[10px] scale-75 opacity-85 text-[#9C27B0] font-mono tracking-normal lowercase">🔒 sandbox ok</span>
                   </button>
                 </div>
 
-                {activeTab === 'google' ? (
-                  <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
-                    {window.self !== window.top ? (
-                      <div className="p-4 bg-brand-primary/10 rounded-xl border border-brand-primary/20 text-brand-text-secondary text-[11px] leading-relaxed space-y-2 text-center shadow-inner">
-                        <div className="w-10 h-10 mx-auto bg-brand-primary/20 text-brand-primary rounded-full flex items-center justify-center mb-2 animate-pulse">
-                          <Shield size={20} />
-                        </div>
-                        <p className="font-extrabold text-brand-primary text-[12px] uppercase tracking-wider">Sandbox Frame Detected</p>
-                        <p className="opacity-90">
-                          Browsers strictly block iframe identity popups (causing <strong>auth/popup-closed-by-user</strong> errors). 
-                          To authenticate with Google SSO, you must open the workspace in a clean window.
-                        </p>
-                        <div className="pt-3 pb-2">
-                          <a 
-                            href={window.location.href} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="inline-flex w-full items-center justify-center gap-1.5 py-3.5 px-4 bg-brand-primary hover:bg-brand-primary/90 text-brand-bg rounded-xl text-[10.5px] font-black uppercase tracking-widest hover:-translate-y-1 transition-all shadow-lg shadow-brand-primary/25"
-                          >
-                            🚀 Launch App in New Tab ↗
-                          </a>
-                        </div>
-                        {signInSimulated && (
-                          <div className="mt-2 pt-2 border-t border-brand-primary/10">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setLocalError(null);
-                                if (clearError) clearError();
-                                signInSimulated();
-                              }}
-                              className="w-full py-2.5 px-4 bg-brand-bg/50 hover:bg-brand-bg border border-brand-primary/20 text-brand-primary rounded-lg text-[9.5px] font-black uppercase tracking-widest transition-all"
-                            >
-                              ✨ Bypass Login (Sandbox Mode)
-                            </button>
+                {/* Animated tab view transitions */}
+                <div className="min-h-[250px] flex flex-col justify-center">
+                  <AnimatePresence mode="wait">
+                    {activeTab === 'guest' && (
+                      <motion.div
+                        key="guest-tab"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.18, ease: "easeInOut" }}
+                        className="w-full flex flex-col gap-4 text-center py-2"
+                      >
+                        <div className="p-4 bg-brand-secondary/8 rounded-xl border border-brand-secondary/20 text-brand-text-secondary text-[11px] leading-relaxed space-y-2">
+                          <div className="w-10 h-10 mx-auto bg-brand-secondary/20 text-brand-secondary rounded-full flex items-center justify-center mb-1">
+                            <Sparkles size={18} className="animate-spin-slow" />
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleGoogleSignIn}
-                          disabled={loading}
-                          className="w-full h-11 flex items-center justify-center gap-2.5 px-5 bg-white hover:bg-neutral-100 text-black font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 shadow-md transition-all duration-200 disabled:opacity-50 cursor-pointer"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                          </svg>
-                          <span>Connect with Google ID</span>
-                        </button>
+                          <p className="font-extrabold text-brand-secondary text-[11px] uppercase tracking-wider">Authentic Firebase Guest Access</p>
+                          <p className="opacity-95 text-[10px]">
+                            Provisions an authentic guest signature securely stored in Firebase Firestore. 100% compliant with standard sandbox iframes!
+                          </p>
+                        </div>
 
                         <button
                           type="button"
-                          onClick={handleGoogleRedirectSignIn}
+                          onClick={async () => {
+                            setLocalError(null);
+                            try {
+                              await signInGuest();
+                            } catch (err: any) {
+                              setLocalError(err.message || "Guest authentication failed.");
+                            }
+                          }}
                           disabled={loading}
-                          className="w-full h-10 flex items-center justify-center gap-2.5 px-5 bg-brand-bg hover:bg-brand-border/30 text-brand-text border border-brand-border/50 font-extrabold text-[9px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 cursor-pointer"
-                          title="Sign in with Redirect"
+                          className="w-full h-11 flex items-center justify-center gap-2 px-5 bg-brand-secondary hover:bg-brand-secondary/95 text-brand-bg font-extrabold text-[10px] uppercase tracking-widest rounded-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-lg shadow-brand-secondary/20 hover:shadow-brand-secondary/35 transition-all text-center cursor-pointer disabled:opacity-50"
                         >
-                          <span>Direct Redirect Method</span>
+                          <span>{loading ? "Authenticating Session Identity..." : "Initialize Free Guest Token"}</span>
                         </button>
                         
-                        <p className="text-[8.5px] text-center text-brand-text-secondary mt-1">
-                          * Redirect acts as a native fallback bypassing browser policies.
+                        <p className="text-[8.5px] text-zinc-500 max-w-xs mx-auto">
+                          * Your sandbox workspace data persists inside your local session automatically.
                         </p>
-                      </>
+                      </motion.div>
                     )}
-                  </div>
-                ) : (
-                  <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3 w-full max-w-sm mx-auto">
-                    {showReset ? (
-                      <div className="space-y-3">
-                        <div className="text-left">
-                          <p className="text-[9.5px] font-bold text-brand-text-secondary uppercase tracking-widest">Reset Passphrase</p>
-                          <p className="text-[10px] text-brand-text-secondary mt-0.5">We will send a secure passphrase reset link to your email.</p>
-                        </div>
-                        <div>
-                          <input
-                            type="email"
-                            placeholder="Your Registered Email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
-                          />
-                        </div>
-                        {resetSent && (
-                          <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-200 text-xs font-mono text-left">
-                            ✓ Password reset link has been dispatched to your inbox.
+
+                    {activeTab === 'google' && (
+                      <motion.div
+                        key="google-tab"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.18, ease: "easeInOut" }}
+                        className="w-full flex flex-col gap-4 text-center"
+                      >
+                        {window.self !== window.top ? (
+                          <div className="p-4 bg-brand-primary/10 rounded-xl border border-brand-primary/25 text-brand-text-secondary text-[11px] leading-relaxed space-y-2 text-center shadow-inner">
+                            <div className="w-10 h-10 mx-auto bg-brand-primary/20 text-brand-primary rounded-full flex items-center justify-center mb-2 animate-pulse">
+                              <Shield size={20} className="text-brand-primary" />
+                            </div>
+                            <p className="font-extrabold text-brand-primary text-[11px] uppercase tracking-widest">Workspace Cross-Origin Sandbox</p>
+                            <p className="opacity-90">
+                              Browsers securely restrict cross-origin popup auth tokens within iframe contexts (throwing <strong>auth/popup-closed-by-user</strong> blocks).
+                            </p>
+                            <div className="pt-2 pb-1.5">
+                              <a 
+                                href={window.location.href} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="inline-flex w-full items-center justify-center gap-2 py-3.5 px-4 bg-brand-primary hover:bg-brand-primary/95 text-brand-bg rounded-xl text-[10px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-all shadow-md shadow-brand-primary/20 hover:shadow-brand-primary/30 active:translate-y-0"
+                              >
+                                🚀 Open Workspace in Full Tab ↗
+                              </a>
+                            </div>
+                            
+                            <p className="text-[8.5px] text-zinc-400">
+                              Alternatively, toggle above to <strong>Guest Access</strong> or <strong>Email Method</strong> to log in directly here.
+                            </p>
+
+                            {signInSimulated && (
+                              <div className="mt-2.5 pt-2.5 border-t border-brand-primary/10">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLocalError(null);
+                                    if (clearError) clearError();
+                                    signInSimulated();
+                                  }}
+                                  className="w-full py-2 bg-brand-bg/50 hover:bg-brand-bg border border-brand-primary/20 hover:border-brand-primary/40 text-brand-primary rounded-lg text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer hover:shadow-inner"
+                                >
+                                  ✨ Fast Staging Bypass (Sandbox Mode)
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-3.5 py-2">
+                            <button
+                              type="button"
+                              onClick={handleGoogleSignIn}
+                              disabled={loading}
+                              className="w-full h-11 flex items-center justify-center gap-2.5 px-5 bg-white hover:bg-neutral-100 text-black font-extrabold text-[10.5px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-md hover:shadow-lg"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                              </svg>
+                              <span>Connect with Google ID</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={handleGoogleRedirectSignIn}
+                              disabled={loading}
+                              className="w-full h-10 flex items-center justify-center gap-2.5 px-5 bg-brand-bg hover:bg-brand-border/40 text-brand-text border border-brand-border/60 font-extrabold text-[9px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                              title="Sign in with Redirect"
+                            >
+                              <span>Direct Redirect Method</span>
+                            </button>
+                            
+                            <p className="text-[8.5px] text-center text-brand-text-secondary mt-1">
+                              * Redirect maps secure fallback credentials to support aggressive adblock/privacy firewalls.
+                            </p>
                           </div>
                         )}
-                        <div className="flex items-center justify-between gap-2.5 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowReset(false);
-                              setLocalError(null);
-                            }}
-                            className="text-[9px] font-black uppercase tracking-wider text-brand-text-secondary hover:text-brand-text transition-colors cursor-pointer"
-                          >
-                            ← Back to Login
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-brand-secondary hover:bg-brand-secondary/90 text-brand-bg font-extrabold text-[9.5px] uppercase tracking-widest py-2.5 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-colors"
-                          >
-                            {loading ? "Sending..." : "Dispatch Link"}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {isSignUp && (
-                          <div>
-                            <input
-                              type="text"
-                              placeholder="Your Full Name"
-                              required
-                              value={displayName}
-                              onChange={(e) => setDisplayName(e.target.value)}
-                              className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <input
-                            type="email"
-                            placeholder="Email Address"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="password"
-                            placeholder="Password Passphrase"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1 text-[8.5px]">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowReset(true);
-                              setLocalError(null);
-                            }}
-                            className="text-brand-text-secondary hover:text-brand-text transition-colors cursor-pointer"
-                          >
-                            Forgot Passphrase?
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsSignUp(!isSignUp);
-                              setLocalError(null);
-                              setIsVerified(false);
-                            }}
-                            className="text-brand-secondary hover:underline cursor-pointer font-bold"
-                          >
-                            {isSignUp ? "Already have an account? Sign In" : "Need an account? Get Started"}
-                          </button>
-                        </div>
-
-                        {isSignUp && (
-                          <div className="py-1">
-                            <Recapture onVerify={setIsVerified} />
-                          </div>
-                        )}
-
-                        <button
-                          type="submit"
-                          disabled={loading || (isSignUp && !isVerified)}
-                          className={`w-full h-10 mt-1 flex items-center justify-center font-extrabold text-[10px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 shadow-md transition-all cursor-pointer ${loading || (isSignUp && !isVerified) ? 'bg-brand-secondary/40 text-brand-bg/60 opacity-50 cursor-not-allowed' : 'bg-brand-secondary hover:bg-brand-secondary/90 text-brand-bg'}`}
-                        >
-                          <span>{loading ? "Authenticating Master Signature..." : isSignUp ? "Establish Secure Account" : "Access Workspace"}</span>
-                        </button>
-                      </div>
+                      </motion.div>
                     )}
-                  </form>
-                )}
+
+                    {activeTab === 'email' && (
+                      <motion.div
+                        key="email-tab"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.18, ease: "easeInOut" }}
+                        className="w-full"
+                      >
+                        <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3.5 w-full max-w-sm mx-auto">
+                          {showReset ? (
+                            <div className="space-y-3">
+                              <div className="text-left">
+                                <p className="text-[9.5px] font-bold text-brand-text-secondary uppercase tracking-widest">Reset Passphrase</p>
+                                <p className="text-[10px] text-brand-text-secondary mt-0.5">We will send a secure passphrase reset link to your email.</p>
+                              </div>
+                              <div>
+                                <input
+                                  type="email"
+                                  placeholder="Your Registered Email"
+                                  required
+                                  value={email}
+                                  onChange={(e) => setEmail(e.target.value)}
+                                  className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
+                                />
+                              </div>
+                              {resetSent && (
+                                <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-200 text-xs font-mono text-left">
+                                  ✓ Password reset link has been dispatched to your inbox.
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between gap-2.5 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowReset(false);
+                                    setLocalError(null);
+                                  }}
+                                  className="text-[9px] font-black uppercase tracking-wider text-brand-text-secondary hover:text-brand-text transition-colors cursor-pointer"
+                                >
+                                  ← Back to Login
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={loading}
+                                  className="bg-brand-secondary hover:bg-brand-secondary/90 text-brand-bg font-extrabold text-[9.5px] uppercase tracking-widest py-2.5 px-4 rounded-xl cursor-pointer disabled:opacity-50 transition-colors"
+                                >
+                                  {loading ? "Sending..." : "Dispatch Link"}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {isSignUp && (
+                                <div>
+                                  <input
+                                    type="text"
+                                    placeholder="Your Full Name"
+                                    required
+                                    value={displayName}
+                                    onChange={(e) => setDisplayName(e.target.value)}
+                                    className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
+                                  />
+                                </div>
+                              )}
+                              <div>
+                                <input
+                                  type="email"
+                                  placeholder="Email Address"
+                                  required
+                                  value={email}
+                                  onChange={(e) => setEmail(e.target.value)}
+                                  className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="password"
+                                  placeholder="Password Passphrase"
+                                  required
+                                  value={password}
+                                  onChange={(e) => setPassword(e.target.value)}
+                                  className="w-full px-3.5 py-2.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-xl text-xs placeholder-brand-text-secondary/60 focus:outline-none focus:border-brand-secondary/80 focus:ring-1 focus:ring-brand-secondary/25 transition-all"
+                                />
+                              </div>
+
+                              <div className="flex items-center justify-between pt-1 text-[8.5px]">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowReset(true);
+                                    setLocalError(null);
+                                  }}
+                                  className="text-brand-text-secondary hover:text-brand-text transition-colors cursor-pointer"
+                                >
+                                  Forgot Passphrase?
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsSignUp(!isSignUp);
+                                    setLocalError(null);
+                                    setIsVerified(false);
+                                  }}
+                                  className="text-brand-secondary hover:underline cursor-pointer font-bold"
+                                >
+                                  {isSignUp ? "Already have an account? Sign In" : "Need an account? Get Started"}
+                                </button>
+                              </div>
+
+                              {isSignUp && (
+                                <div className="py-1">
+                                  <Recapture onVerify={setIsVerified} />
+                                </div>
+                              )}
+
+                              <button
+                                type="submit"
+                                disabled={loading || (isSignUp && !isVerified)}
+                                className={`w-full h-10 mt-1 flex items-center justify-center font-extrabold text-[10px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 shadow-md transition-all cursor-pointer ${loading || (isSignUp && !isVerified) ? 'bg-brand-secondary/40 text-brand-bg/60 opacity-50 cursor-not-allowed' : 'bg-brand-secondary hover:bg-brand-secondary/90 text-brand-bg'}`}
+                              >
+                                <span>{loading ? "Authenticating Master Signature..." : isSignUp ? "Establish Secure Account" : "Access Workspace"}</span>
+                              </button>
+                            </div>
+                          )}
+                        </form>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {displayError && (
                   <div className="mt-4 p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-200 text-xs text-left w-full max-w-sm mx-auto border-l-4 border-l-red-500 space-y-2.5 font-mono">

@@ -11,7 +11,8 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   sendPasswordResetEmail,
-  browserPopupRedirectResolver
+  browserPopupRedirectResolver,
+  signInAnonymously
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { 
@@ -36,6 +37,7 @@ interface AuthContextType {
   signInWithGoogle: (useRedirect?: boolean) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
+  signInGuest: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -52,6 +54,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithGoogle: async (_useRedirect?: boolean) => {},
   signUpWithEmail: async (_email: string, _password: string, _displayName: string) => {},
   signInWithEmail: async (_email: string, _password: string) => {},
+  signInGuest: async () => {},
   resetPassword: async (_email: string) => {},
   logout: async () => {},
   clearError: () => {},
@@ -367,6 +370,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInGuest = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const userCredential = await signInAnonymously(auth);
+      await updateProfile(userCredential.user, {
+        displayName: 'Guest Scholar'
+      });
+    } catch (err: any) {
+      setLoading(false);
+      console.error("Guest Sign-in Failure Diagnostics:", err);
+      if (err.code === 'auth/operation-not-allowed') {
+        setError("Admin suggestion: Guest sign-in is disabled. Please go to your Firebase Console > Authentication > Sign-in method, enable 'Anonymous', and click Save.");
+      } else if (err.code === 'auth/internal-error') {
+        setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
+      } else {
+        setError(err.message || "An unexpected error occurred during guest sign-in.");
+      }
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetPassword = async (email: string) => {
     setLoading(true);
     setError(null);
@@ -418,7 +445,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, resetPassword, logout, clearError, signInSimulated }}>
+    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, signInGuest, resetPassword, logout, clearError, signInSimulated }}>
       {children}
     </AuthContext.Provider>
   );
