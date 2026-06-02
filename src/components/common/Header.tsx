@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LogOut, LogIn, Menu, Search, Cloud } from 'lucide-react';
 import Logo from './Logo';
 import { AppTab } from '../../types';
@@ -14,10 +14,75 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, onMenuClick }) => {
   const { user, userData, accessToken, logout } = useAuth();
+  const [firestoreStatus, setFirestoreStatus] = useState<'checking' | 'online' | 'offline' | 'sandbox-offline' | 'error'>(() => {
+    try {
+      if (typeof window !== 'undefined' && localStorage.getItem('offline_mode') === 'true') {
+        return 'sandbox-offline';
+      }
+    } catch {
+       // Ignore localStorage issues
+    }
+    return 'checking';
+  });
+
+  useEffect(() => {
+    const handleStatus = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.status) {
+        setFirestoreStatus(detail.status);
+      }
+    };
+    window.addEventListener('firestore-status', handleStatus);
+    return () => window.removeEventListener('firestore-status', handleStatus);
+  }, []);
 
   const handleSearchClick = () => {
     const ev = new CustomEvent('open-command-palette');
     window.dispatchEvent(ev);
+  };
+
+  const renderStatusPill = () => {
+    if (firestoreStatus === 'checking') return null;
+    
+    if (firestoreStatus === 'online') {
+      return (
+        <span 
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-teal-500/10 bg-teal-500/5 text-teal-400 text-[10px] font-bold uppercase tracking-wider transition-colors shrink-0 cursor-help"
+          title="Securely connected to Google Cloud Sandbox Cloud Firestore."
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+          <span>Cloud Live</span>
+        </span>
+      );
+    }
+    
+    if (firestoreStatus === 'sandbox-offline') {
+      return (
+        <button 
+          onClick={() => onTabClick('settings')}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-brand-border/80 bg-brand-surface/80 text-brand-text-secondary text-[10px] font-bold uppercase tracking-wider hover:border-brand-primary/50 transition-all shrink-0 cursor-pointer"
+          title="Operating in simulated developer offline sandbox mode entirely client-side. Click to manage."
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+          <span>Local Sandbox</span>
+        </button>
+      );
+    }
+    
+    if (firestoreStatus === 'offline' || firestoreStatus === 'error') {
+      return (
+        <button 
+          onClick={() => onTabClick('settings')}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-500 text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500/10 hover:border-amber-500/30 transition-all shrink-0 cursor-pointer animate-pulse"
+          title="Firebase servers are currently unreachable inside your preview sandbox. Operating safely in local caching mode. Click to read more."
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+          <span>Offline Sandbox Cache</span>
+        </button>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -73,6 +138,8 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
             </button>
 
             <div className="w-[1px] h-6 bg-brand-border/50 mx-1 hidden sm:block" />
+
+            {renderStatusPill()}
 
             {/* Auth/Profile Section */}
             {user ? (

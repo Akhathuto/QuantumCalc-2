@@ -122,6 +122,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [grade, setGrade] = useState<string>('');
   const [school, setSchool] = useState<string>('');
   const [primaryInterest, setPrimaryInterest] = useState<string>('general');
+  const [referralSource, setReferralSource] = useState<string>('search');
+  const [mathConfidence, setMathConfidence] = useState<number>(3);
   
   const handleGoogleSignIn = async () => {
     setLocalError(null);
@@ -171,14 +173,27 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
 
     if (isSignUp) {
-      if (!displayName) {
-        setLocalError("Please enter your full name.");
+      if (!displayName || displayName.trim().length < 2) {
+        setLocalError("Please enter your full name (at least 2 letters).");
         return;
       }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setLocalError("Please enter a valid structure email address.");
+        return;
+      }
+
+      if (password.length < 6) {
+        setLocalError("Password passphrase must be at least 6 characters.");
+        return;
+      }
+
       if (signUpStep === 1) {
         setSignUpStep(2);
         return;
       }
+      
       if (!isVerified) {
         setLocalError("Please complete the Quantum Recapture human verification.");
         return;
@@ -192,6 +207,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           grade: ['student', 'teacher'].includes(role) ? grade : null,
           school: school || null,
           primaryInterest,
+          referralSource,
+          mathConfidence,
           onboarded: true
         };
         await signUpWithEmail(email, password, displayName, extraData);
@@ -676,6 +693,48 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                       onChange={(e) => setSchool(e.target.value)}
                                       className="w-full px-3 py-1.5 bg-brand-bg/70 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-lg text-xs placeholder-brand-text-secondary/50 focus:outline-none focus:border-brand-primary/80 transition-all"
                                     />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[9.5px] font-black uppercase tracking-wider text-brand-text mb-1">
+                                      How did you find QuantumCalc?
+                                    </label>
+                                    <select
+                                      value={referralSource}
+                                      onChange={(e) => setReferralSource(e.target.value)}
+                                      className="w-full px-2.5 py-1.5 bg-brand-bg/85 border border-brand-border/40 hover:border-brand-border text-brand-text rounded-lg text-xs focus:outline-none focus:border-brand-primary/80 transition-all font-mono"
+                                    >
+                                      <option value="search">Search Engine (Google, Bing, etc.)</option>
+                                      <option value="social">Social Media (Twitter, YouTube, Reddit)</option>
+                                      <option value="school">Teacher / Class / Academic Institution</option>
+                                      <option value="friend">Word of Mouth / Colleague or Friend</option>
+                                      <option value="other">Other channels</option>
+                                    </select>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[9.5px] font-black uppercase tracking-wider text-brand-text mb-1 flex items-center justify-between">
+                                      <span>Current Math Comfort Level</span>
+                                      <span className="text-brand-primary font-mono font-bold text-[10px]">
+                                        {['Novice 🧠', 'Learning 📚', 'Confident ✨', 'Advanced 🚀', 'Genius 🌌'][mathConfidence - 1]}
+                                      </span>
+                                    </label>
+                                    <div className="flex gap-2 pt-1 items-center">
+                                      {[1, 2, 3, 4, 5].map((level) => (
+                                        <button
+                                          key={level}
+                                          type="button"
+                                          onClick={() => setMathConfidence(level)}
+                                          className={`flex-1 py-1.5 rounded-lg border text-xs font-mono font-black transition-all cursor-pointer text-center ${
+                                            mathConfidence === level
+                                              ? 'bg-brand-primary/20 border-brand-primary text-brand-primary'
+                                              : 'bg-brand-bg/40 border-brand-border/30 text-brand-text-secondary hover:text-brand-text'
+                                          }`}
+                                        >
+                                          {level}
+                                        </button>
+                                      ))}
+                                    </div>
                                   </div>
                                 </motion.div>
                               )}

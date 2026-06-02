@@ -303,6 +303,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         grade: extraData?.grade || null,
         school: extraData?.school || null,
         primaryInterest: extraData?.primaryInterest || 'general',
+        ...extraData,
         createdAt: serverTimestamp()
       };
       await setDoc(userRef, initialData);

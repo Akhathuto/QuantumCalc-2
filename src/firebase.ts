@@ -57,9 +57,15 @@ async function testConnection() {
     console.log("[Firebase] Testing connection to Firestore...");
     await getDocFromServer(doc(db, 'test', 'connection'));
     console.log("[Firebase] Firestore connectivity verified successfully.");
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('firestore-status', { detail: { status: 'online' } }));
+    }
   } catch (error: any) {
     if (error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied' || (error instanceof Error && error.message.includes('Missing or insufficient permissions'))) {
       console.log("[Firebase] Permission check passed (access restricted but backend reachable).");
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('firestore-status', { detail: { status: 'online' } }));
+      }
       return;
     }
     
@@ -68,27 +74,34 @@ async function testConnection() {
     }
 
     const errorStr = error instanceof Error ? error.message : String(error);
-    const isOffline = errorStr.includes('client is offline') || errorStr.includes('Backend didn\'t respond');
+    const isOffline = errorStr.includes('client is offline') || errorStr.includes('Backend didn\'t respond') || errorStr.includes('Could not reach Cloud Firestore backend');
     
     if (isOffline) {
       console.log("[Firebase] Notice: Client is currently operating in offline cache mode.");
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('firestore-status', { detail: { status: 'offline' } }));
+      }
     } else {
       console.error("Firestore connectivity error:", errorStr);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('firestore-status', { detail: { status: 'error', error: errorStr } }));
+      }
     }
   }
 }
 
-// Delay test to ensure environment is ready in non-production
-if (import.meta.env.DEV) {
+// Delay test to ensure environment is ready
+if (typeof window !== 'undefined') {
   setTimeout(() => {
     try {
-      if (typeof window !== 'undefined' && localStorage.getItem('offline_mode') === 'true') {
+      if (localStorage.getItem('offline_mode') === 'true') {
         console.log("[Firebase] Explicit Sandbox Offline Mode is enabled. Skipping Firestore connectivity test.");
+        window.dispatchEvent(new CustomEvent('firestore-status', { detail: { status: 'sandbox-offline' } }));
         return;
       }
     } catch {
        // Ignore localStorage errors
     }
     testConnection();
-  }, 5000);
+  }, 3500);
 }

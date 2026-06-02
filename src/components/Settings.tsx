@@ -65,6 +65,11 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     const handleFormatChange = (format: string) => {
         setNumberFormat(format);
         localStorage.setItem('numberFormat', format);
+        try {
+            window.dispatchEvent(new CustomEvent('numberFormat-change', { detail: { format } }));
+        } catch (e) {
+            console.warn("Could not dispatch numberFormat-change event", e);
+        }
         showToast('Number formatting updated.');
     };
 
