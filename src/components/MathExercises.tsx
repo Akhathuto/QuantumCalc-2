@@ -234,6 +234,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\frac{d}{dx}[${a}x^2 + ${b}x] = ${a}(2x) + ${b}(1) = ${2 * a}x + ${b}.`
         });
+        deck.push({
+          id: 105,
+          category: "Calculus & Limits",
+          difficulty: 'basic',
+          title: "Limit of rational expression",
+          latexQuery: `\\lim_{x \\to ${a}} \\frac{x^2 - ${a*a}}{x - ${a}}`,
+          correctAnswer: [`${2 * a}`],
+          hints: [
+            "Factor the numerator using difference of squares: $x^2 - a^2 = (x - a)(x + a)$.",
+            "Cancel the common term $(x - a)$ in both numerator and denominator.",
+            `Substituting $x = ${a}$ into the simplified expression $x + ${a}$ yields $${a} + ${a}$.`
+          ],
+          stepByStepSolution: `\\lim_{x \\to ${a}} \\frac{x^2 - ${a*a}}{x - ${a}} = \\lim_{x \\to ${a}} (x + ${a}) = ${a} + ${a} = ${2 * a}.`
+        });
       } else if (level === 'intermediate') {
         deck.push({
           id: 103,
@@ -249,6 +263,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\text{Derivative yields: } ${a} \\cdot \\cos(${a}x).`
         });
+        deck.push({
+          id: 106,
+          category: "Calculus & Limits",
+          difficulty: 'intermediate',
+          title: "Derivative of exponential composition",
+          latexQuery: `\\frac{d}{dx}[x e^{${a}x}]`,
+          correctAnswer: [`e^{${a}x}(1+${a}x)`, `e^{${a}x}(${a}x+1)`, `(${a}x+1)e^{${a}x}`, `(1+${a}x)e^{${a}x}`],
+          hints: [
+            "Use the Product Rule: $(uv)' = u'v + uv'$.",
+            `Let $u = x$ and $v = e^{${a}x}$. Thus $u' = 1$ and $v' = ${a}e^{${a}x}$.`,
+            "Combine terms and factor out the common exponential part."
+          ],
+          stepByStepSolution: `\\frac{d}{dx}[x e^{${a}x}] = (1)e^{${a}x} + x(${a}e^{${a}x}) = e^{${a}x}(1 + ${a}x).`
+        });
       } else {
         deck.push({
           id: 104,
@@ -263,6 +291,20 @@ export const MathExercises: React.FC = () => {
             "The simplified integral is $\\int e^u du = e^u + C$."
           ],
           stepByStepSolution: `\\int 2x e^{x^2} dx = \\int e^u du = e^{x^2} + C.`
+        });
+        deck.push({
+          id: 107,
+          category: "Calculus & Limits",
+          difficulty: 'advanced',
+          title: "Definite Integral of Linear Function",
+          latexQuery: `\\int_{0}^{${a}} (2x + ${b}) dx`,
+          correctAnswer: [`${a * a + b * a}`],
+          hints: [
+            `Find the antiderivative of $2x + ${b}$, which is $x^2 + ${b}x$.`,
+            `Evaluate the antiderivative at the upper bound $x = ${a}$.`,
+            "Evaluate at the lower bound $x = 0$ (which is $0$) and subtract."
+          ],
+          stepByStepSolution: `\\int_{0}^{${a}} (2x + ${b}) dx = \\left[ x^2 + ${b}x \\right]_{0}^{${a}} = (${a})^2 + ${b}(${a}) - 0 = ${a * a + b * a}.`
         });
       }
     }
@@ -284,6 +326,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `Add ${b}: ${a}x = ${a * c} \\Rightarrow \\text{Divide by } ${a}: x = ${c}.`
         });
+        deck.push({
+          id: 204,
+          category: "Algebraic Systems",
+          difficulty: 'basic',
+          title: "Solve proportion equation",
+          latexQuery: `\\frac{x}{${a}} = \\frac{${b}}{2}`,
+          correctAnswer: [`${(a * b) / 2}`],
+          hints: [
+            "Cross-multiply components to solve for the unknown x.",
+            `Multiply $x$ by 2 and $${a}$ by $${b}$.`,
+            `Divide the product $${a * b}$ by 2.`
+          ],
+          stepByStepSolution: `2x = ${a} \\cdot ${b} = ${a * b} \\Rightarrow x = \\frac{${a * b}}{2} = ${(a * b) / 2}.`
+        });
       } else if (level === 'intermediate') {
         deck.push({
           id: 202,
@@ -299,6 +355,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `Factorized format: (x - ${a})(x - ${b}) = 0. \\text{ Roots: } x = ${a}, ${b}.`
         });
+        deck.push({
+          id: 205,
+          category: "Algebraic Systems",
+          difficulty: 'intermediate',
+          title: "Solve linear system by elimination",
+          latexQuery: `\\begin{cases} x + y = ${a + b} \\\\ x - y = ${Math.abs(a - b)} \\end{cases} \\quad \\text{Solve for } x`,
+          correctAnswer: [`${Math.max(a, b)}`],
+          hints: [
+            "Add the two equations together to eliminate y.",
+            `Adding yields: $2x = ${a + b} + ${Math.abs(a - b)}$.`,
+            "Divide the combined value by 2 to isolate x."
+          ],
+          stepByStepSolution: `(x + y) + (x - y) = 2x = ${a + b + Math.abs(a - b)} \\Rightarrow x = ${Math.max(a, b)}.`
+        });
       } else {
         deck.push({
           id: 203,
@@ -313,6 +383,20 @@ export const MathExercises: React.FC = () => {
             `In this equation, $a=3$ and $b=-${a * 3}$. Calculate $-(-${a * 3})/3$.`
           ],
           stepByStepSolution: `\\text{According to Vieta's identities, sum of roots: } S = \\frac{-(-${a * 3})}{3} = ${a}.`
+        });
+        deck.push({
+          id: 206,
+          category: "Algebraic Systems",
+          difficulty: 'advanced',
+          title: "Discriminant of quadratic equation",
+          latexQuery: `x^2 + ${2 * a}x + ${a * a - b} = 0 \\quad \\text{Find discriminant } \\Delta`,
+          correctAnswer: [`${4 * b}`],
+          hints: [
+            "The discriminant formula is $\\Delta = B^2 - 4AC$.",
+            `Identify parameters: $A = 1$, $B = ${2 * a}$, and $C = ${a * a - b}$.`,
+            `Evaluate $(${2 * a})^2 - 4(1)(${a * a - b})$.`
+          ],
+          stepByStepSolution: `\\Delta = (${2 * a})^2 - 4(1)(${a * a - b}) = ${4 * a * a} - ${4 * a * a} + ${4 * b} = ${4 * b}.`
         });
       }
     }
@@ -334,6 +418,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\text{The standard Pythagorean Identity simplifies to 1 for all inputs.}`
         });
+        deck.push({
+          id: 304,
+          category: "Trig Identities",
+          difficulty: 'basic',
+          title: "Product of sine and cosecant",
+          latexQuery: `\\sin(\\theta) \\cdot \\csc(\\theta)`,
+          correctAnswer: ["1"],
+          hints: [
+            "Recall that cosecant is the reciprocal of sine.",
+            "Write cosecant as $1 / \\sin(\\theta)$.",
+            "Multiply and simplify."
+          ],
+          stepByStepSolution: `\\sin(\\theta) \\cdot \\csc(\\theta) = \\sin(\\theta) \\cdot \\frac{1}{\\sin(\\theta)} = 1.`
+        });
       } else if (level === 'intermediate') {
         deck.push({
           id: 302,
@@ -348,6 +446,20 @@ export const MathExercises: React.FC = () => {
             `The argument inside sine becomes $2 \\times ${a}\\phi$.`
           ],
           stepByStepSolution: `2\\sin(${a}\\phi)\\cos(${a}\\phi) = \\sin(2 \\cdot ${a}\\phi) = \\sin(${2 * a}\\phi).`
+        });
+        deck.push({
+          id: 305,
+          category: "Trig Identities",
+          difficulty: 'intermediate',
+          title: "Angle addition formula",
+          latexQuery: `\\sin(x)\\cos(${a}x) + \\cos(x)\\sin(${a}x)`,
+          correctAnswer: [`sin(${a + 1}x)`, `sin(${a + 1}*x)`],
+          hints: [
+            "This fits the angle addition identity: $\\sin(A)\\cos(B) + \\cos(A)\\sin(B) = \\sin(A + B)$.",
+            `Identify components: $A = x$ and $B = ${a}x$.`,
+            "Add the arguments together inside the sine function."
+          ],
+          stepByStepSolution: `\\sin(x)\\cos(${a}x) + \\cos(x)\\sin(${a}x) = \\sin(x + ${a}x) = \\sin(${a + 1}x).`
         });
       } else {
         deck.push({
@@ -364,25 +476,85 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\tan(x) \\cdot \\cot(x) = \\tan(x) \\cdot \\frac{1}{\\tan(x)} = 1.`
         });
+        deck.push({
+          id: 306,
+          category: "Trig Identities",
+          difficulty: 'advanced',
+          title: "Trigonometric equation primary route",
+          latexQuery: `2\\sin(x) - \\sqrt{3} = 0 \\quad \\text{for } 0 \\le x < \\pi`,
+          correctAnswer: [`pi/3, 2pi/3`, `pi/3,2pi/3`, `pi/3`,`2pi/3`],
+          hints: [
+            "Isolate $\\sin(x)$ to find the target outputs.",
+            "This yields $\\sin(x) = \\frac{\\sqrt{3}}{2}$.",
+            "Find the standard angles in the first and second quadrant."
+          ],
+          stepByStepSolution: `2\\sin(x) = \\sqrt{3} \\Rightarrow \\sin(x) = \\frac{\\sqrt{3}}{2} \\Rightarrow x = \\frac{\\pi}{3}, \\frac{2\\pi}{3}.`
+        });
       }
     }
 
     // Category 4: Fractions & Core Arithmetic
     if (cat === 'All Categories' || cat === 'Fractions & Core Arithmetic') {
-      deck.push({
-        id: 401,
-        category: "Fractions & Core Arithmetic",
-        difficulty: level,
-        title: "Multiplying fractions with reduction",
-        latexQuery: `\\frac{${a}}{3} \\cdot \\frac{6}{${a === 2 ? 5 : a - 1}}`,
-        correctAnswer: [`${(a * 6) / (3 * (a === 2 ? 5 : a - 1)) % 1 === 0 ? (a * 6) / (3 * (a === 2 ? 5 : a - 1)) : `${a * 2}/${a === 2 ? 5 : a - 1}`}`],
-        hints: [
-          "Multiply numerators together, then multiply denominators separately.",
-          `The product is $(${a} \\times 6) / (3 \\times ${a === 2 ? 5 : a - 1})$.`,
-          "Reduce the fraction to its simplified prime format."
-        ],
-        stepByStepSolution: `\\frac{${a}}{3} \\cdot \\frac{6}{${a === 2 ? 5 : a - 1}} = \\frac{${6 * a}}{${3 * (a === 2 ? 5 : a - 1)}} = \\frac{${2 * a}}{${a === 2 ? 5 : a - 1}}.`
-      });
+      if (level === 'basic') {
+        deck.push({
+          id: 402,
+          category: "Fractions & Core Arithmetic",
+          difficulty: 'basic',
+          title: "Add fractions with unlike denominators",
+          latexQuery: `\\frac{1}{${a}} + \\frac{1}{${a + 1}}`,
+          correctAnswer: [`${2 * a + 1}/${a * (a + 1)}`],
+          hints: [
+            `Find the least common denominator, which is $${a} \\cdot ${a + 1} = ${a * (a + 1)}$.`,
+            "Rewrite both fractions with the common denominator.",
+            `Add the numerators together: $${a + 1} + ${a}$.`
+          ],
+          stepByStepSolution: `\\frac{1}{${a}} + \\frac{1}{${a + 1}} = \\frac{${a + 1}}{${a * (a + 1)}} + \\frac{${a}}{${a * (a + 1)}} = \\frac{${2 * a + 1}}{${a * (a + 1)}}.`
+        });
+      } else if (level === 'intermediate') {
+        deck.push({
+          id: 401,
+          category: "Fractions & Core Arithmetic",
+          difficulty: 'intermediate',
+          title: "Multiplying fractions with reduction",
+          latexQuery: `\\frac{${a}}{3} \\cdot \\frac{6}{${a === 2 ? 5 : a - 1}}`,
+          correctAnswer: [`${(a * 6) / (3 * (a === 2 ? 5 : a - 1)) % 1 === 0 ? (a * 6) / (3 * (a === 2 ? 5 : a - 1)) : `${a * 2}/${a === 2 ? 5 : a - 1}`}`],
+          hints: [
+            "Multiply numerators together, then multiply denominators separately.",
+            `The product is $(${a} \\times 6) / (3 \\times ${a === 2 ? 5 : a - 1})$.`,
+            "Reduce the fraction to its simplified prime format."
+          ],
+          stepByStepSolution: `\\frac{${a}}{3} \\cdot \\frac{6}{${a === 2 ? 5 : a - 1}} = \\frac{${6 * a}}{${3 * (a === 2 ? 5 : a - 1)}} = \\frac{${2 * a}}{${a === 2 ? 5 : a - 1}}.`
+        });
+        deck.push({
+          id: 403,
+          category: "Fractions & Core Arithmetic",
+          difficulty: 'intermediate',
+          title: "Solve relative fraction balance",
+          latexQuery: `\\frac{x - ${b}}{${a}} = 3`,
+          correctAnswer: [`${3 * a + b}`],
+          hints: [
+            `Multiply both sides of the equation by $${a}$ to clear the fraction.`,
+            `This leaves $x - ${b} = ${3 * a}$.`,
+            `Add $${b}$ to both sides to solve for x.`
+          ],
+          stepByStepSolution: `x - ${b} = 3 \\cdot ${a} = ${3 * a} \\Rightarrow x = ${3 * a} + ${b} = ${3 * a + b}.`
+        });
+      } else {
+        deck.push({
+          id: 404,
+          category: "Fractions & Core Arithmetic",
+          difficulty: 'advanced',
+          title: "Simplifying complex continued fraction",
+          latexQuery: `\\cfrac{1}{1 + \\cfrac{1}{${c}}}`,
+          correctAnswer: [`${c}/${c + 1}`],
+          hints: [
+            `Simplify the inner denominator $1 + 1/${c}$ first.`,
+            `This expression expands to $\\frac{${c} + 1}{${c}}$.`,
+            "Find the reciprocal of that fraction to solve the puzzle."
+          ],
+          stepByStepSolution: `1 + \\frac{1}{${c}} = \\frac{${c} + 1}{${c}} \\Rightarrow \\cfrac{1}{\\left(\\frac{${c}+1}{${c}}\\right)} = \\frac{${c}}{${c}+1}.`
+        });
+      }
     }
 
     // Category 5: Geometry
@@ -402,6 +574,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `A = \\frac{1}{2}bh = \\frac{1}{2}(${a})(${b}) = ${(a * b) / 2}.`
         });
+        deck.push({
+          id: 504,
+          category: "Geometry",
+          difficulty: 'basic',
+          title: "Perimeter of rectangle",
+          latexQuery: `\\text{Perimeter of rectangle with length } ${a + c} \\text{ and width } ${c}`,
+          correctAnswer: [`${2 * (a + c) + 2 * c}`],
+          hints: [
+            "The formula for the perimeter of a rectangle is $P = 2(L + W)$.",
+            `Add the length $${a + c}$ and the width $${c}$.`,
+            "Multiply the sum by 2."
+          ],
+          stepByStepSolution: `P = 2(L + W) = 2(${a + c} + ${c}) = 2(${a + 2 * c}) = ${2 * (a + c) + 2 * c}.`
+        });
       } else if (level === 'intermediate') {
         const sideC = Math.sqrt(a * a + b * b);
         const formatSide = sideC % 1 === 0 ? `${sideC}` : `\\sqrt{${a * a + b * b}}`;
@@ -419,6 +605,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `c^2 = a^2 + b^2 = ${a}^2 + ${b}^2 = ${a * a + b * b}. \\quad c = ${formatSide}.`
         });
+        deck.push({
+          id: 505,
+          category: "Geometry",
+          difficulty: 'intermediate',
+          title: "Area of a Circle",
+          latexQuery: `\\text{Area of circle with radius } r = ${c} \\quad \\text{in terms of } \\pi`,
+          correctAnswer: [`${c * c}\\pi`, `${c * c}pi`, `${c * c}*pi`],
+          hints: [
+            "The formula for the area of a circle is $A = \\pi r^2$.",
+            `Square the radius: $r^2 = ${c}^2 = ${c * c}$.`,
+            "Multiply by pi."
+          ],
+          stepByStepSolution: `A = \\pi r^2 = \\pi (${c})^2 = ${c * c}\\pi.`
+        });
       } else {
         deck.push({
           id: 503,
@@ -433,6 +633,20 @@ export const MathExercises: React.FC = () => {
             `Multiply by height $h = ${b}$ and append $\\pi$.`
           ],
           stepByStepSolution: `V = \\pi r^2 h = \\pi (${a})^2 (${b}) = ${a * a * b}\\pi.`
+        });
+        deck.push({
+          id: 506,
+          category: "Geometry",
+          difficulty: 'advanced',
+          title: "Surface area of sphere",
+          latexQuery: `\\text{Surface Area of sphere with radius } r = ${a} \\quad \\text{in terms of } \\pi`,
+          correctAnswer: [`${4 * a * a}\\pi`, `${4 * a * a}pi`, `${4 * a * a}*pi`],
+          hints: [
+            "The formula for the surface area of a sphere is $A = 4\\pi r^2$.",
+            `Square the radius: $r^2 = ${a}^2 = ${a * a}$.`,
+            "Multiply by 4 and append pi."
+          ],
+          stepByStepSolution: `A = 4\\pi r^2 = 4\\pi (${a})^2 = 4(${a * a})\\pi = ${4 * a * a}\\pi.`
         });
       }
     }
@@ -454,6 +668,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\text{Mean} = \\frac{${a} + ${b} + ${c}}{3} = \\frac{${a + b + c}}{3} = ${(a + b + c) / 3}.`
         });
+        deck.push({
+          id: 604,
+          category: "Statistics & Probability",
+          difficulty: 'basic',
+          title: "Range of a set",
+          latexQuery: `\\text{Range of } \\{ ${a}, ${a + c}, ${a - 1} \\}`,
+          correctAnswer: [`${c + 1}`],
+          hints: [
+            "The range is the difference between the maximum and minimum values in a dataset.",
+            `Identify the maximum value: $${a + c}$.`,
+            `Identify the minimum value: $${a - 1}$. Subtract it from the maximum.`
+          ],
+          stepByStepSolution: `\\text{Range} = \\text{Max} - \\text{Min} = ${a + c} - (${a - 1}) = ${c + 1}.`
+        });
       } else if (level === 'intermediate') {
         const total = a + b;
         deck.push({
@@ -470,6 +698,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `P(\\text{red}) = \\frac{\\text{red}}{\\text{total}} = \\frac{${a}}{${a} + ${b}} = \\frac{${a}}{${total}}.`
         });
+        deck.push({
+          id: 605,
+          category: "Statistics & Probability",
+          difficulty: 'intermediate',
+          title: "Median of a dataset",
+          latexQuery: `\\text{Median of } \\{ ${a}, ${a + 2}, ${a + 4} \\}`,
+          correctAnswer: [`${a + 2}`],
+          hints: [
+            "The median is the middle value when the data is sorted in ascending order.",
+            `The sorted list is already: $${a}$, $${a + 2}$, $${a + 4}$.`,
+            "Identify the middle element."
+          ],
+          stepByStepSolution: `\\text{The sorted dataset contains 3 items. The middle element is } ${a + 2}.`
+        });
       } else {
         const permResult = a * (a - 1) * (a - 2);
         deck.push({
@@ -485,6 +727,20 @@ export const MathExercises: React.FC = () => {
             `Calculate $${a} \\times ${a - 1} \\times ${a - 2}$.`
           ],
           stepByStepSolution: `P(${a}, 3) = \\frac{${a}!}{(${a} - 3)!} = ${a} \\times ${a - 1} \\times ${a - 2} = ${permResult}.`
+        });
+        deck.push({
+          id: 606,
+          category: "Statistics & Probability",
+          difficulty: 'advanced',
+          title: "Combinations calculation",
+          latexQuery: `C(${a}, 2) \\text{ or } \\binom{${a}}{2}`,
+          correctAnswer: [`${(a * (a - 1)) / 2}`],
+          hints: [
+            "The combinations formula is $C(n, k) = \\frac{n!}{k!(n - k)!}$.",
+            "For $k = 2$, this simplifies to $\\frac{n(n - 1)}{2}$.",
+            `Evaluate $(${a} \\times ${a - 1}) / 2$.`
+          ],
+          stepByStepSolution: `\\binom{${a}}{2} = \frac{${a} \\cdot ${a - 1}}{2} = ${(a * (a - 1)) / 2}.`
         });
       }
     }
@@ -506,6 +762,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `(${a})(${c}) + (${b})(${a}) = ${a * c} + ${b * a} = ${a * c + b * a}.`
         });
+        deck.push({
+          id: 704,
+          category: "Linear Algebra",
+          difficulty: 'basic',
+          title: "Scalar Vector Multiplication",
+          latexQuery: `3 \\cdot [${a}, -${b}]`,
+          correctAnswer: [`[${3 * a},-${3 * b}]`, `[${3 * a}, -${3 * b}]`],
+          hints: [
+            "Multiply each component of the vector by the scalar multiplier.",
+            `Calculate $3 \\times ${a}$ and $3 \\times (-${b})$.`,
+            "Format the response inside standard square brackets [u, v]."
+          ],
+          stepByStepSolution: `3 \\cdot [${a}, -${b}] = [3 \\cdot ${a}, 3 \\cdot (-${b})] = [${3 * a}, -${3 * b}].`
+        });
       } else if (level === 'intermediate') {
         const det2x2 = a * c - b * b;
         deck.push({
@@ -522,6 +792,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\det = (${a})(${c}) - (${b})(${b}) = ${a * c} - ${b * b} = ${det2x2}.`
         });
+        deck.push({
+          id: 705,
+          category: "Linear Algebra",
+          difficulty: 'intermediate',
+          title: "Orthogonal vectors check",
+          latexQuery: `\\text{Find } x \\text{ such that } [x, ${a}] \\text{ and } [4, -2] \\text{ are orthogonal}`,
+          correctAnswer: [`${a / 2}`],
+          hints: [
+            "Two vectors are orthogonal if their dot product is equal to 0.",
+            `Perform dot product: $4x + (${a} \\cdot -2) = 0$.`,
+            `Solve the equation: $4x - ${2 * a} = 0$.`
+          ],
+          stepByStepSolution: `4x - ${2 * a} = 0 \\Rightarrow 4x = ${2 * a} \\Rightarrow x = \\frac{${2 * a}}{4} = ${a / 2}.`
+        });
       } else {
         const trace = a + c + a;
         deck.push({
@@ -537,6 +821,20 @@ export const MathExercises: React.FC = () => {
             `The result is ${trace}.`
           ],
           stepByStepSolution: `\\text{Tr} = ${a} + ${c} + ${a} = ${trace}.`
+        });
+        deck.push({
+          id: 706,
+          category: "Linear Algebra",
+          difficulty: 'advanced',
+          title: "Eigenvalues of diagonal matrix",
+          latexQuery: `\\text{Eigenvalues of } \\begin{pmatrix} ${a} & 0 \\\\ 0 & ${c} \\end{pmatrix}`,
+          correctAnswer: [`${Math.min(a, c)}, ${Math.max(a, c)}`, `${Math.min(a, c)},${Math.max(a, c)}`],
+          hints: [
+            "For a diagonal matrix, the eigenvalues are simply the elements on the main diagonal.",
+            "Identify the main diagonal elements.",
+            "Format the response with the smaller root first, e.g., u, v."
+          ],
+          stepByStepSolution: `\\text{The eigenvalues of a diagonal matrix match its diagonal entries: } \\lambda = ${Math.min(a, c)}, ${Math.max(a, c)}.`
         });
       }
     }
@@ -558,6 +856,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `(${a} + ${c}) + (${b} - ${b - 1})i = ${a + c} + 1i.`
         });
+        deck.push({
+          id: 804,
+          category: "Complex Numbers",
+          difficulty: 'basic',
+          title: "Modulus of complex number",
+          latexQuery: `|3 + 4i|`,
+          correctAnswer: ["5"],
+          hints: [
+            "The modulus of a + bi is the square root of (a^2 + b^2).",
+            "Square the real and imaginary parts: 3^2 + 4^2 = 9 + 16 = 25.",
+            "Take the square root of 25."
+          ],
+          stepByStepSolution: `|3 + 4i| = \\sqrt{3^2 + 4^2} = \\sqrt{25} = 5.`
+        });
       } else if (level === 'intermediate') {
         deck.push({
           id: 802,
@@ -573,8 +885,22 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `(${a})(${b}) - ${a}i + ${b}i - i^2 = ${a * b} + ${b - a}i - (-1) = ${a * b + 1} + ${b - a}i.`
         });
+        deck.push({
+          id: 805,
+          category: "Complex Numbers",
+          difficulty: 'intermediate',
+          title: "Complex conjugate product",
+          latexQuery: `(${a} + ${b}i)(${a} - ${b}i)`,
+          correctAnswer: [`${a * a + b * b}`],
+          hints: [
+            "Multiplying a complex number by its conjugate yields (u + vi)(u - vi) = u^2 + v^2.",
+            `Assess values: u = ${a} and v = ${b}.`,
+            `Evaluate $${a}^2 + ${b}^2 = ${a * a} + ${b * b}$.`
+          ],
+          stepByStepSolution: `(${a} + ${b}i)(${a} - ${b}i) = ${a}^2 - (${b}i)^2 = ${a * a} + ${b * b} = ${a * a + b * b}.`
+        });
       } else {
-         deck.push({
+        deck.push({
           id: 803,
           category: "Complex Numbers",
           difficulty: 'advanced',
@@ -582,11 +908,25 @@ export const MathExercises: React.FC = () => {
           latexQuery: `\\frac{${a}}{${b}i}`,
           correctAnswer: [`-${a}/${b}i`, `-${a / b}i`, `${-a}/${b}i`],
           hints: [
-             "Multiply the numerator and denominator by the complex conjugate of the denominator.",
-             "The complex conjugate of $bi$ is $-bi$.",
-             `Recall that $i^2 = -1$.`
+            "Multiply the numerator and denominator by the complex conjugate of the denominator.",
+            "The complex conjugate of $bi$ is $-bi$.",
+            `Recall that $i^2 = -1$.`
           ],
           stepByStepSolution: `\\frac{${a} \\cdot (-${b}i)}{${b}i \\cdot (-${b}i)} = \\frac{-${a * b}i}{-${b * b}i^2} = \\frac{-${a * b}i}{${b * b}} = -\\frac{${a}}{${b}}i.`
+        });
+        deck.push({
+          id: 806,
+          category: "Complex Numbers",
+          difficulty: 'advanced',
+          title: "Imaginary power reduction",
+          latexQuery: `i^{${4 * a + 3}}`,
+          correctAnswer: ["-i"],
+          hints: [
+            "Powers of i cycle in a period of 4: i^1 = i, i^2 = -1, i^3 = -i, i^4 = 1.",
+            "Divide the exponent by 4 and find the remainder.",
+            `The remainder of $${4 * a + 3} \\div 4$ is 3, which corresponds to $i^3$.`
+          ],
+          stepByStepSolution: `i^{${4 * a + 3}} = (i^4)^{${a}} \\cdot i^3 = (1) \\cdot (-i) = -i.`
         });
       }
     }
@@ -608,6 +948,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\int dy = \\int ${a}x dx \\Rightarrow y = \\frac{${a}}{2}x^2 + C.`
         });
+        deck.push({
+          id: 904,
+          category: "Differential Equations",
+          difficulty: 'basic',
+          title: "Order of differential equation",
+          latexQuery: `\\left(\\frac{d^2y}{dx^2}\\right)^3 + 5\\left(\\frac{dy}{dx}\\right)^4 + y = 0 \\quad \\text{Find order}`,
+          correctAnswer: ["2"],
+          hints: [
+            "The order of a differential equation is the highest derivative present in the equation.",
+            "Identify the derivatives: first-order dy/dx and second-order d^2y/dx^2.",
+            "The highest derivative order is 2."
+          ],
+          stepByStepSolution: `\\text{The highest derivative in the equation is of the second order, so order = } 2.`
+        });
       } else if (level === 'intermediate') {
         deck.push({
           id: 902,
@@ -623,6 +977,20 @@ export const MathExercises: React.FC = () => {
           ],
           stepByStepSolution: `\\mu(x) = e^{\\int \\frac{1}{x}dx} = e^{\\ln(x)} = x.`
         });
+        deck.push({
+          id: 905,
+          category: "Differential Equations",
+          difficulty: 'intermediate',
+          title: "First order homogeneous decay",
+          latexQuery: `y' - ${a}y = 0`,
+          correctAnswer: [`Ce^{${a}x}`, `C*e^{${a}x}`, `c*e^{${a}x}`, `ce^{${a}x}`],
+          hints: [
+            "This is a first-order linear homogeneous differential equation.",
+            `Write as $dy/y = ${a} dx$ and integrate both sides.`,
+            `The solution is an exponential function of the form $Ce^{kx}$ where $k = ${a}$.`
+          ],
+          stepByStepSolution: `\\ln|y| = ${a}x + C_1 \\Rightarrow y = Ce^{${a}x}.`
+        });
       } else {
         deck.push({
           id: 903,
@@ -637,6 +1005,20 @@ export const MathExercises: React.FC = () => {
             "Divide out the common factor $e^{rx}$."
           ],
           stepByStepSolution: `r^2e^{rx} - ${a * 2}re^{rx} + ${a * a}e^{rx} = 0 \\Rightarrow e^{rx}(r^2 - ${a * 2}r + ${a * a}) = 0 \\Rightarrow r^2 - ${a * 2}r + ${a * a} = 0.`
+        });
+        deck.push({
+          id: 906,
+          category: "Differential Equations",
+          difficulty: 'advanced',
+          title: "Second order general solution",
+          latexQuery: `y'' - 5y' + 6y = 0 \\quad \\text{with roots } (r - 2)(r - 3) = 0`,
+          correctAnswer: [`C_1e^{2x} + C_2e^{3x}`, `C_1e^{2x}+C_2e^{3x}`],
+          hints: [
+            "Since the characteristic equation has distinct real roots r1=2 and r2=3.",
+            "The general solution is of the form C1 * e^(r1 * x) + C2 * e^(r2 * x).",
+            "Substitute the roots to formulate the result."
+          ],
+          stepByStepSolution: `\\text{Since general solution for distinct roots } r_1, r_2 \\text{ is } C_1e^{r_1 x} + C_2e^{r_2 x} \\Rightarrow y = C_1e^{2x} + C_2e^{3x}.`
         });
       }
     }

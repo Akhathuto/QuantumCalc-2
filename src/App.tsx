@@ -10,17 +10,6 @@ import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
 import LandingPage from './components/LandingPage';
 import Calculator from './components/Calculator';
-import History from './components/History';
-import { UnitConverter } from './components/UnitConverter';
-import BaseConverter from './components/BaseConverter';
-import ProgrammerCalculator from './components/ProgrammerCalculator';
-import DateCalculator from './components/DateCalculator';
-import About from './components/About';
-import Contact from './components/Contact';
-import TermsAndLicense from './components/TermsAndLicense';
-import Settings from './components/Settings';
-import Help from './components/Help';
-import ExploreHub from './components/ExploreHub';
 import { AppTab, HistoryEntry } from './types';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import AuthModal from './components/common/AuthModal';
@@ -49,6 +38,19 @@ const CoreLicense = lazy(() => import('./components/CoreLicense'));
 const SupportHub = lazy(() => import('./components/SupportHub'));
 const MathSandbox = lazy(() => import('./components/MathSandbox'));
 const GoogleCalendar = lazy(() => import('./components/GoogleCalendar'));
+
+// Secondary and lower-usage components lazy loaded to optimize initial bundle size & load times
+const History = lazy(() => import('./components/History'));
+const UnitConverter = lazy(() => import('./components/UnitConverter').then(m => ({ default: m.UnitConverter })));
+const BaseConverter = lazy(() => import('./components/BaseConverter'));
+const ProgrammerCalculator = lazy(() => import('./components/ProgrammerCalculator'));
+const DateCalculator = lazy(() => import('./components/DateCalculator'));
+const About = lazy(() => import('./components/About'));
+const Contact = lazy(() => import('./components/Contact'));
+const TermsAndLicense = lazy(() => import('./components/TermsAndLicense'));
+const Settings = lazy(() => import('./components/Settings'));
+const Help = lazy(() => import('./components/Help'));
+const ExploreHub = lazy(() => import('./components/ExploreHub'));
 
 const App = () => {
   const { user, userData, accessToken, loading } = useAuth();
