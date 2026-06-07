@@ -1,36 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   Calculator as CalculatorIcon,
   LineChart,
-  Scale,
-  Landmark,
-  Binary,
-  Banknote,
   Calendar,
   History,
-  Beaker,
-  TestTube,
-  HeartPulse,
-  FileText,
   Settings as SettingsIcon,
-  Wrench,
-  Code,
-  GraduationCap,
   ChevronRight,
   X,
   Search,
   BookOpen,
   Smartphone,
   MessageSquare,
-  Smile,
-  Terminal,
   Compass,
-  Info
+  Info,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Logo from './Logo';
 import { AppTab } from '../../types';
+import { toolCategories } from './toolCategories';
+import { dailyGoalService } from '../../services/dailyGoalService';
+import { Target, Flame } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: AppTab;
@@ -50,41 +42,49 @@ const navItems = [
   { id: 'history', label: 'History', Icon: History },
 ];
 
-const toolCategories = [
-  {
-    label: 'Tools',
-    Icon: Wrench,
-    items: [
-      { id: 'math-tools', label: 'Math Tools', Icon: Beaker },
-      { id: 'programmer', label: 'Programmer', Icon: Binary },
-      { id: 'periodic', label: 'Periodic Table', Icon: TestTube },
-      { id: 'financial', label: 'Financial', Icon: Landmark },
-      { id: 'date', label: 'Date & Time', Icon: Calendar },
-      { id: 'health', label: 'Health', Icon: HeartPulse },
-      { id: 'text', label: 'Text Tools', Icon: FileText },
-      { id: 'developer', label: 'Developer', Icon: Code },
-      { id: 'sandbox', label: 'Math Sandbox', Icon: Terminal },
-      { id: 'student', label: 'Academic', Icon: GraduationCap },
-      { id: 'k5worksheets', label: 'K-5 Math Lab', Icon: Smile },
-      { id: 'exercises', label: 'Exercises', Icon: BookOpen },
-    ]
-  },
-  {
-    label: 'Converters',
-    Icon: Scale,
-    items: [
-      { id: 'units', label: 'Units', Icon: Scale },
-      { id: 'currency', label: 'Currency', Icon: Banknote },
-      { id: 'base', label: 'Base', Icon: Binary },
-    ]
-  }
-];
-
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsOpen, canInstall, onInstall }) => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     'Tools': true,
     'Converters': true
   });
+
+  const [pinnedToolIds, setPinnedToolIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('pinnedTools');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [goalData, setGoalData] = useState(() => dailyGoalService.getGoalData());
+
+  useEffect(() => {
+    const handlePinnedChange = (e: any) => {
+      setPinnedToolIds(e.detail?.pinnedTools || []);
+    };
+    const handleGoalChange = (e: any) => {
+      setGoalData(dailyGoalService.getGoalData());
+    };
+    window.addEventListener('pinnedTools-change', handlePinnedChange);
+    window.addEventListener('dailyGoal-change', handleGoalChange);
+    return () => {
+      window.removeEventListener('pinnedTools-change', handlePinnedChange);
+      window.removeEventListener('dailyGoal-change', handleGoalChange);
+    };
+  }, []);
+
+  const unpinTool = (toolId: string) => {
+    const nextPinned = pinnedToolIds.filter(id => id !== toolId);
+    setPinnedToolIds(nextPinned);
+    localStorage.setItem('pinnedTools', JSON.stringify(nextPinned));
+    window.dispatchEvent(new CustomEvent('pinnedTools-change', { detail: { pinnedTools: nextPinned } }));
+  };
+
+  const flatTools = toolCategories.flatMap(c => c.items);
+  const pinnedToolsList = pinnedToolIds
+    .map(id => flatTools.find(t => t.id === id))
+    .filter(Boolean) as typeof toolCategories[0]['items'];
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => ({
@@ -148,6 +148,40 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
             </button>
 
 
+          {pinnedToolsList.length > 0 && (
+            <div className="space-y-1 mb-6">
+              <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] px-3 mb-2 shrink-0 flex items-center justify-between pointer-events-none">
+                <span>Pinned Tools</span>
+                <Pin size={12} className="text-brand-primary fill-brand-primary/20" />
+              </div>
+              {pinnedToolsList.map((item) => (
+                <div key={item.id} className="relative group flex items-center">
+                  <button
+                    onClick={() => handleTabClick(item.id as AppTab)}
+                    className={`flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-left ${
+                      activeTab === item.id 
+                        ? 'bg-brand-primary text-brand-bg font-bold shadow-md shadow-brand-primary/20' 
+                        : 'text-brand-text-secondary hover:bg-brand-surface hover:text-brand-text'
+                    }`}
+                  >
+                    <item.Icon size={18} className={activeTab === item.id ? "text-brand-bg shrink-0" : "text-brand-text-secondary shrink-0 opacity-80 group-hover:opacity-100 group-hover:text-brand-text"} />
+                    <span className="text-sm truncate pr-6">{item.label}</span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      unpinTool(item.id);
+                    }}
+                    title="Unpin tool"
+                    className="absolute right-2 p-1.5 rounded-lg text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all duration-150 cursor-pointer"
+                  >
+                    <PinOff size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="space-y-1 mb-8">
             <div className="text-[10px] font-black text-brand-text-secondary uppercase tracking-[0.2em] px-3 mb-3 shrink-0">
               Main Menu
@@ -191,20 +225,43 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
                       className="overflow-hidden"
                     >
                       <div className="space-y-1 pt-1 border-l border-brand-border/30 ml-4 pl-2">
-                        {category.items.map((item) => (
-                          <button
-                            key={item.id}
-                            onClick={() => handleTabClick(item.id as AppTab)}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-left ${
-                              activeTab === item.id 
-                                ? 'bg-brand-primary/10 text-brand-primary font-bold' 
-                                : 'text-brand-text-secondary hover:bg-brand-surface hover:text-brand-text'
-                            }`}
-                          >
-                            <item.Icon size={16} className={activeTab === item.id ? "text-brand-primary" : "opacity-70"} />
-                            <span className="text-sm">{item.label}</span>
-                          </button>
-                        ))}
+                        {category.items.map((item) => {
+                          const isPinned = pinnedToolIds.includes(item.id);
+                          return (
+                            <div key={item.id} className="relative group flex items-center w-full">
+                              <button
+                                onClick={() => handleTabClick(item.id as AppTab)}
+                                className={`flex-1 flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-left ${
+                                  activeTab === item.id 
+                                    ? 'bg-brand-primary/10 text-brand-primary font-bold' 
+                                    : 'text-brand-text-secondary hover:bg-brand-surface hover:text-brand-text'
+                                }`}
+                              >
+                                <item.Icon size={16} className={activeTab === item.id ? "text-brand-primary shrink-0" : "opacity-70 shrink-0 group-hover:opacity-100 group-hover:text-brand-text"} />
+                                <span className="text-sm truncate mr-6">{item.label}</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isPinned) {
+                                    unpinTool(item.id);
+                                  } else {
+                                    const nextPinned = [...pinnedToolIds, item.id];
+                                    setPinnedToolIds(nextPinned);
+                                    localStorage.setItem('pinnedTools', JSON.stringify(nextPinned));
+                                    window.dispatchEvent(new CustomEvent('pinnedTools-change', { detail: { pinnedTools: nextPinned } }));
+                                  }
+                                }}
+                                title={isPinned ? "Unpin tool" : "Pin tool"}
+                                className={`absolute right-2 p-1 rounded-lg text-brand-text-secondary hover:text-brand-primary transition-all duration-150 cursor-pointer ${
+                                  isPinned ? 'opacity-100 text-brand-primary' : 'opacity-0 group-hover:opacity-100'
+                                }`}
+                              >
+                                <Pin size={13} className={isPinned ? "fill-brand-primary" : ""} />
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -215,6 +272,53 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabClick, isOpen, setIsO
         </div>
         
         <div className="p-4 border-t border-brand-border/50 bg-brand-bg/50 shrink-0 space-y-3">
+           {/* Daily Goals Micro Progress Ring */}
+           <div 
+             onClick={() => handleTabClick('settings')}
+             className="flex items-center gap-3 p-3 bg-brand-surface/40 hover:bg-brand-surface border border-brand-border/40 hover:border-brand-primary/30 rounded-2xl transition-all cursor-pointer group"
+             title="Configure Daily Calculation Target"
+           >
+             <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
+               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 40 40">
+                 <circle
+                   cx="20"
+                   cy="20"
+                   r="16"
+                   className="stroke-brand-border/20 fill-none"
+                   strokeWidth="3.5"
+                 />
+                 <circle
+                   cx="20"
+                   cy="20"
+                   r="16"
+                   className="stroke-emerald-400 fill-none"
+                   strokeWidth="3.5"
+                   strokeDasharray={2 * Math.PI * 16}
+                   strokeDashoffset={(2 * Math.PI * 16) - (Math.min(100, (dailyGoalService.getTodaySolved() / goalData.target) * 100) / 100) * (2 * Math.PI * 16)}
+                   strokeLinecap="round"
+                 />
+               </svg>
+               <Target size={12} className="absolute text-brand-text-secondary group-hover:text-emerald-400 transition-colors" />
+             </div>
+             
+             <div className="flex-1 min-w-0">
+               <div className="flex items-center justify-between gap-1">
+                 <span className="text-[10px] font-black uppercase tracking-[0.05em] text-brand-text">Daily Math Goal</span>
+                 {goalData.streak > 0 && (
+                   <span className="text-[9px] font-mono font-black text-amber-500 flex items-center gap-0.5 shrink-0" title="Consistency streak days">
+                     <Flame size={10} className="fill-amber-500/10 shrink-0" /> {goalData.streak}d
+                   </span>
+                 )}
+               </div>
+               <div className="flex items-center justify-between text-[11px] font-mono font-bold leading-none mt-1">
+                 <span className="text-brand-text-secondary">Progress</span>
+                 <span className={`${dailyGoalService.getTodaySolved() >= goalData.target ? 'text-emerald-400' : 'text-brand-text'}`}>
+                   {dailyGoalService.getTodaySolved()} / {goalData.target}
+                 </span>
+               </div>
+             </div>
+           </div>
+
            {canInstall && (
              <button 
                 onClick={onInstall}

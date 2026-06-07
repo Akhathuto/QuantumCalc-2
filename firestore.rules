@@ -54,7 +54,13 @@ service cloud.firestore {
              (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 4096)) &&
              (!('role' in data) || (data.role is string && data.role in ['student', 'teacher', 'business_owner', 'normal_user', 'employee', ''])) &&
              (!('grade' in data) || (data.grade is string && data.grade.size() <= 200) || data.grade == null) &&
-             (!('school' in data) || (data.school is string && data.school.size() <= 500) || data.school == null);
+             (!('school' in data) || (data.school is string && data.school.size() <= 500) || data.school == null) &&
+             (!('dailyGoal' in data) || (
+               data.dailyGoal is map &&
+               data.dailyGoal.target is number &&
+               data.dailyGoal.streak is number &&
+               data.dailyGoal.history is map
+             ));
     }
 
     function isValidHistoryEntry(data) {
@@ -146,7 +152,7 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
       allow update: if isOwner(userId) && isValidUser(incoming()) && (
         // Action: Standard Update
-        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'role', 'grade', 'school', 'onboarded']))
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'role', 'grade', 'school', 'onboarded', 'dailyGoal']))
       );
       allow delete: if isAdmin();
     }

@@ -61,6 +61,7 @@ const toolCategories = [
     name: 'Classrooms, Tutors & Scholars',
     tools: [
       { id: 'k5worksheets', name: 'K-5 Homework Studio', desc: 'Generate seedable high-contrast homework sheets with custom grids, school notes, and separate printed answer sheets.', icon: Printer, color: 'text-pink-500', bg: 'bg-pink-500/10', badge: 'Popular' },
+      { id: 'study-guides', name: 'DBE Self-Study Guides', desc: 'Official South African CAPS study material download guides for independent Grade 10-12 exam support.', icon: GraduationCap, color: 'text-indigo-500', bg: 'bg-indigo-500/10', badge: 'CAPS' },
       { id: 'exercises', name: 'Curriculum Drills Arena', desc: 'Topic-by-topic drills, adaptive test sets, score stars & diploma awards.', icon: Award, color: 'text-yellow-500', bg: 'bg-yellow-500/10', badge: 'Hot' },
       { id: 'student', name: 'AI Scholar Coach', desc: 'Prompt the custom academic assistant for proof formulas & learning guides.', icon: GraduationCap, color: 'text-violet-500', bg: 'bg-violet-500/10' },
       { id: 'history', name: 'Formula & Execution Logs', desc: 'Audit and restore previous calculations, export lists, and favorite items.', icon: History, color: 'text-gray-400', bg: 'bg-gray-400/10' },

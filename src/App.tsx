@@ -32,6 +32,7 @@ const PeriodicTable = lazy(() => import('./components/PeriodicTable'));
 const ProfileOnboarding = lazy(() => import('./components/ProfileOnboarding'));
 const FeedbackPage = lazy(() => import('./components/FeedbackPage'));
 const ExerciseReference = lazy(() => import('./components/ExerciseReference'));
+const StudyGuides = lazy(() => import('./components/StudyGuides').then(m => ({ default: m.StudyGuides })));
 
 const PrivacyProtocol = lazy(() => import('./components/PrivacyProtocol'));
 const CoreLicense = lazy(() => import('./components/CoreLicense'));
@@ -395,6 +396,9 @@ const App = () => {
         break;
       case 'k5worksheets':
         TabComponent = <K5Worksheets />;
+        break;
+      case 'study-guides':
+        TabComponent = <StudyGuides />;
         break;
       case 'feedback':
         TabComponent = <FeedbackPage />;

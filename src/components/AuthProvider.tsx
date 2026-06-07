@@ -26,6 +26,7 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
+import { dailyGoalService } from '../services/dailyGoalService';
 
 interface AuthContextType {
   user: User | null;
@@ -74,13 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<any | null>(null);
   const [totalScholars, setTotalScholars] = useState(0);
-  const [accessToken, setAccessToken] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem('google_access_token');
-    } catch (e) {
-      return null;
-    }
-  });
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const unsubscribeUserDocRef = useRef<(() => void) | null>(null);
@@ -121,11 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const credential = GoogleAuthProvider.credentialFromResult(result);
           if (credential?.accessToken) {
             setAccessToken(credential.accessToken);
-            try {
-              localStorage.setItem('google_access_token', credential.accessToken);
-            } catch (e) {
-              // Ignore error
-            }
           }
         }
       } catch (err: any) {
@@ -156,7 +146,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         unsubscribeUserDocRef.current = onSnapshot(userRef, async (docSnap: DocumentSnapshot) => {
           if (docSnap.exists()) {
-            setUserData(docSnap.data());
+            const data = docSnap.data();
+            setUserData(data);
+            if (data?.dailyGoal) {
+              dailyGoalService.syncFromCloud(data.dailyGoal);
+            } else {
+              // Upload local progress/history if user profile has no cloud data yet
+              dailyGoalService.syncToCloud();
+            }
             setLoading(false);
           } else {
             const initialData: any = {
@@ -202,11 +199,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUserData(null);
         setAccessToken(null);
-        try {
-          localStorage.removeItem('google_access_token');
-        } catch (e) {
-          // Ignore error
-        }
         setLoading(false);
       }
     });
@@ -237,11 +229,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
         setAccessToken(credential.accessToken);
-        try {
-          localStorage.setItem('google_access_token', credential.accessToken);
-        } catch (e) {
-          // Ignore error
-        }
       }
     } catch (err: any) {
       setLoading(false);
@@ -274,11 +261,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut(auth);
       setAccessToken(null);
       setError(null);
-      try {
-        localStorage.removeItem('google_access_token');
-      } catch (e) {
-        // Ignore error
-      }
     } catch (err) {
       console.error("Error signing out", err instanceof Error ? err.message : String(err));
     }

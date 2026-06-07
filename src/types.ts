@@ -43,6 +43,7 @@ export type AppTab =
   | 'terms'
   | 'settings'
   | 'help'
+  | 'study-guides'
   | 'exercise-references'
   | 'feedback'
   | 'privacy'

@@ -120,3 +120,81 @@ html.mobile-touch {
 body {
     @apply bg-brand-bg text-brand-text transition-colors duration-300;
 }
+
+@media print {
+  /* Hide interactive, non-content elements */
+  aside,
+  header,
+  footer,
+  .print-hidden,
+  .print\:hidden,
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  .modal,
+  [class*="FloatingAssistant"] {
+    display: none !important;
+  }
+
+  /* Reset layout constraints to ensure entire page flow prints completely */
+  html,
+  body,
+  #root,
+  .min-h-\[100dvh\],
+  .max-h-\[100dvh\],
+  main,
+  div {
+    height: auto !important;
+    min-height: initial !important;
+    max-height: initial !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    position: static !important;
+  }
+
+  /* Support clean paper backgrounds and high contrast text */
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Expand printed container to full page width */
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Clean page break behaviors for complex blocks, lists, and tables */
+  .page-break-inside-avoid,
+  card,
+  .card,
+  table,
+  tr,
+  pre {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Render visual colors cleanly if supported */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+

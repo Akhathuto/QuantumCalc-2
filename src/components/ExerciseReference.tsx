@@ -61,6 +61,12 @@ const EXERCISES = {
     math: [
         { q: "If you cut a sweet cake into 6 equal slices and eat 2, what fraction of the cake did you eat? Simplify it!", a: "2/6 which simplifies to 1/3 of the cake", difficulty: 'Kids / Easy' },
         { q: "A square has a side length of 5 cm. What is its Perimeter and its Area?", a: "Perimeter = 20 cm, Area = 25 cm²", difficulty: 'Kids / Easy' },
+        { q: "What is the 10th term of the Fibonacci sequence, starting with 0, 1, 1, 2...", a: "34 (0th=0, 1st=1, 2nd=1, 3rd=2, 4th=3, 5th=5, 6th=8, 7th=13, 8th=21, 9th=34)", difficulty: 'Easy' },
+        { q: "Calculate the determinant of the 2x2 matrix: [[3, 2], [1, 4]].", a: "(3 * 4) - (2 * 1) = 12 - 2 = 10", difficulty: 'Medium' },
+        { q: "If you invest $1,000 at a 10% annual interest rate compounded annually, how much money will you have after 2 years?", a: "$1,210 ($1000 * 1.10 * 1.10 = $1210)", difficulty: 'Medium' },
+        { q: "Simplify the trigonometric expression: sin²(θ) + cos²(θ).", a: "1 (Pythagorean trigonometric identity)", difficulty: 'Easy' },
+        { q: "How many unique 3-letter words (real or made-up) can you form using the letters A, B, and C without repeating any letters?", a: "6 unique words (3! = 3 * 2 * 1 = 6)", difficulty: 'Medium' },
+        { q: "Solve for x: log₂ (x) = 5.", a: "x = 32 (since 2⁵ = 32)", difficulty: 'Medium' },
         { q: "Find the roots of x² - 5x + 6 = 0", a: "x = 2, x = 3", difficulty: 'Medium' },
         { q: "Calculate the derivative of f(x) = x³ + 2x", a: "f'(x) = 3x² + 2", difficulty: 'Medium' },
         { q: "Integrate ∫(2x) dx", a: "x² + C", difficulty: 'Easy' },
@@ -70,6 +76,12 @@ const EXERCISES = {
     ],
     physics: [
         { q: "Why do we weigh less on the Moon than on the Earth?", a: "Because the Moon has much less mass and pulls with only 1/6th of Earth's gravity force.", difficulty: 'Kids / Easy' },
+        { q: "What is the approximate escape velocity from the surface of Earth in km/s?", a: "11.2 km/s", difficulty: 'Medium / Hard' },
+        { q: "Does sound travel faster through seawater or through dry air?", a: "Seawater (~1500 m/s vs ~343 m/s in air) because molecules are much more tightly packed.", difficulty: 'Medium' },
+        { q: "Approximately how many minutes does it take for light from the Sun to travel to the Earth?", a: "About 8 minutes and 20 seconds (8.3 minutes).", difficulty: 'Kids / Easy' },
+        { q: "If a heater uses 10 Amperes of current when connected to a 120 Volt outlet, how many Watts of electrical power does it consume?", a: "1,200 Watts (Power = Voltage * Current = 120V * 10A)", difficulty: 'Medium' },
+        { q: "How is the energy of a single photon calculated using its frequency (f) and Planck's constant (h)?", a: "E = h * f (Planck-Einstein relation)", difficulty: 'Hard' },
+        { q: "If an apple falls freely from a tall tree on Earth, neglecting air resistance, what will its velocity be after exactly 3 seconds?", a: "29.4 m/s (using g ≈ 9.8 m/s²; v = g * t = 9.8 * 3)", difficulty: 'Easy / Medium' },
         { q: "A car travels 100m in 5s. Find velocity.", a: "20 m/s", difficulty: 'Easy' },
         { q: "Calculate gravitational force between two 1kg masses at 1m.", a: "6.67 × 10⁻¹¹ N", difficulty: 'Hard' },
         { q: "What is the kinetic energy of a 2kg object moving at 3 m/s?", a: "9 Joules", difficulty: 'Medium' },
@@ -78,6 +90,12 @@ const EXERCISES = {
     ],
     chemistry: [
         { q: "What are the three core states of water, and how do we get them?", a: "Ice (Solid), Water (Liquid), Steam (Gas). Change by heating/cooling.", difficulty: 'Kids / Easy' },
+        { q: "What is the scientific name and chemical formula for common kitchen table salt?", a: "Sodium Chloride (NaCl)", difficulty: 'Kids / Easy' },
+        { q: "What is the value of Avogadro's constant, which represents the number of particles in one mole?", a: "6.022 × 10²³ particles/mol", difficulty: 'Medium' },
+        { q: "Why are noble gases (like Helium, Neon, Argon) extremely stable and unreactive?", a: "They have a fully completed outer valence electron shell (octet rule, 8 electrons, or 2 for Helium).", difficulty: 'Medium / Hard' },
+        { q: "Does a campfire release heat or absorb heat, and is it exothermic or endothermic?", a: "Releases heat (burning wood is an Exothermic chemical reaction).", difficulty: 'Kids / Easy' },
+        { q: "What is 'dry ice' made of chemically?", a: "Frozen solid Carbon Dioxide (CO2)", difficulty: 'Easy / Kids' },
+        { q: "If the volume of a gas chamber is cut in half at constant temperature, what happens to the gas pressure?", a: "The pressure doubles (Boyle's Law: P₁V₁ = P₂V₂)", difficulty: 'Medium' },
         { q: "Which three particles make up an atom?", a: "Protons (positive charge), Neutrons (neutral charge), and Electrons (negative charge).", difficulty: 'Kids / Easy' },
         { q: "Balance the equation: H2 + O2 → H2O", a: "2H2 + O2 → 2H2O", difficulty: 'Medium' },
         { q: "What is the pH of pure water at 25°C?", a: "7.0 (Neutral)", difficulty: 'Easy' },
@@ -85,6 +103,12 @@ const EXERCISES = {
     ],
     biology: [
         { q: "What is green pigment in leaves called, and what does it do?", a: "Chlorophyll. It absorbs sunlight to power food production (Photosynthesis).", difficulty: 'Kids / Easy' },
+        { q: "What is the single longest type of cell in the human body, reaching up to 1 meter in length?", a: "The Nerve Cell / Neuron (specifically the sciatic nerve axon)", difficulty: 'Medium / Hard' },
+        { q: "What is the largest organ of the human body that protects us from germs and controls our body temperature?", a: "The Skin", difficulty: 'Kids / Easy' },
+        { q: "Which four chemical bases make up DNA, and how do they pair up?", a: "Adenine (A) pairs with Thymine (T), and Cytosine (C) pairs with Guanine (G).", difficulty: 'Medium' },
+        { q: "Why is blood type O-negative considered the 'universal donor' for blood transfusions?", a: "Because O-negative red blood cells do not have A, B, or Rh antigens on their surface, meaning they won't trigger an immune reaction in the recipient.", difficulty: 'Hard' },
+        { q: "Which thick band of nerve fibers connects the left and right hemispheres of the human brain?", a: "The Corpus Callosum", difficulty: 'Hard' },
+        { q: "Why are honeybees so important to the life cycle of flowering plants and fruits?", a: "They transfer pollen grains from the male anther to the female stigma, fertilizing the plant so it can produce seeds and fruit (Pollination).", difficulty: 'Kids / Easy' },
         { q: "Why do human bodies need red blood cells?", a: "To carry oxygen from your lungs to the rest of your body.", difficulty: 'Kids / Easy' },
         { q: "What is the powerhouse of the cell?", a: "Mitochondria - they generate most of the cell's supply of ATP.", difficulty: 'Medium' },
         { q: "Name the process by which DNA is copied into RNA.", a: "Transcription", difficulty: 'Hard' },
@@ -92,6 +116,12 @@ const EXERCISES = {
     ],
     cs: [
         { q: "How do you write the normal number 5 in computer binary code?", a: "0101 (Fours column + Ones column = 4 + 1 = 5)", difficulty: 'Kids / Easy' },
+        { q: "In computer data structures, what is the difference between a Stack and a Queue in terms of retrieval order?", a: "A Stack is LIFO (Last-In, First-Out, like a pile of plates) whereas a Queue is FIFO (First-In, First-Out, like people waiting in line).", difficulty: 'Medium' },
+        { q: "What is the principal difference between IPv4 and IPv6 addresses?", a: "IPv4 uses 32-bit addresses (e.g., 192.168.1.1) providing ~4.3 billion addresses, whereas IPv6 uses 128-bit hexadecimal addresses providing 3.4×10³⁸ unique addresses.", difficulty: 'Medium / Hard' },
+        { q: "What does CPU stand for, and what is its main job?", a: "Central Processing Unit. It acts as the 'brain' of the computer, executing program instructions and processing data.", difficulty: 'Kids / Easy' },
+        { q: "What are two key properties of a secure cryptographic hash function like SHA-256?", a: "1. One-way (cannot reverse hash to find input). 2. Collision-resistant (no two different inputs produce the exact same hash).", difficulty: 'Hard' },
+        { q: "In recursion (a function calling itself), why is a 'base case' absolutely critical?", a: "To stop the function from calling itself infinitely, preventing a crash due to a 'Stack Overflow' error.", difficulty: 'Medium' },
+        { q: "Why do we call program errors 'bugs'? Who found the first legendary physical computer bug?", a: "Grace Hopper and her team found a real, physical moth trapped in a relay of the Harvard Mark II computer in 1947, taping it in their logbook with the caption 'First actual case of bug being found.'", difficulty: 'Kids / Easy' },
         { q: "What is the difference between an If-Else decider and a Loop?", a: "A loop repeats an action multiple times, while If-Else makes a single choice.", difficulty: 'Kids / Easy' },
         { q: "What does HTML stand for?", a: "HyperText Markup Language", difficulty: 'Easy' },
         { q: "Define what a Boolean data type is.", a: "A data type that has one of two possible values (usually denoted true and false).", difficulty: 'Medium' },
@@ -99,6 +129,12 @@ const EXERCISES = {
     ],
     history: [
         { q: "Name the planet in our solar system that is famous for its bright outer rings.", a: "Saturn", difficulty: 'Kids / Easy' },
+        { q: "Why was the Great Wall of China originally built over thousands of miles?", a: "To protect the Chinese empires against raids and invasions from various nomadic groups of the Eurasian Steppe (like the Mongols).", difficulty: 'Kids / Easy' },
+        { q: "What is the historical significance of the Magna Carta signed by King John of England in 1215?", a: "It established the principle that everyone, including the king, is subject to the law, protecting individual rights and laying foundations for modern democracy.", difficulty: 'Medium / Hard' },
+        { q: "Which German inventor introduced moveable-type printing press to Europe in the 1440s, revolutionizing how books were made?", a: "Johannes Gutenberg", difficulty: 'Easy / Medium' },
+        { q: "In which year did the famous Titanic passenger liner strike an iceberg and sink on its maiden voyage?", a: "1912", difficulty: 'Easy / Kids' },
+        { q: "Which of the Seven Wonders of the Ancient World is the only one that is still mostly standing today?", a: "The Great Pyramid of Giza (Egypt)", difficulty: 'Kids / Easy' },
+        { q: "Who is widely credited with inventing the modern, efficient Steam Engine that powered the Industrial Revolution in the late 18th century?", a: "James Watt", difficulty: 'Medium' },
         { q: "How many oceans are on the planet Earth, and which one is the largest?", a: "There are 5 oceans in total, and the Pacific Ocean is the largest.", difficulty: 'Kids / Easy' },
         { q: "In what year did the Apollo 11 first land humans on the Moon?", a: "1969", difficulty: 'Medium' },
         { q: "Who was the first woman to win a Nobel Prize?", a: "Marie Curie (in 1903 for Physics)", difficulty: 'Medium' },
@@ -106,6 +142,12 @@ const EXERCISES = {
     ],
     language: [
         { q: "What is a noun?", a: "A word that represents a person, place, thing, or idea.", difficulty: 'Kids / Easy' },
+        { q: "What is the difference between a Synonym and an Antonym?", a: "Synonyms are words with similar meanings (e.g., big and large), while Antonyms are words with opposite meanings (e.g., big and small).", difficulty: 'Kids / Easy' },
+        { q: "Convert this sentence to active voice: 'The master equation was solved by the student.'", a: "The student solved the master equation.", difficulty: 'Medium' },
+        { q: "Give three examples of Onomatopoeia (words that imitate the sound they make).", a: "Buzz, Clang, Pop, Sizzle, or Meow.", difficulty: 'Kids / Easy' },
+        { q: "How many lines are in a traditional Shakespearean sonnet, and what is its rhyme scheme?", a: "14 lines, with a rhyme scheme of ABAB CDCD EFEF GG (three quatrains and a final rhyming couplet).", difficulty: 'Medium / Hard' },
+        { q: "What is a homophone, and give an example of word pairs that sound the same but have different meanings.", a: "Words that sound identical but have different spellings and meanings. Examples: There/Their/They're, To/Too/Two, or flower/flour.", difficulty: 'Easy / Kids' },
+        { q: "What is the definition of Dramatic Irony in literature?", a: "When the audience or reader knows a vital piece of information that the characters in the story or play are unaware of.", difficulty: 'Hard' },
         { q: "Identify the verb in: 'The quick brown fox jumps.'", a: "Jumps", difficulty: 'Easy' },
         { q: "What is an oxymoron?", a: "A figure of speech in which apparently contradictory terms appear in conjunction (e.g., deafening silence).", difficulty: 'Medium' },
         { q: "Give an example of alliteration.", a: "Peter Piper picked a peck of pickled peppers.", difficulty: 'Medium' },
@@ -227,6 +269,8 @@ const ExerciseReference = () => {
         n.points.some(p => p.toLowerCase().includes(search.toLowerCase()))
     );
 
+    const totalExercisesCount = Object.values(EXERCISES).reduce((sum, list) => sum + list.length, 0);
+
     return (
         <div className="space-y-12 animate-fade-in pb-20">
             {/* Header section with Stats */}
@@ -254,7 +298,7 @@ const ExerciseReference = () => {
                     </div>
                     <div className="bg-brand-primary/5 px-8 py-6 rounded-[2rem] border border-brand-primary/20 backdrop-blur-md">
                         <div className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-1">Active Exercises</div>
-                        <div className="text-3xl font-black text-brand-primary font-mono">42+</div>
+                        <div className="text-3xl font-black text-brand-primary font-mono">{totalExercisesCount}</div>
                     </div>
                 </div>
             </div>

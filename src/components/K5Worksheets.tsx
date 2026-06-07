@@ -23,6 +23,7 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 import Latex from 'react-latex-next';
+import { dailyGoalService } from '../services/dailyGoalService';
 
 interface WorksheetQuestion {
   id: number;
@@ -1643,6 +1644,9 @@ export const K5Worksheets: React.FC = () => {
     });
     setEarnedStars(score);
     setSubmittedAnswers(true);
+    if (score > 0) {
+      dailyGoalService.incrementSolved(score);
+    }
   };
 
   return (

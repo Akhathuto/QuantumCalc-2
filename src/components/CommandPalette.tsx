@@ -184,6 +184,15 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ onTabClick }) => {
       keywords: ['pdf', 'printable', 'print', 'homework', 'sheets', 'k5', 'kids', 'answers', 'exercises'],
     },
     {
+      id: 'tab-study-guides',
+      title: 'Switch to DBE Self-Study Guides',
+      description: 'Access official South African DBE CAPS study guides for Grades 10 - 12 (Maths, Physics, Life Sciences).',
+      icon: GraduationCap,
+      action: () => { onTabClick('study-guides'); setIsOpen(false); },
+      category: 'Navigation',
+      keywords: ['school', 'caps', 'south', 'african', 'study', 'guides', 'dbe', 'matric', 'grade', 'pdf', 'download'],
+    },
+    {
       id: 'tab-exercises',
       title: 'Switch to Drills Arena',
       description: 'Embark on dynamic interactive training quizzes and unlock stellar badges.',

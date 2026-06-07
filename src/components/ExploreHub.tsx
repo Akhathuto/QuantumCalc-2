@@ -21,9 +21,28 @@ import {
   History,
   Compass,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  HelpCircle,
+  Lightbulb,
+  Check,
+  RotateCw
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { AppTab } from '../types';
+import { dailyGoalService } from '../services/dailyGoalService';
+
+const RAPID_DRILLS = [
+  { category: 'Mathematics', q: 'Identify the 10th term of the Fibonacci sequence starting with 0, 1, 1, 2...', a: '34', hint: 'Sequence indexes: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34.' },
+  { category: 'Physics', q: 'Approximately how many minutes does it take light to travel from Sun to Earth?', a: '8.3 minutes (8 min 20 sec)', hint: 'Distance is 1.5×10⁸ km divided by speed of light (~3×10⁵ km/s).' },
+  { category: 'Chemistry', q: 'What is dry ice made of chemically?', a: 'Solid Carbon Dioxide (CO2)', hint: 'Solid state of a common greenhouse gas.' },
+  { category: 'Biology', q: 'Which green pigment captures light energy for photosynthesis inside leaves?', a: 'Chlorophyll', hint: 'The molecule reflecting green light.' },
+  { category: 'Computer Science', q: 'How is the normal number 5 represented in computer binary code?', a: '0101', hint: 'Weights: 8, 4, 2, 1 columns.' },
+  { category: 'History', q: 'Which year marked the Apollo 11 moon landing?', a: '1969', hint: 'Height of the Cold War Space Race.' },
+  { category: 'Language Arts', q: 'What literary device directly attributes identity to comparison without "like" or "as"?', a: 'Metaphor (e.g. "Time is a thief")', hint: 'Unlike similes, metaphors assert equality.' },
+  { category: 'Mathematics', q: 'Solve for x: log₂ (x) = 5.', a: '32', hint: 'Standard exponential definition: 2⁵ = x.' },
+  { category: 'Physics', q: 'Does sound travel faster in dry air or in liquid water?', a: 'Liquid water (~1500 m/s vs ~343 m/s in air)', hint: 'Water is much denser and virtually incompressible.' },
+  { category: 'Chemistry', q: 'What chemical formula represents sodium chloride (common table salt)?', a: 'NaCl', hint: 'Equal ratio of group 1 alkali metal and group 17 halogen.' }
+];
 
 interface ExploreHubProps {
   onTabClick: (tabId: AppTab) => void;
@@ -54,6 +73,7 @@ const toolsList: ToolItem[] = [
   { id: 'date', name: 'Temporal Duration', desc: 'Compare exact calendar spans, time durations.', category: 'everyday', icon: Calendar, color: 'text-rose-400', bg: 'bg-rose-500/10' },
 
   { id: 'k5worksheets', name: 'K-5 Homework Studio', desc: 'Generate custom math homework sheets with answers.', category: 'learning', icon: Printer, color: 'text-pink-400', bg: 'bg-pink-500/10', badge: 'Hot' },
+  { id: 'study-guides', name: 'DBE Self-Study Guides', desc: 'Official South African CAPS study guides for independent exam support.', category: 'learning', icon: GraduationCap, color: 'text-indigo-400', bg: 'bg-indigo-500/10', badge: 'CAPS' },
   { id: 'exercises', name: 'Drills Arena', desc: 'Adaptive test sets, score stars & diploma achievements.', category: 'learning', icon: Award, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
   { id: 'student', name: 'Learning Coach', desc: 'AI academic solver for proof formulas & learning guides.', category: 'learning', icon: GraduationCap, color: 'text-violet-400', bg: 'bg-violet-500/10' },
 
@@ -66,6 +86,36 @@ const toolsList: ToolItem[] = [
 const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'math' | 'everyday' | 'learning' | 'dev'>('all');
+
+  const [stars, setStars] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('quantumGymStars');
+      return saved ? parseInt(saved, 10) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [currentDrillIdx, setCurrentDrillIdx] = useState<number>(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean | null>(null);
+
+  const incrementStars = () => {
+    if (answeredCorrectly === true) return;
+    const nextStars = stars + 1;
+    setStars(nextStars);
+    localStorage.setItem('quantumGymStars', nextStars.toString());
+    setAnsweredCorrectly(true);
+    dailyGoalService.incrementSolved(1);
+  };
+
+  const handleNextDrill = () => {
+    setCurrentDrillIdx((prev) => (prev + 1) % RAPID_DRILLS.length);
+    setShowAnswer(false);
+    setShowHint(false);
+    setAnsweredCorrectly(null);
+  };
 
   const filteredTools = useMemo(() => {
     return toolsList.filter(tool => {
@@ -82,6 +132,7 @@ const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
         'health': ['calories', 'health', 'hydration', 'bmi', 'bmr', 'weight', 'diet', 'calorie'],
         'date': ['time', 'date', 'calendar', 'duration', 'weeks', 'days', 'hours'],
         'k5worksheets': ['pdf', 'printable', 'print', 'homework', 'sheets', 'k5', 'kids'],
+        'study-guides': ['caps', 'matric', 'dbe', 'south', 'african', 'study', 'guides', 'school', 'grade', 'pdf', 'download'],
         'exercises': ['quiz', 'test', 'drills', 'stars', 'adaptive', 'score', 'trophy'],
         'student': ['ai', 'chat', 'mentor', 'proof', 'formulas', 'study', 'lessons', 'gemini'],
         'programmer': ['hex', 'bin', 'oct', 'dec', 'register', 'bitwise', 'binary'],
@@ -192,6 +243,125 @@ const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
           );
         })}
       </div>
+
+      {/* Interactive Daily Brain Gym Widget */}
+      {(activeCategory === 'all' || activeCategory === 'learning') && !searchQuery && (
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-5 sm:p-6 bg-gradient-to-br from-brand-surface to-brand-bg rounded-[2rem] border-2 border-brand-border/80 shadow-lg relative overflow-hidden"
+          id="quantum_brain_gym_widget"
+        >
+          {/* Accent radial glow */}
+          <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full blur-2xl pointer-events-none" />
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4.5 border-b border-brand-border/30 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-brand-primary/10 text-brand-primary rounded-xl shrink-0">
+                <Award size={18} className="animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-brand-text">Quantum Brain Gym</h3>
+                <p className="text-[10px] text-brand-text-secondary leading-none mt-0.5">Instant rapid drills to test your cognitive depth.</p>
+              </div>
+            </div>
+
+            {/* Stars Counter Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary/10 border border-brand-primary/20 rounded-xl w-fit">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-primary">Stars:</span>
+              <span className="text-xs font-mono font-black text-brand-primary">⭐ {stars}</span>
+            </div>
+          </div>
+
+          {/* Drill Question Card */}
+          <div className="bg-brand-surface/40 p-4.5 rounded-2xl border border-brand-border/50 shadow-inner relative">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-primary bg-brand-primary/15 px-2 py-0.5 rounded-md">
+                {RAPID_DRILLS[currentDrillIdx].category}
+              </span>
+              <button 
+                onClick={() => setShowHint(!showHint)} 
+                className="text-[9px] font-bold text-brand-text-secondary hover:text-brand-primary uppercase flex items-center gap-1 cursor-pointer select-none"
+              >
+                <Lightbulb size={10} /> {showHint ? 'Hide Hint' : 'Show Hint'}
+              </button>
+            </div>
+
+            <p className="text-sm font-bold text-brand-text tracking-tight mb-3">
+              {RAPID_DRILLS[currentDrillIdx].q}
+            </p>
+
+            <AnimatePresence>
+              {showHint && (
+                <motion.p 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-xs text-brand-text-secondary leading-normal font-light italic mb-3 bg-brand-bg/50 p-2.5 rounded-xl border border-brand-border/30 overflow-hidden"
+                >
+                  💡 Hint: {RAPID_DRILLS[currentDrillIdx].hint}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            {/* Reveal Answer Area */}
+            {showAnswer ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mt-4 pt-4 border-t border-brand-border/30"
+              >
+                <div className="text-[9px] font-black text-brand-text-secondary/50 uppercase tracking-[0.3em] mb-1">Answer Formula</div>
+                <div className="p-3.5 bg-emerald-500/5 text-emerald-400 border border-emerald-500/15 rounded-xl text-xs font-mono font-bold leading-normal">
+                  {RAPID_DRILLS[currentDrillIdx].a}
+                </div>
+
+                {/* Score actions */}
+                <div className="flex items-center justify-end gap-2 mt-3 font-sans">
+                  <span className="text-[10px] font-medium text-brand-text-secondary mr-2">Did you solve it?</span>
+                  <button
+                    onClick={incrementStars}
+                    disabled={answeredCorrectly === true}
+                    className={`px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer select-none ${
+                      answeredCorrectly === true
+                        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 cursor-default shadow-inner'
+                        : 'bg-brand-surface hover:bg-brand-primary hover:text-brand-bg border-brand-border/80 text-brand-text-secondary hover:border-brand-primary hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
+                  >
+                    <Check size={12} /> {answeredCorrectly === true ? 'Earned Star!' : 'Yes, Correct!'}
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <button
+                onClick={() => setShowAnswer(true)}
+                className="w-full py-3 mt-2 rounded-xl bg-brand-surface border border-brand-border hover:border-brand-primary/50 text-[10px] font-black uppercase tracking-widest text-brand-text-secondary hover:text-brand-text transition-all cursor-pointer select-none active:scale-[0.99]"
+              >
+                Reveal Verified Answer
+              </button>
+            )}
+          </div>
+
+          {/* Quick navigation actions */}
+          <div className="flex items-center justify-between mt-4">
+            <button
+              onClick={() => onTabClick('exercises')}
+              className="text-[10px] font-black uppercase tracking-wider text-brand-primary hover:text-white flex items-center gap-1 cursor-pointer select-none bg-transparent border-none outline-none"
+            >
+              Launch Full Drills Arena <ChevronRight size={12} />
+            </button>
+
+            <button
+              onClick={handleNextDrill}
+              className="px-3.5 py-2 bg-brand-surface border border-brand-border hover:border-brand-primary/50 text-[10px] font-black uppercase tracking-wider text-brand-text-secondary hover:text-brand-text rounded-xl transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98] select-none"
+              title="Shuffle another random challenge"
+            >
+              <RotateCw size={11} className="opacity-80 transition-transform active:rotate-180 duration-500 shrink-0" /> Next Drill
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Dynamic Grid Results */}
       {filteredTools.length > 0 ? (

@@ -355,26 +355,50 @@ const GoogleCalendar: React.FC = () => {
             </p>
           </div>
 
-          <div className="pt-2">
-            <button
-              onClick={() => signInWithGoogle()}
-              disabled={authLoading}
-              className="gsi-material-button mx-auto hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-lg shadow-brand-primary/15"
-              style={{ display: 'inline-block' }}
-            >
-              <div className="gsi-material-button-state"></div>
-              <div className="gsi-material-button-content-wrapper flex items-center gap-3 bg-[#131b2e] hover:bg-[#1a233d] border border-brand-border px-4 py-2.5 rounded-xl text-white">
-                <div className="gsi-material-button-icon">
-                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ display: 'block', width: '20px', height: '20px' }}>
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                    <path fill="none" d="M0 0h48v48H0z"></path>
-                  </svg>
-                </div>
-                <span className="gsi-material-button-contents text-xs font-black uppercase tracking-widest">Connect Google Calendar</span>
+          {window.self !== window.top && (
+            <div className="p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-brand-text-secondary text-xs leading-relaxed space-y-3 text-center max-w-md mx-auto shadow-inner">
+              <div className="flex items-center gap-1.5 justify-center font-extrabold text-brand-primary uppercase tracking-widest text-[10px]">
+                <AlertTriangle size={14} className="text-brand-primary animate-pulse" />
+                <span>Sandbox Environment Detected</span>
               </div>
+              <p className="opacity-90">
+                Browsers restrict cross-origin auth popups inside iframe frames. If the standard login fails, try the <strong>Direct Redirect</strong> or <strong>Full Tab</strong> options below.
+              </p>
+              <div className="flex gap-2.5 justify-center pt-1">
+                <a 
+                  href={window.location.href} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 bg-brand-primary hover:bg-brand-primary/95 text-brand-bg rounded-xl text-[10px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-all shadow-md shadow-brand-primary/10 cursor-pointer"
+                >
+                  🚀 Open in Full Tab
+                </a>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center max-w-md mx-auto pt-2">
+            <button
+              onClick={() => signInWithGoogle(false)}
+              disabled={authLoading}
+              className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2.5 px-4 h-11 bg-white hover:bg-neutral-100 text-black font-extrabold text-[10px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-md"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              <span>Connect (Popup)</span>
+            </button>
+
+            <button
+              onClick={() => signInWithGoogle(true)}
+              disabled={authLoading}
+              className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-4 h-11 bg-brand-bg hover:bg-brand-border/40 text-brand-text border border-brand-border/60 font-extrabold text-[10px] uppercase tracking-wider rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+              title="Connect via Redirect Fallback"
+            >
+              <span>Direct Redirect</span>
             </button>
           </div>
 

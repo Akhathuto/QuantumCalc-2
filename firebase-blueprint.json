@@ -13,7 +13,16 @@
         "grade": { "type": "string", "description": "Grade or level (for students/teachers)" },
         "school": { "type": "string", "description": "School or organization" },
         "onboarded": { "type": "boolean", "description": "Whether the user has completed onboarding" },
-        "createdAt": { "type": "timestamp", "description": "Account creation time" }
+        "createdAt": { "type": "timestamp", "description": "Account creation time" },
+        "dailyGoal": {
+          "type": "object",
+          "description": "Daily calculation goal, history, and streak sync",
+          "properties": {
+            "target": { "type": "number" },
+            "streak": { "type": "number" },
+            "history": { "type": "object" }
+          }
+        }
       },
       "required": ["uid", "email", "createdAt", "onboarded"]
     },

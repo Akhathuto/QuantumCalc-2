@@ -39,7 +39,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
-  Divide
+  Divide,
+  ArrowRight,
+  CheckCircle2,
+  Pin,
+  Star
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from './AuthProvider';
@@ -3608,9 +3612,51 @@ const PracticeBench = () => {
 // --- Main Student Tools Component ---
 const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) => {
     const { user, userData } = useAuth();
-    type ToolID = 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises' | 'lessons' | 'wolfram' | 'mathexercises' | 'k5worksheets';
-    const [activeTool, setActiveTool] = useState<ToolID>('lessons');
+    
+    type ToolID = 'dashboard' | 'gpa' | 'pomodoro' | 'geometry' | 'science' | 'physics' | 'formulas' | 'notes' | 'citations' | 'flashcards' | 'assignments' | 'elements' | 'tutor' | 'equation' | 'unit' | 'exercises' | 'lessons' | 'wolfram' | 'mathexercises' | 'k5worksheets';
+    const [activeTool, setActiveTool] = useState<ToolID>('dashboard');
     const [activeToolSearch, setActiveToolSearch] = useState('');
+    const [dashboardCategory, setDashboardCategory] = useState<string>('all');
+
+    const [pinnedTools, setPinnedTools] = useState<ToolID[]>(() => {
+        try {
+            const saved = localStorage.getItem('student_pinned_tools');
+            return saved ? JSON.parse(saved) : ['lessons', 'tutor', 'gpa'];
+        } catch {
+            return ['lessons', 'tutor', 'gpa'];
+        }
+    });
+
+    const togglePin = (type: ToolID) => {
+        setPinnedTools(prev => {
+            const next = prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type];
+            localStorage.setItem('student_pinned_tools', JSON.stringify(next));
+            return next;
+        });
+    };
+
+    const TOOLS_INFO: Record<ToolID, { name: string; desc: string; icon: any; category: string; bg: string; color: string }> = {
+        dashboard: { name: 'Overview', desc: 'Central academic exploration board.', icon: Layers, category: 'hub', bg: 'bg-indigo-500/10', color: 'text-indigo-400' },
+        pomodoro: { name: 'Focus Timer', desc: 'Boost productivity with customizable Pomodoro sessions and nature sounds.', icon: Coffee, category: 'productivity', bg: 'bg-rose-500/10', color: 'text-rose-400' },
+        assignments: { name: 'Assignment Tracker', desc: 'Organize syllabus, keep track of due dates, homework, and exam preparations.', icon: CheckSquare, category: 'productivity', bg: 'bg-emerald-500/10', color: 'text-emerald-400' },
+        notes: { name: 'Research Journal', desc: 'Draft clean mathematical notation, scientific summaries, and lecture notes.', icon: StickyNote, category: 'productivity', bg: 'bg-amber-500/10', color: 'text-amber-400' },
+        flashcards: { name: 'Active Recall Desk', desc: 'Create study decks, memorize definitions, and practice spaced repetition.', icon: BrainCircuit, category: 'productivity', bg: 'bg-sky-500/10', color: 'text-sky-400' },
+        lessons: { name: 'Curriculum Studio', desc: 'Access structured subject syllabus tutorials, core concepts, and curriculum guides.', icon: BookOpen, category: 'practice', bg: 'bg-indigo-500/10', color: 'text-indigo-400' },
+        exercises: { name: 'Practice Sandbox', desc: 'Endless generative science challenges, level drills, and error logs.', icon: Activity, category: 'practice', bg: 'bg-teal-500/10', color: 'text-teal-400' },
+        mathexercises: { name: 'Math Drills', desc: 'Solve arithmetic, fractional, algebraic, and advanced calculus modules.', icon: Play, category: 'practice', bg: 'bg-purple-500/10', color: 'text-purple-400' },
+        k5worksheets: { name: 'K5 Worksheets', desc: 'Generate printable custom learning aids for primary and secondary foundations.', icon: Download, category: 'practice', bg: 'bg-orange-500/10', color: 'text-orange-400' },
+        tutor: { name: 'AI Socratic Coach', desc: 'Inquire with Gemini Socratic mentor. Clarify derivations, parse theories, get unstuck.', icon: Sparkles, category: 'practice', bg: 'bg-violet-500/10', color: 'text-violet-400' },
+        wolfram: { name: 'Wolfram Engine', desc: 'Query advanced computational matrix steps, plots, and standard algebraic solvers.', icon: Zap, category: 'math', bg: 'bg-red-500/10', color: 'text-red-400' },
+        equation: { name: 'Equation Derivative', desc: 'Step-by-step calculus limits, integrations, matrices, and linear systems.', icon: Divide, category: 'math', bg: 'bg-blue-500/10', color: 'text-blue-400' },
+        geometry: { name: 'Geometric Solver', desc: 'Compute trigonometric functions, area vectors, dimensions, and triangles.', icon: Triangle, category: 'math', bg: 'bg-cyan-500/10', color: 'text-cyan-400' },
+        gpa: { name: 'GPA Forecast Desk', desc: 'Tabulate cumulative grade indexes, course weights, and final goals.', icon: GraduationCap, category: 'math', bg: 'bg-pink-500/10', color: 'text-pink-400' },
+        science: { name: 'Physicochemical Core', desc: 'Calculate fundamental physical constants, gravitational variables, and molar formulas.', icon: FlaskConical, category: 'science', bg: 'bg-emerald-500/10', color: 'text-emerald-400' },
+        physics: { name: 'Kinematic & Quantum Workbench', desc: 'Simulate kinetic force profiles, optical lenses, orbital orbits, and thermal state changes.', icon: Zap, category: 'science', bg: 'bg-violet-500/10', color: 'text-violet-400' },
+        elements: { name: 'Interactive Periodic Table', desc: 'Explore group electron configurations, melting profiles, electronegativities.', icon: Atom, category: 'science', bg: 'bg-purple-500/10', color: 'text-purple-400' },
+        unit: { name: 'Scientific Converter', desc: 'Convert multidimensional units of thermodynamic temperature, speeds, digital sizing.', icon: RotateCcw, category: 'science', bg: 'bg-teal-500/10', color: 'text-teal-400' },
+        formulas: { name: 'Formula Encyclopedist', desc: 'Reference quick sheets for physics, chemical reactions, derivatives, complex numbers.', icon: Layers, category: 'research', bg: 'bg-indigo-500/10', color: 'text-indigo-400' },
+        citations: { name: 'Bibliography Engine', desc: 'Structure standard citations automatically following APA, MLA, Chicago formatting.', icon: Quote, category: 'research', bg: 'bg-amber-500/10', color: 'text-amber-400' }
+    };
 
     const categories = [
         { id: 'productivity', label: 'Productivity', icon: Activity, types: ['pomodoro', 'assignments', 'notes', 'flashcards'] },
@@ -3651,7 +3697,7 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                 <div className="space-y-2">
                     <div className="flex items-center gap-3 text-brand-primary mb-2">
                         <GraduationCap className="animate-pulse" size={24} />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Academic Engine v4.1</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Academic Engine v4.2</span>
                     </div>
                     <h2 className="text-5xl md:text-7xl font-black text-brand-text tracking-tightest leading-none">Research <span className="text-brand-primary">Terminal</span></h2>
                     <p className="text-brand-text-secondary text-lg font-light max-w-xl">
@@ -3689,7 +3735,8 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                                     <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-secondary">Terminal Module</span>
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">
-                                    {activeTool === 'gpa' ? 'GPA Calculator' :
+                                    {activeTool === 'dashboard' ? 'Overview Dashboard' :
+                                    activeTool === 'gpa' ? 'GPA Calculator' :
                                     activeTool === 'elements' ? 'Periodic Table' :
                                     activeTool === 'tutor' ? 'AI Tutor' :
                                     activeTool === 'equation' ? 'Equation Solver' :
@@ -3705,6 +3752,9 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                                     onChange={(e) => setActiveTool(e.target.value as ToolID)}
                                     className="w-full appearance-none bg-brand-bg border border-brand-border/50 hover:border-brand-primary/50 text-brand-text text-sm font-bold rounded-xl px-4 py-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all shadow-sm"
                                 >
+                                    <option value="dashboard" className="bg-brand-bg text-brand-primary font-black">
+                                        🎛️ Terminal Dashboard Overview
+                                    </option>
                                     {categories.map(cat => (
                                         <optgroup key={cat.id} label={cat.label} className="bg-brand-surface font-black text-brand-text-secondary">
                                             {cat.types.map(type => {
@@ -3735,8 +3785,18 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                     {/* Desktop Navigation List */}
                     <div className="hidden md:block bg-brand-surface border border-brand-border/50 p-4 rounded-3xl shadow-2xl backdrop-blur-3xl max-h-[50vh] md:max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
                         
+                        {/* Terminal Dashboard Overview Button */}
+                        <div className="mb-6">
+                            <SubNavButton
+                                label="Terminal Dashboard"
+                                isActive={activeTool === 'dashboard'}
+                                onClick={() => setActiveTool('dashboard')}
+                                icon={Layers}
+                            />
+                        </div>
+
                         {/* Interactive Sidebar Search */}
-                        <div className="relative mb-6">
+                        <div className="relative mb-6 pb-6 border-b border-brand-border/20">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-text-secondary">
                                 <Search size={14} />
                             </div>
@@ -3780,7 +3840,7 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                                                 label={getToolLabel(type)}
                                                 isActive={activeTool === type}
                                                 onClick={() => setActiveTool(type as ToolID)}
-                                                icon={ChevronRight}
+                                                icon={TOOLS_INFO[type as ToolID]?.icon || ChevronRight}
                                             />
                                         ))}
                                     </div>
@@ -3802,8 +3862,264 @@ const StudentTools: React.FC<{ onLoginClick: () => void }> = ({ onLoginClick }) 
                             className="relative group/tool"
                         >
                             <div className="absolute -inset-6 bg-brand-primary/5 rounded-[3rem] blur-3xl opacity-0 group-hover/tool:opacity-100 transition-opacity duration-1000" />
+                            
                             <div className="relative">
-                                {renderTool()}
+                                {/* Academic Dashboard / Hub Board */}
+                                {activeTool === 'dashboard' && (
+                                    <div className="space-y-12">
+                                        {/* Animated Banner with gradient accents */}
+                                        <div className="relative rounded-[2.5rem] bg-gradient-to-br from-brand-surface/40 to-brand-bg/20 border border-brand-border/40 p-8 md:p-12 overflow-hidden shadow-2xl backdrop-blur-md">
+                                            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                                            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 justify-between">
+                                                <div className="space-y-4 max-w-xl text-center md:text-left">
+                                                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest ring-1 ring-brand-primary/20">
+                                                        <Sparkles size={12} className="text-brand-accent animate-pulse" /> Personalized Research Desk
+                                                    </span>
+                                                    <h1 className="text-3xl md:text-5xl font-black text-brand-text leading-tight tracking-tightest">
+                                                        Academic <span className="text-brand-primary">Terminal Hub</span>
+                                                    </h1>
+                                                    <p className="text-brand-text-secondary text-base font-light leading-relaxed">
+                                                        Access all computational modeling, active study sessions, curriculum benchmarks, and scientific solvers from a single integrated research desk.
+                                                    </p>
+                                                </div>
+                                                
+                                                {/* Visual stats panel */}
+                                                <div className="grid grid-cols-2 gap-4 w-full md:w-auto shrink-0 max-w-sm">
+                                                    <div className="bg-brand-bg/40 border border-brand-border/30 rounded-2xl p-5 text-center shadow-inner">
+                                                        <div className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-1">Total Utilities</div>
+                                                        <div className="text-3xl font-black font-mono text-brand-text">19</div>
+                                                    </div>
+                                                    <div className="bg-brand-bg/40 border border-brand-border/30 rounded-2xl p-5 text-center shadow-inner">
+                                                        <div className="text-[10px] font-black text-brand-accent uppercase tracking-widest mb-1">Session Saved</div>
+                                                        <div className="text-3xl font-black font-mono text-brand-accent">Active</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Dashboard filter & searching */}
+                                        <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between border-b border-brand-border/20 pb-8">
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    onClick={() => setDashboardCategory('all')}
+                                                    className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                                                        dashboardCategory === 'all'
+                                                            ? 'bg-brand-primary text-brand-bg font-black shadow-lg shadow-brand-primary/20'
+                                                            : 'bg-brand-surface/50 border border-brand-border/50 text-brand-text-secondary hover:text-white hover:bg-brand-surface'
+                                                    }`}
+                                                >
+                                                    All Modules
+                                                </button>
+                                                {categories.map(cat => (
+                                                    <button
+                                                        key={cat.id}
+                                                        onClick={() => setDashboardCategory(cat.id)}
+                                                        className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 ${
+                                                            dashboardCategory === cat.id
+                                                                ? 'bg-brand-primary text-brand-bg font-black shadow-lg shadow-brand-primary/20'
+                                                                : 'bg-brand-surface/50 border border-brand-border/50 text-brand-text-secondary hover:text-white hover:bg-brand-surface'
+                                                        }`}
+                                                    >
+                                                        <cat.icon size={12} />
+                                                        {cat.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {/* Dashboard Search */}
+                                            <div className="relative w-full md:w-80">
+                                                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-text-secondary">
+                                                    <Search size={15} />
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search modules..."
+                                                    value={activeToolSearch}
+                                                    onChange={(e) => setActiveToolSearch(e.target.value)}
+                                                    className="w-full pl-10 pr-4 py-3 bg-brand-surface border border-brand-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all placeholder:text-brand-text-secondary/50 shadow-inner"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Pinned / Starred Tools Row */}
+                                        {pinnedTools.length > 0 && activeToolSearch === '' && (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-2 px-1 text-brand-accent">
+                                                    <Star size={16} className="fill-brand-accent text-brand-accent animate-pulse" />
+                                                    <h2 className="text-xs font-black uppercase tracking-[0.2em]">Quick Access Drawer</h2>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                    {pinnedTools.map(type => {
+                                                        const info = TOOLS_INFO[type];
+                                                        if (!info) return null;
+                                                        return (
+                                                            <motion.div
+                                                                key={`pinned-${type}`}
+                                                                whileHover={{ scale: 1.02 }}
+                                                                className="relative bg-brand-surface/60 border border-brand-border/40 p-6 rounded-[2rem] shadow-xl group cursor-pointer overflow-hidden flex items-start gap-4 hover:border-brand-primary/20"
+                                                                onClick={() => setActiveTool(type)}
+                                                            >
+                                                                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full blur-2xl group-hover:bg-brand-primary/10 transition-colors pointer-events-none" />
+                                                                <div className={`w-10 h-10 rounded-xl ${info.bg} ${info.color} flex items-center justify-center border border-brand-border/40 shrink-0`}>
+                                                                    <info.icon size={20} />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center justify-between gap-2">
+                                                                        <h3 className="text-sm font-black text-brand-text truncate group-hover:text-brand-primary transition-colors">{info.name}</h3>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                togglePin(type);
+                                                                            }}
+                                                                            className="text-brand-accent hover:text-brand-text-secondary transition-colors shrink-0 p-1 hover:bg-brand-bg/60 rounded-lg"
+                                                                        >
+                                                                            <Star size={14} className="fill-brand-accent text-brand-accent" />
+                                                                        </button>
+                                                                    </div>
+                                                                    <p className="text-xs text-brand-text-secondary mt-1 font-light leading-relaxed truncate">{info.desc}</p>
+                                                                </div>
+                                                            </motion.div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Grid display of categorized modules */}
+                                        <div className="space-y-12">
+                                            {categories
+                                                .filter(cat => dashboardCategory === 'all' || dashboardCategory === cat.id)
+                                                .map(cat => {
+                                                    const filteredTypes = cat.types.filter(type => {
+                                                        const info = TOOLS_INFO[type as ToolID];
+                                                        const label = type === 'gpa' ? 'GPA Calculator' :
+                                                                    type === 'elements' ? 'Periodic Table' :
+                                                                    type === 'tutor' ? 'AI Tutor' :
+                                                                    type === 'equation' ? 'Equation Solver' :
+                                                                    type === 'wolfram' ? 'Wolfram Computational' :
+                                                                    type === 'mathexercises' ? 'Math Drills' :
+                                                                    type === 'k5worksheets' ? 'K5 Worksheets' :
+                                                                    type.charAt(0).toUpperCase() + type.slice(1);
+                                                        return label.toLowerCase().includes(activeToolSearch.toLowerCase()) || 
+                                                               info?.desc.toLowerCase().includes(activeToolSearch.toLowerCase());
+                                                    });
+
+                                                    if (filteredTypes.length === 0) return null;
+
+                                                    return (
+                                                        <div key={`section-${cat.id}`} className="space-y-6">
+                                                            <div className="flex items-center gap-3 border-b border-brand-border/10 pb-3">
+                                                                <div className="w-8 h-8 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+                                                                    <cat.icon size={16} />
+                                                                </div>
+                                                                <h2 className="text-base font-black uppercase tracking-widest text-brand-text">{cat.label}</h2>
+                                                                <span className="text-xs font-mono text-brand-text-secondary ml-auto bg-brand-surface/40 px-3 py-1 border border-brand-border rounded-lg">{filteredTypes.length} Modules</span>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                                {filteredTypes.map(type => {
+                                                                    const info = TOOLS_INFO[type as ToolID];
+                                                                    if (!info) return null;
+                                                                    const isPinned = pinnedTools.includes(type as ToolID);
+                                                                    
+                                                                    const label = type === 'gpa' ? 'GPA Calculator' :
+                                                                        type === 'elements' ? 'Periodic Table' :
+                                                                        type === 'tutor' ? 'AI Tutor' :
+                                                                        type === 'equation' ? 'Equation Solver' :
+                                                                        type === 'wolfram' ? 'Wolfram Computational' :
+                                                                        type === 'mathexercises' ? 'Math Drills' :
+                                                                        type === 'k5worksheets' ? 'K5 Worksheets' :
+                                                                        type.charAt(0).toUpperCase() + type.slice(1);
+
+                                                                    return (
+                                                                        <motion.div
+                                                                            key={`card-${type}`}
+                                                                            whileHover={{ y: -4, border: '1px solid rgba(255,255,255,0.15)' }}
+                                                                            className="bg-brand-surface border border-brand-border/30 rounded-[2.2rem] p-8 flex flex-col h-full shadow-lg hover:shadow-2xl hover:shadow-brand-primary/5 transition-all cursor-pointer group relative overflow-hidden"
+                                                                            onClick={() => setActiveTool(type as ToolID)}
+                                                                        >
+                                                                            {/* Accent glowing aura */}
+                                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none group-hover:bg-brand-primary/10 transition-colors duration-500" />
+                                                                            
+                                                                            <div className="flex items-center justify-between mb-6">
+                                                                                <div className={`w-14 h-14 rounded-2xl ${info.bg} ${info.color} flex items-center justify-center border border-brand-border/50 group-hover:scale-110 transition-transform`}>
+                                                                                    <info.icon size={28} />
+                                                                                </div>
+                                                                                
+                                                                                <button
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        togglePin(type as ToolID);
+                                                                                    }}
+                                                                                    className={`p-2.5 rounded-xl border border-brand-border/50 hover:border-brand-accent/50 transition-colors ${
+                                                                                        isPinned ? 'text-brand-accent bg-brand-accent/10 border-brand-accent/20' : 'text-brand-text-secondary hover:text-brand-text'
+                                                                                    }`}
+                                                                                >
+                                                                                    <Star size={14} className={isPinned ? 'fill-brand-accent text-brand-accent' : ''} />
+                                                                                </button>
+                                                                            </div>
+
+                                                                            <div className="flex-1 space-y-2">
+                                                                                <h3 className="text-lg font-black tracking-tight text-brand-text group-hover:text-brand-primary transition-colors">{label}</h3>
+                                                                                <p className="text-sm text-brand-text-secondary font-light leading-relaxed">{info.desc}</p>
+                                                                            </div>
+
+                                                                            <div className="mt-8 pt-4 border-t border-brand-border/10 flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-brand-text-secondary group-hover:text-brand-primary transition-colors">
+                                                                                <span>Deploy Module</span>
+                                                                                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Back to Hub Breadcrumb Header for detail views */}
+                                {activeTool !== 'dashboard' && (
+                                    <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-brand-surface/30 p-4 rounded-2xl border border-brand-border/30 backdrop-blur-md">
+                                        <button
+                                            onClick={() => setActiveTool('dashboard')}
+                                            className="flex items-center gap-2 px-4 py-2 bg-brand-bg hover:bg-brand-surface border border-brand-border hover:border-brand-primary/30 rounded-xl font-bold text-xs uppercase tracking-wider text-brand-text-secondary hover:text-white transition-all shadow-inner group/back"
+                                        >
+                                            <ChevronLeft size={16} className="group-hover/back:-translate-x-1 transition-transform" />
+                                            <span>Academic Dashboard</span>
+                                        </button>
+
+                                        <div className="flex items-center gap-3">
+                                            {/* Category & pin badge */}
+                                            {(() => {
+                                                const info = TOOLS_INFO[activeTool];
+                                                if (!info) return null;
+                                                return (
+                                                    <>
+                                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] uppercase tracking-widest font-black ${info.bg} ${info.color} border border-brand-border/40`}>
+                                                            <info.icon size={10} />
+                                                            {info.category}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => togglePin(activeTool)}
+                                                            className={`p-2 rounded-lg border transition-colors ${
+                                                                pinnedTools.includes(activeTool)
+                                                                    ? 'text-brand-accent bg-brand-accent/10 border-brand-accent/20'
+                                                                    : 'text-brand-text-secondary border-brand-border/40 hover:text-brand-text hover:border-brand-text/30'
+                                                            }`}
+                                                            title={pinnedTools.includes(activeTool) ? "Unpin Tool" : "Pin to Favorites"}
+                                                        >
+                                                            <Star size={14} className={pinnedTools.includes(activeTool) ? 'fill-brand-accent text-brand-accent' : ''} />
+                                                        </button>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {activeTool !== 'dashboard' && renderTool()}
                             </div>
 
                             {!user && (

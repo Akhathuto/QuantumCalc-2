@@ -17,6 +17,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI, Type } from "@google/genai";
+import { dailyGoalService } from '../services/dailyGoalService';
 
 interface QuizQuestion {
     q: string;
@@ -594,6 +595,9 @@ const LessonsHub = ({ onLoginClick }: { onLoginClick: () => void }) => {
         });
         setScore(points);
         setQuizGraded(true);
+        if (points > 0) {
+            dailyGoalService.incrementSolved(points);
+        }
 
         const percentage = (points / selectedLesson.quiz.length) * 100;
         if (percentage === 100) setScholarRank('Gold Scholar (Summa Cum Laude)');

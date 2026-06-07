@@ -21,6 +21,7 @@ import Latex from 'react-latex-next';
 import ReactMarkdown from 'react-markdown';
 import { getExerciseAiExplanation } from '../services/geminiService';
 import { triggerCloudSync } from '../services/googleDriveService';
+import { dailyGoalService } from '../services/dailyGoalService';
 
 interface DrillProblem {
   id: number;
@@ -1057,6 +1058,7 @@ export const MathExercises: React.FC = () => {
 
     if (isAnswerCorrect) {
       setScore(prev => prev + 1);
+      dailyGoalService.incrementSolved(1);
       const nextStreak = streak + 1;
       setStreak(nextStreak);
       if (nextStreak > highStreak) {

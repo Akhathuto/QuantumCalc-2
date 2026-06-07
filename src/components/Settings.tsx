@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info, Cpu, Sparkles, Clipboard, Activity, Upload, Sliders, Volume2, Compass, Eye } from 'lucide-react';
+import { Moon, Sun, Palette, Check, Download, Trash2, GraduationCap, School, User as UserIcon, HardHat, Building2, Save, Cloud, RefreshCw, AlertCircle, Smartphone, Info, Cpu, Sparkles, Clipboard, Activity, Upload, Sliders, Volume2, Compass, Eye, Pin } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -7,6 +7,10 @@ import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandle
 import { secureStorage, validateApiKey, getGeminiModel } from '../services/geminiService';
 import { googleDriveService } from '../services/googleDriveService';
 import { motion } from 'motion/react';
+import { toolCategories } from './common/toolCategories';
+import { dailyGoalService } from '../services/dailyGoalService';
+import { Target, Trophy, Flame as FlameIcon, CheckCircle, RotateCcw } from 'lucide-react';
+import { Achievements } from './Achievements';
 
 const roles = [
     { id: 'student', title: 'Student', icon: GraduationCap, color: 'text-blue-500', bg: 'bg-blue-500/10' },
@@ -33,7 +37,7 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
-    const { user, userData, accessToken } = useAuth();
+    const { user, userData, accessToken, signInWithGoogle } = useAuth();
     const [toastMessage, setToastMessage] = useState('');
     const [currentThemeId, setCurrentThemeId] = useState(() => {
         try { return localStorage.getItem('theme') || 'dark'; } catch(e) { return 'dark'; }
@@ -71,6 +75,43 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
             console.warn("Could not dispatch numberFormat-change event", e);
         }
         showToast('Number formatting updated.');
+    };
+
+    const [pinnedToolIds, setPinnedToolIds] = useState<string[]>(() => {
+        try {
+            return JSON.parse(localStorage.getItem('pinnedTools') || '[]');
+        } catch {
+            return [];
+        }
+    });
+
+    const [goalData, setGoalData] = useState(() => dailyGoalService.getGoalData());
+
+    useEffect(() => {
+        const handlePinnedChange = (e: any) => {
+            setPinnedToolIds(e.detail?.pinnedTools || []);
+        };
+        const handleGoalChange = (e: any) => {
+            setGoalData(dailyGoalService.getGoalData());
+        };
+        window.addEventListener('pinnedTools-change', handlePinnedChange);
+        window.addEventListener('dailyGoal-change', handleGoalChange);
+        return () => {
+            window.removeEventListener('pinnedTools-change', handlePinnedChange);
+            window.removeEventListener('dailyGoal-change', handleGoalChange);
+        };
+    }, []);
+
+    const togglePin = (toolId: string) => {
+        let nextPinned: string[];
+        if (pinnedToolIds.includes(toolId)) {
+            nextPinned = pinnedToolIds.filter(id => id !== toolId);
+        } else {
+            nextPinned = [...pinnedToolIds, toolId];
+        }
+        setPinnedToolIds(nextPinned);
+        localStorage.setItem('pinnedTools', JSON.stringify(nextPinned));
+        window.dispatchEvent(new CustomEvent('pinnedTools-change', { detail: { pinnedTools: nextPinned } }));
     };
 
     const selectTheme = (themeId: string) => {
@@ -680,6 +721,12 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                                 {isSavingProfile ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
+
+                        {/* Divider separating details from Achievements grid */}
+                        <div className="h-[1px] bg-brand-border/20 my-6" />
+
+                        {/* Achievements & Academic Milestones Grid */}
+                        <Achievements />
                     </div>
                 </motion.div>
             )}
@@ -708,7 +755,7 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                                 </div>
                             </div>
 
-                            {accessToken && (
+                            {accessToken ? (
                                 <div className="p-4 rounded-2xl bg-brand-bg/50 border border-brand-border/40 flex items-center justify-between">
                                     <div className="space-y-0.5">
                                         <h5 className="text-xs font-bold text-brand-text">Real-Time Cloud Auto-Backup</h5>
@@ -720,6 +767,40 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                                     >
                                         <div className={`bg-brand-bg w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${autoSyncEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
                                     </button>
+                                </div>
+                            ) : (
+                                <div className="p-4 rounded-2xl bg-brand-primary/5 border border-brand-primary/10 flex flex-col gap-3">
+                                    <div>
+                                        <h5 className="text-xs font-bold text-brand-text">Authorize Backups</h5>
+                                        <p className="text-[10px] text-brand-text-secondary leading-relaxed">Securely store your custom variables, preferences, and calculations.</p>
+                                    </div>
+                                    
+                                    {window.self !== window.top && (
+                                        <p className="text-[9.5px] text-brand-text-secondary bg-brand-bg/60 p-2.5 rounded-xl leading-relaxed">
+                                            ⚠️ Sandbox Active. If the popup login fails, click the <strong>Redirect</strong> option or <strong>Open in Full Tab</strong>.
+                                        </p>
+                                    )}
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => signInWithGoogle && signInWithGoogle(false)}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white hover:bg-neutral-100 text-black rounded-lg text-xs font-bold transition-all cursor-pointer min-w-[100px]"
+                                        >
+                                            <svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                            </svg>
+                                            <span>Popup</span>
+                                        </button>
+                                        <button
+                                            onClick={() => signInWithGoogle && signInWithGoogle(true)}
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-brand-bg hover:bg-brand-border/40 text-brand-text border border-brand-border/50 rounded-lg text-xs font-bold transition-all cursor-pointer min-w-[100px]"
+                                        >
+                                            <span>Redirect</span>
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
@@ -1211,6 +1292,283 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                             </button>
                         ))}
                     </div>
+                </div>
+            </motion.div>
+
+            {/* Daily Calculation Goals & Consistency Section */}
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm relative overflow-hidden animate-fade-in" id="daily_goal_settings_card">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+                
+                <h3 className="text-2xl font-bold mb-6 text-brand-text flex items-center justify-between">
+                    <span className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                            <Target size={24} />
+                        </div>
+                        Daily Calculation Goal
+                    </span>
+                    {dailyGoalService.getTodaySolved() >= goalData.target && (
+                        <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold animate-pulse">
+                            <Trophy size={14} /> Goal met today!
+                        </span>
+                    )}
+                </h3>
+
+                <p className="text-brand-text-secondary text-sm font-light mb-8">
+                    Set a customized target number of arithmetic calculations, science worksheets, or cognitive drills to answer correctly each day. Cultivate a persistent learning habit and watch your consistency grow!
+                </p>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    {/* Circle Progress Ring */}
+                    <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-brand-bg/40 rounded-2xl border border-brand-border/30 relative">
+                        <div className="relative w-36 h-36 flex items-center justify-center">
+                            {/* SVG Progress Ring */}
+                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                                {/* Track */}
+                                <circle
+                                    cx="60"
+                                    cy="60"
+                                    r="50"
+                                    className="stroke-brand-border/10 fill-none"
+                                    strokeWidth="8"
+                                />
+                                {/* Progress dynamic circle */}
+                                <motion.circle
+                                    cx="60"
+                                    cy="60"
+                                    r="50"
+                                    className="stroke-emerald-400 fill-none"
+                                    strokeWidth="8"
+                                    strokeDasharray={2 * Math.PI * 50}
+                                    initial={{ strokeDashoffset: 2 * Math.PI * 50 }}
+                                    animate={{ 
+                                        strokeDashoffset: (2 * Math.PI * 50) - (Math.min(100, (dailyGoalService.getTodaySolved() / goalData.target) * 100) / 100) * (2 * Math.PI * 50) 
+                                    }}
+                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            {/* Inner Metric Text */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-3xl font-black font-mono text-brand-text leading-none">
+                                    {dailyGoalService.getTodaySolved()}
+                                </span>
+                                <div className="w-12 h-[1px] bg-brand-border/40 my-1" />
+                                <span className="text-xs font-mono font-black text-emerald-400 leading-none">
+                                    Goal: {goalData.target}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Percent status */}
+                        <div className="text-center mt-4">
+                            <span className="text-lg font-black text-brand-text">
+                                {Math.round(Math.min(100, (dailyGoalService.getTodaySolved() / goalData.target) * 100))}%
+                            </span>
+                            <span className="text-xs text-brand-text-secondary block">completed today</span>
+                        </div>
+                    </div>
+
+                    {/* Settings Controls */}
+                    <div className="lg:col-span-8 space-y-6">
+                        {/* Target selection buttons */}
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-[0.15em] text-brand-text-secondary mb-3">
+                                Set Daily Target Problems Solved
+                            </label>
+                            <div className="flex flex-wrap gap-2.5">
+                                {[3, 5, 10, 15, 20, 25].map((val) => (
+                                    <button
+                                        key={val}
+                                        onClick={() => {
+                                            dailyGoalService.setTarget(val);
+                                            showToast(`Daily target set to ${val} problems.`);
+                                        }}
+                                        className={`px-4 py-2.5 rounded-xl font-mono text-sm font-black transition-all cursor-pointer ${
+                                            goalData.target === val
+                                                ? 'bg-emerald-500 text-brand-bg shadow-md shadow-emerald-500/20'
+                                                : 'bg-brand-bg/50 border border-brand-border/60 text-brand-text-secondary hover:text-brand-text hover:border-brand-primary'
+                                        }`}
+                                    >
+                                        {val}
+                                    </button>
+                                ))}
+                                {/* Custom Numeric controller */}
+                                <div className="flex items-center bg-brand-bg/50 border border-brand-border/60 rounded-xl overflow-hidden px-2 h-[41px]">
+                                    <span className="text-[10px] font-black uppercase text-brand-text-secondary pr-2">CUSTOM</span>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        value={goalData.target}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value, 10);
+                                            if (!isNaN(val) && val > 0) {
+                                                dailyGoalService.setTarget(val);
+                                            }
+                                        }}
+                                        className="w-16 bg-transparent text-center border-none p-0 text-brand-text font-mono font-black placeholder-brand-text-secondary/40 focus:outline-none focus:ring-0 text-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Consistency indicators Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Streak Counter Block */}
+                            <div className="p-4 bg-brand-bg/40 border border-brand-border/30 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-amber-500/10 text-amber-500 rounded-lg">
+                                        <FlameIcon size={18} className="fill-amber-500/10" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-brand-text-secondary block leading-none mb-1">Current Streak</span>
+                                        <span className="text-xl font-mono font-black text-amber-500">{goalData.streak} days</span>
+                                    </div>
+                                </div>
+                                <div className="text-[10px] font-bold text-brand-text-secondary max-w-[100px] text-right leading-tight">
+                                    Keep completing goals to protect your streak!
+                                </div>
+                            </div>
+
+                            {/* Total Days track */}
+                            <div className="p-4 bg-brand-bg/40 border border-brand-border/30 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-brand-primary/10 text-brand-primary rounded-lg">
+                                        <Trophy size={18} />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-brand-text-secondary block leading-none mb-1">Completed Days</span>
+                                        <span className="text-xl font-mono font-black text-brand-primary">
+                                            {Object.values(goalData.history).filter(solved => solved >= goalData.target).length} Days
+                                        </span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (confirm("Reset current daily statistics and history logs? This action is permanent.")) {
+                                            dailyGoalService.saveGoalData({ target: 5, history: {}, streak: 0 });
+                                            showToast("Daily statistics and target goals reset.");
+                                        }
+                                    }}
+                                    title="Reset consistency records"
+                                    className="p-2 rounded-lg text-brand-text-secondary hover:text-red-400 hover:bg-red-500/5 transition-all"
+                                >
+                                    <RotateCcw size={14} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Weekly consistency timeline */}
+                        <div className="bg-brand-bg/20 p-4 border border-brand-border/30 rounded-2xl">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-brand-text-secondary block mb-3">
+                                Weekly Consistency (Last 7 Days)
+                            </span>
+                            <div className="grid grid-cols-7 gap-2">
+                                {dailyGoalService.getPastWeeklyConsistency().map((dayData, idx) => {
+                                    const dateObj = new Date(dayData.date + 'T00:00:00');
+                                    const weekday = dateObj.toLocaleDateString(undefined, { weekday: 'short' });
+                                    const isToday = dayData.date === new Date().toISOString().split('T')[0];
+                                    
+                                    return (
+                                        <div key={dayData.date} className={`flex flex-col items-center p-2 rounded-xl border relative ${
+                                            isToday 
+                                                ? 'bg-brand-primary/5 border-brand-primary/30' 
+                                                : dayData.completed 
+                                                    ? 'bg-emerald-500/5 border-emerald-500/10' 
+                                                    : 'bg-brand-bg/40 border-brand-border/10'
+                                        }`}>
+                                            <span className="text-[9px] font-black uppercase text-brand-text-secondary leading-none mb-1.5">
+                                                {weekday}
+                                            </span>
+                                            
+                                            <div className="mb-1">
+                                                {dayData.completed ? (
+                                                    <CheckCircle size={16} className="text-emerald-400" />
+                                                ) : (
+                                                    <div className="w-4 h-4 rounded-full border border-dashed border-brand-text-secondary/40 flex items-center justify-center">
+                                                        <span className="text-[8px] font-mono font-bold text-brand-text-secondary/60">
+                                                            {dayData.solved}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <span className="text-[8px] font-mono text-brand-text-secondary/80 mt-0.5">
+                                                {dayData.solved}/{dayData.target}
+                                            </span>
+
+                                            {isToday && (
+                                                <div className="absolute -bottom-1 px-1 bg-brand-primary text-brand-bg text-[7px] font-black uppercase rounded">
+                                                    TODAY
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            <motion.div variants={sectionVariants} className="bg-brand-surface/40 p-6 md:p-8 rounded-3xl border border-brand-border/50 shadow-xl backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
+                
+                <h3 className="text-2xl font-bold mb-8 text-brand-text flex items-center justify-between">
+                    <span className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-brand-primary/10 text-brand-primary">
+                            <Pin size={24} className="rotate-45" />
+                        </div>
+                        Favorites & Pinning
+                    </span>
+                </h3>
+
+                <p className="text-brand-text-secondary text-sm font-light mb-6">
+                    Customize your workspace. Pin your most frequently used academic aids, calculation tools, and unit converters here or by clicking the pin indicators directly in the sidebar for rapid, one-click access.
+                </p>
+
+                <div className="space-y-6">
+                    {toolCategories.map((category) => (
+                        <div key={category.label} className="bg-brand-bg/40 p-5 rounded-2xl border border-brand-border/30">
+                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-brand-text-secondary mb-4 flex items-center gap-2 animate-fade-in">
+                                <category.Icon size={14} className="opacity-70" />
+                                {category.label}
+                            </h4>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                {category.items.map((item) => {
+                                    const isPinned = pinnedToolIds.includes(item.id);
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => {
+                                                togglePin(item.id);
+                                                showToast(isPinned ? `Removed ${item.label} from pinned tools.` : `Pinned ${item.label} to the top!`);
+                                            }}
+                                            className={`flex items-center justify-between p-3.5 rounded-xl border transition-all text-left group cursor-pointer ${
+                                                isPinned 
+                                                    ? 'border-brand-primary bg-brand-primary/5 text-brand-text shadow-sm shadow-brand-primary/5' 
+                                                    : 'border-brand-border/50 bg-brand-bg/20 hover:border-brand-primary/30 hover:bg-brand-surface text-brand-text-secondary hover:text-brand-text hover:shadow-md'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <item.Icon size={16} className={isPinned ? 'text-brand-primary shrink-0' : 'opacity-70 shrink-0 group-hover:scale-110 transition-transform duration-200'} />
+                                                <span className="text-sm font-semibold truncate">{item.label}</span>
+                                            </div>
+                                            <Pin 
+                                                size={14} 
+                                                className={`transition-all duration-200 shrink-0 ${
+                                                    isPinned 
+                                                        ? 'text-brand-primary fill-brand-primary scale-110' 
+                                                        : 'opacity-40 group-hover:opacity-100 group-hover:text-brand-primary hover:scale-125'
+                                                }`} 
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </motion.div>
 
