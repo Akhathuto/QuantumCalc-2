@@ -348,6 +348,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError("Please enter a valid email address.");
       } else if (err.code === 'auth/internal-error') {
         setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
+      } else if (err.message?.includes('firebase-app-check-token-is-invalid') || err.message?.includes('AppCheck') || err.message?.includes('app-check')) {
+        setError("Firebase App Check Validation Blocked: App Check is checking signatures or recaptcha is blocked in this container/iframe sandbox. Click 'Unlock Sandbox Workspace' below to bypass security check and login instantly with fully functional offline state.");
       } else {
         setError(err.message || "An unexpected error occurred during sign-in.");
       }
@@ -372,6 +374,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError("Admin suggestion: Guest sign-in is disabled. Please go to your Firebase Console > Authentication > Sign-in method, enable 'Anonymous', and click Save.");
       } else if (err.code === 'auth/internal-error') {
         setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
+      } else if (err.message?.includes('firebase-app-check-token-is-invalid') || err.message?.includes('AppCheck') || err.message?.includes('app-check')) {
+        setError("Firebase App Check Validation Blocked: App Check is checking signatures or recaptcha is blocked in this container/iframe sandbox. Click 'Unlock Sandbox Workspace' below to bypass security check and login instantly with fully functional offline state.");
       } else {
         setError(err.message || "An unexpected error occurred during guest sign-in.");
       }
