@@ -6,18 +6,25 @@ import {
   browserSessionPersistence,
   inMemoryPersistence
 } from 'firebase/auth';
-import { doc, getDocFromServer, initializeFirestore } from 'firebase/firestore';
+import { doc, getDocFromServer, initializeFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-// Use initializeFirestore with optimized settings for container/proxy environments
+// Use initializeFirestore with optimized settings for container/proxy environments and persistent offline cache
 const dbId = (firebaseConfig as any).firestoreDatabaseId || '(default)';
 console.log(`[Firebase] Initializing Firestore with Database ID: ${dbId}`);
 
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
 }, dbId);
+
+// Explicitly enable IndexedDB Persistence as requested
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(db).catch((err) => {
+    console.warn("[Firebase] Could not enable IndexedDB persistence:", err.code, err.message);
+  });
+}
 
 // Initialize Firebase Auth with explicit persistences in order of preference.
 // By omitting the default popup redirect resolver from the global initialization configuration,
