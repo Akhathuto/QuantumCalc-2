@@ -3,6 +3,7 @@ import App from './App';
 import './index.css';
 import 'katex/dist/katex.min.css';
 import { AuthProvider } from './components/AuthProvider';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Fail-safe protection against Vite/infrastructure interceptors crashing on circular JSON objects in console.error
 const originalConsoleError = console.error;
@@ -56,7 +57,9 @@ if (!rootElement) {
 
 const root = createRoot(rootElement);
 root.render(
-  <AuthProvider>
-    <App />
-  </AuthProvider>
+  <ErrorBoundary>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </ErrorBoundary>
 );

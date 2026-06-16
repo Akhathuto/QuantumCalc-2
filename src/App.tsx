@@ -14,44 +14,45 @@ import { AppTab, HistoryEntry } from './types';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import AuthModal from './components/common/AuthModal';
 import { triggerCloudSync } from './services/googleDriveService';
+import { lazyWithRetry } from './lib/lazyWithRetry';
 
 // Lazy-load components with heavy dependencies (like charting libraries) to prevent startup crashes
-const Graph = lazy(() => import('./components/Graph'));
-const MathTools = lazy(() => import('./components/MathTools'));
-const CurrencyConverter = lazy(() => import('./components/CurrencyConverter'));
-const FinancialCalculator = lazy(() => import('./components/FinancialCalculator'));
-const HealthCalculator = lazy(() => import('./components/HealthCalculator'));
-const TextTools = lazy(() => import('./components/TextTools'));
-const DeveloperTools = lazy(() => import('./components/DeveloperTools'));
-const StudentTools = lazy(() => import('./components/StudentTools'));
-const K5Worksheets = lazy(() => import('./components/K5Worksheets'));
-const FloatingAssistant = lazy(() => import('./components/FloatingAssistant'));
-const Scratchpad = lazy(() => import('./components/Scratchpad'));
-const CommandPalette = lazy(() => import('./components/CommandPalette'));
-const PeriodicTable = lazy(() => import('./components/PeriodicTable'));
-const ProfileOnboarding = lazy(() => import('./components/ProfileOnboarding'));
-const FeedbackPage = lazy(() => import('./components/FeedbackPage'));
-const ExerciseReference = lazy(() => import('./components/ExerciseReference'));
-const StudyGuides = lazy(() => import('./components/StudyGuides').then(m => ({ default: m.StudyGuides })));
+const Graph = lazy(() => lazyWithRetry(() => import('./components/Graph')));
+const MathTools = lazy(() => lazyWithRetry(() => import('./components/MathTools')));
+const CurrencyConverter = lazy(() => lazyWithRetry(() => import('./components/CurrencyConverter')));
+const FinancialCalculator = lazy(() => lazyWithRetry(() => import('./components/FinancialCalculator')));
+const HealthCalculator = lazy(() => lazyWithRetry(() => import('./components/HealthCalculator')));
+const TextTools = lazy(() => lazyWithRetry(() => import('./components/TextTools')));
+const DeveloperTools = lazy(() => lazyWithRetry(() => import('./components/DeveloperTools')));
+const StudentTools = lazy(() => lazyWithRetry(() => import('./components/StudentTools')));
+const K5Worksheets = lazy(() => lazyWithRetry(() => import('./components/K5Worksheets')));
+const FloatingAssistant = lazy(() => lazyWithRetry(() => import('./components/FloatingAssistant')));
+const Scratchpad = lazy(() => lazyWithRetry(() => import('./components/Scratchpad')));
+const CommandPalette = lazy(() => lazyWithRetry(() => import('./components/CommandPalette')));
+const PeriodicTable = lazy(() => lazyWithRetry(() => import('./components/PeriodicTable')));
+const ProfileOnboarding = lazy(() => lazyWithRetry(() => import('./components/ProfileOnboarding')));
+const FeedbackPage = lazy(() => lazyWithRetry(() => import('./components/FeedbackPage')));
+const ExerciseReference = lazy(() => lazyWithRetry(() => import('./components/ExerciseReference')));
+const StudyGuides = lazy(() => lazyWithRetry(() => import('./components/StudyGuides').then(m => ({ default: m.StudyGuides }))));
 
-const PrivacyProtocol = lazy(() => import('./components/PrivacyProtocol'));
-const CoreLicense = lazy(() => import('./components/CoreLicense'));
-const SupportHub = lazy(() => import('./components/SupportHub'));
-const MathSandbox = lazy(() => import('./components/MathSandbox'));
-const GoogleCalendar = lazy(() => import('./components/GoogleCalendar'));
+const PrivacyProtocol = lazy(() => lazyWithRetry(() => import('./components/PrivacyProtocol')));
+const CoreLicense = lazy(() => lazyWithRetry(() => import('./components/CoreLicense')));
+const SupportHub = lazy(() => lazyWithRetry(() => import('./components/SupportHub')));
+const MathSandbox = lazy(() => lazyWithRetry(() => import('./components/MathSandbox')));
+const GoogleCalendar = lazy(() => lazyWithRetry(() => import('./components/GoogleCalendar')));
 
 // Secondary and lower-usage components lazy loaded to optimize initial bundle size & load times
-const History = lazy(() => import('./components/History'));
-const UnitConverter = lazy(() => import('./components/UnitConverter').then(m => ({ default: m.UnitConverter })));
-const BaseConverter = lazy(() => import('./components/BaseConverter'));
-const ProgrammerCalculator = lazy(() => import('./components/ProgrammerCalculator'));
-const DateCalculator = lazy(() => import('./components/DateCalculator'));
-const About = lazy(() => import('./components/About'));
-const Contact = lazy(() => import('./components/Contact'));
-const TermsAndLicense = lazy(() => import('./components/TermsAndLicense'));
-const Settings = lazy(() => import('./components/Settings'));
-const Help = lazy(() => import('./components/Help'));
-const ExploreHub = lazy(() => import('./components/ExploreHub'));
+const History = lazy(() => lazyWithRetry(() => import('./components/History')));
+const UnitConverter = lazy(() => lazyWithRetry(() => import('./components/UnitConverter').then(m => ({ default: m.UnitConverter }))));
+const BaseConverter = lazy(() => lazyWithRetry(() => import('./components/BaseConverter')));
+const ProgrammerCalculator = lazy(() => lazyWithRetry(() => import('./components/ProgrammerCalculator')));
+const DateCalculator = lazy(() => lazyWithRetry(() => import('./components/DateCalculator')));
+const About = lazy(() => lazyWithRetry(() => import('./components/About')));
+const Contact = lazy(() => lazyWithRetry(() => import('./components/Contact')));
+const TermsAndLicense = lazy(() => lazyWithRetry(() => import('./components/TermsAndLicense')));
+const Settings = lazy(() => lazyWithRetry(() => import('./components/Settings')));
+const Help = lazy(() => lazyWithRetry(() => import('./components/Help')));
+const ExploreHub = lazy(() => lazyWithRetry(() => import('./components/ExploreHub')));
 
 const App = () => {
   const { user, userData, accessToken, loading } = useAuth();

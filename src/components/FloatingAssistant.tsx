@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AppTab } from '../types';
 import { getApiKey } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
-import Markdown from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 
 interface FloatingAssistantProps {
   activeTab: AppTab;
@@ -158,7 +158,7 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
                         m.text
                       ) : (
                         <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-brand-bg/50 prose-pre:border prose-pre:border-brand-border prose-pre:rounded-lg">
-                          <Markdown>{m.text}</Markdown>
+                          <ReactMarkdown>{m.text}</ReactMarkdown>
                         </div>
                       )}
                     </div>
