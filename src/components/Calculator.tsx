@@ -3,9 +3,10 @@ import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { HistoryEntry, Explanation, AppTab } from '../types';
 import { getFormulaExplanation } from '../services/geminiService';
 import { triggerCloudSync } from '../services/googleDriveService';
+import { localSyncService, SyncState } from '../services/LocalSyncService';
 import { formatNumber } from '../lib/formatters';
 import { create, all } from 'mathjs';
-import { Copy, Check, Loader, Brain, FlaskConical, AlertCircle, Share2, Volume2, VolumeX, Sliders, Keyboard, Sparkles } from 'lucide-react';
+import { Copy, Check, Loader, Brain, FlaskConical, AlertCircle, Share2, Volume2, VolumeX, Sliders, Keyboard, Sparkles, TrendingUp, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const TiltCard: React.FC<{
@@ -179,6 +180,64 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastAnswer, setLastAnswer] = useState<string>('0');
+  
+  // Local Sync State
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [syncRoomId, setSyncRoomId] = useState<string | null>(localSyncService.getRoomId());
+  const [syncInputId, setSyncInputId] = useState('');
+  const [syncStatus, setSyncStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
+
+  useEffect(() => {
+    const unsubscribe = localSyncService.subscribe((state: Partial<SyncState>) => {
+      if (state.currentExpression !== undefined) {
+        setExpression(state.currentExpression);
+        setCurrentInput('');
+        setIsResultState(true);
+      }
+    });
+    
+    if (localSyncService.getRoomId()) {
+      setSyncStatus('connected');
+    }
+
+    return unsubscribe;
+  }, []);
+
+  const handleHostSync = async () => {
+    setSyncStatus('connecting');
+    try {
+      const roomId = await localSyncService.initialize();
+      setSyncRoomId(roomId);
+      setSyncStatus('connected');
+      showToast('Hosted Sync Room');
+    } catch (e) {
+      setSyncStatus('disconnected');
+      showToast('Failed to host room');
+    }
+  };
+
+  const handleJoinSync = async () => {
+    if (!syncInputId) return;
+    setSyncStatus('connecting');
+    try {
+      const roomId = await localSyncService.initialize(syncInputId);
+      setSyncRoomId(roomId);
+      setSyncStatus('connected');
+      showToast('Joined Sync Room');
+      setIsSyncModalOpen(false);
+    } catch (e) {
+      setSyncStatus('disconnected');
+      showToast('Failed to join room');
+    }
+  };
+
+  const handleDisconnectSync = () => {
+    localSyncService.disconnect();
+    setSyncRoomId(null);
+    setSyncStatus('disconnected');
+    showToast('Disconnected from Sync Room');
+  };
+
   const [angleMode, setAngleMode] = useState<AngleMode>(() => {
     try {
       const saved = localStorage.getItem('calc_angleMode');
@@ -499,6 +558,10 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
       setLastAnswer(resultStr);
       setIsResultState(true);
       
+      if (syncStatus === 'connected') {
+        localSyncService.broadcast({ currentExpression: fullExpression + ' = ' + resultStr });
+      }
+      
       setIsLoading(true);
       setExplanation(null);
       const expl = await getFormulaExplanation(sanitizedExpression);
@@ -778,6 +841,34 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                  >
                    <Keyboard size={11} />
                    <span>Shortcuts</span>
+                 </button>
+
+                 <div className="h-4 w-px bg-brand-border/40 hidden sm:block" />
+
+                 <button
+                   type="button"
+                   onClick={() => setActiveTab('graphing')}
+                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border transition-all cursor-pointer uppercase bg-brand-accent/10 border-brand-accent/40 text-brand-accent hover:bg-brand-accent hover:text-white"
+                   title="Open 2D & 3D Analytical Grapher"
+                 >
+                   <TrendingUp size={11} />
+                   <span>Launch Grapher</span>
+                 </button>
+
+                 <div className="h-4 w-px bg-brand-border/40 hidden sm:block" />
+
+                 <button
+                   type="button"
+                   onClick={() => { triggerClick('tick'); setIsSyncModalOpen(true); }}
+                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border transition-all cursor-pointer uppercase ${
+                     syncStatus === 'connected'
+                       ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 animate-pulse'
+                       : 'border-brand-border/40 text-brand-text-secondary hover:bg-brand-primary/10 hover:text-brand-primary hover:border-brand-primary/40'
+                   }`}
+                   title="Local WebRTC Co-op Sync"
+                 >
+                   <Users size={11} />
+                   <span>{syncStatus === 'connected' ? 'Live Sync' : 'Co-op Sync'}</span>
                  </button>
                </div>
              </div>
@@ -1118,6 +1209,132 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
             </TiltCard>
         </div>
       </div>
+      
+      {/* WebRTC Sync Modal */}
+      <AnimatePresence>
+        {isSyncModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-brand-surface border border-brand-border shadow-2xl rounded-3xl p-6 w-full max-w-md relative"
+            >
+              <button 
+                onClick={() => setIsSyncModalOpen(false)}
+                className="absolute top-4 right-4 text-brand-text-secondary hover:text-brand-text p-1"
+              >
+                ✕
+              </button>
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-brand-primary/10 text-brand-primary rounded-xl">
+                  <Users size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-brand-text">P2P Workspace Sync</h3>
+                  <p className="text-xs text-brand-text-secondary">WebRTC Peer-to-Peer Connection</p>
+                </div>
+              </div>
+
+              {syncStatus === 'disconnected' && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-bold text-brand-text mb-2">Host a Session</h4>
+                    <p className="text-xs text-brand-text-secondary mb-3 leading-relaxed">
+                      Create a local sync room. Other users can join using your generated Room ID to see your live calculator stream.
+                    </p>
+                    <button
+                      onClick={handleHostSync}
+                      className="w-full py-3 bg-brand-primary text-brand-bg rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-brand-primary/20"
+                    >
+                      Create Room
+                    </button>
+                  </div>
+
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-brand-border/50"></div></div>
+                    <div className="relative flex justify-center"><span className="bg-brand-surface px-4 text-xs font-black tracking-widest text-brand-text-secondary uppercase">OR</span></div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-bold text-brand-text mb-2">Join a Session</h4>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Enter Room ID"
+                        value={syncInputId}
+                        onChange={(e) => setSyncInputId(e.target.value)}
+                        className="flex-1 bg-brand-bg border border-brand-border rounded-xl px-4 text-sm text-brand-text placeholder-brand-text-secondary/50 focus:outline-none focus:border-brand-primary transition-colors"
+                      />
+                      <button
+                        onClick={handleJoinSync}
+                        disabled={!syncInputId}
+                        className="px-6 py-3 bg-brand-surface border border-brand-border text-brand-text rounded-xl font-bold text-sm hover:border-brand-primary/50 disabled:opacity-50 transition-all"
+                      >
+                        Join
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {syncStatus === 'connecting' && (
+                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                  <div className="w-12 h-12 border-4 border-brand-primary/30 border-t-brand-primary rounded-full animate-spin" />
+                  <p className="text-sm font-bold text-brand-text-secondary animate-pulse">Establishing P2P Connection...</p>
+                </div>
+              )}
+
+              {syncStatus === 'connected' && (
+                <div className="space-y-6">
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-5 text-center space-y-2">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 mb-2">
+                      <Check size={24} />
+                    </div>
+                    <h4 className="text-emerald-400 font-bold">Connected Live</h4>
+                    <p className="text-xs text-brand-text-secondary font-light">
+                      Your calculator results are syncing with the room.
+                    </p>
+                  </div>
+
+                  {syncRoomId && (
+                    <div className="bg-brand-bg border border-brand-border rounded-xl p-4">
+                      <p className="text-[10px] font-black tracking-widest uppercase text-brand-text-secondary mb-2">Room ID (Share this)</p>
+                      <div className="flex justify-between items-center">
+                        <code className="text-brand-text font-mono text-sm select-all">{syncRoomId}</code>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(syncRoomId);
+                            showToast('Room ID Copied!');
+                          }}
+                          className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+                          title="Copy ID"
+                        >
+                          <Copy size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleDisconnectSync}
+                    className="w-full py-3 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl font-bold text-sm hover:bg-rose-500 hover:text-white transition-all"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {toastMessage && <div className="fixed bottom-6 right-6 bg-brand-accent text-white px-5 py-3 rounded-lg shadow-2xl z-50 animate-fade-in-down">{toastMessage}</div>}
     </>
   );

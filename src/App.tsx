@@ -56,7 +56,7 @@ const ExploreHub = lazy(() => lazyWithRetry(() => import('./components/ExploreHu
 const LocalProfilePage = lazy(() => lazyWithRetry(() => import('./components/LocalProfilePage').then(m => ({ default: m.LocalProfilePage }))));
 
 const App = () => {
-  const { user, userData, accessToken, loading } = useAuth();
+  const { user, userData, accessToken, loading, isFirebaseUser } = useAuth();
   const [activeTab, setActiveTab] = useState<AppTab>('landing');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -197,7 +197,7 @@ const App = () => {
 
   // Sync history from Firestore when user logs in
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isFirebaseUser) return;
 
     const reconcileGuestHistory = async () => {
       try {
@@ -256,11 +256,11 @@ const App = () => {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isFirebaseUser]);
 
   // Save history to localStorage (fallback)
   useEffect(() => {
-    if (!user) {
+    if (!user || !isFirebaseUser) {
       try {
         localStorage.setItem('calcHistory', JSON.stringify(history));
         triggerCloudSync();
@@ -268,12 +268,12 @@ const App = () => {
         console.error("Failed to save history to localStorage:", error);
       }
     }
-  }, [history, user]);
+  }, [history, user, isFirebaseUser]);
 
   const addToHistory = async (entry: HistoryEntry) => {
     const newEntry = { ...entry, id: entry.id || Date.now().toString() };
     
-    if (user) {
+    if (user && isFirebaseUser) {
       try {
         await setDoc(doc(db, 'history', newEntry.id), {
           id: newEntry.id,
@@ -287,12 +287,18 @@ const App = () => {
         handleFirestoreError(error, OperationType.WRITE, `history/${newEntry.id}`);
       }
     } else {
-      setHistory(prev => [newEntry, ...prev].slice(0, 100)); // Keep last 100 entries locally
+      const updatedLocalHistory = [newEntry, ...history].slice(0, 100);
+      setHistory(updatedLocalHistory); // Keep last 100 entries locally
+      try {
+        localStorage.setItem('calcHistory', JSON.stringify(updatedLocalHistory));
+      } catch (error) {
+        console.error("Failed to save history to localStorage:", error);
+      }
     }
   };
 
   const clearHistory = async () => {
-    if (user) {
+    if (user && isFirebaseUser) {
       try {
         const batch = writeBatch(db);
         history.forEach(entry => {
@@ -306,6 +312,11 @@ const App = () => {
       }
     } else {
       setHistory([]);
+      try {
+        localStorage.removeItem('calcHistory');
+      } catch (error) {
+        console.error("Failed to clear history in localStorage:", error);
+      }
     }
   };
   
@@ -313,7 +324,7 @@ const App = () => {
     const entryToToggle = history.find(e => e.timestamp === timestamp);
     if (!entryToToggle) return;
 
-    if (user && entryToToggle.id) {
+    if (user && isFirebaseUser && entryToToggle.id) {
       try {
         await setDoc(doc(db, 'history', entryToToggle.id), {
           ...entryToToggle,
@@ -325,13 +336,17 @@ const App = () => {
         handleFirestoreError(error, OperationType.UPDATE, `history/${entryToToggle.id}`);
       }
     } else {
-      setHistory(prev =>
-        prev.map(entry =>
-          entry.timestamp === timestamp
-            ? { ...entry, isFavorite: !entry.isFavorite }
-            : entry
-        )
+      const updatedLocalHistory = history.map(entry =>
+        entry.timestamp === timestamp
+          ? { ...entry, isFavorite: !entry.isFavorite }
+          : entry
       );
+      setHistory(updatedLocalHistory);
+      try {
+        localStorage.setItem('calcHistory', JSON.stringify(updatedLocalHistory));
+      } catch (error) {
+        console.error("Failed to save history to localStorage:", error);
+      }
     }
   };
 
@@ -523,7 +538,7 @@ const App = () => {
                 
                 <div className="pt-8 border-t border-brand-border/30 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="text-xs text-brand-text-secondary text-center md:text-left">
-                        &copy; {new Date().getFullYear()} Edgtec. All rights reserved.
+                        &copy; {new Date().getFullYear()} EDGTEC. Engineered in South Africa. All rights reserved.
                     </div>
                     <div className="flex flex-wrap items-center justify-center md:justify-end gap-6 text-brand-text-secondary">
                       <span className="text-[10px] font-mono hover:text-brand-text transition-colors cursor-pointer">STATUS: ONLINE</span>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Search, Cloud } from 'lucide-react';
+import { Menu, Search, Cloud, Download } from 'lucide-react';
 import Logo from './Logo';
 import { AppTab } from '../../types';
 import { useAuth } from '../AuthProvider';
 import { ScholarCounter } from '../ScholarCounter';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -14,6 +15,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, onMenuClick }) => {
   const { user, userData, accessToken, logout } = useAuth();
+  const { isInstallable, installPWA } = usePWAInstall();
   const [firestoreStatus, setFirestoreStatus] = useState<'checking' | 'online' | 'offline' | 'sandbox-offline' | 'error'>(() => {
     try {
       if (typeof window !== 'undefined' && localStorage.getItem('offline_mode') === 'true') {
@@ -159,10 +161,21 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
 
             <div className="w-[1px] h-6 bg-brand-border/50 mx-1 hidden sm:block" />
 
+            {isInstallable && (
+              <button
+                onClick={installPWA}
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-brand-primary text-brand-bg rounded-lg font-bold text-xs hover:scale-105 transition-transform"
+                title="Install QuantumCalc App"
+              >
+                <Download size={14} />
+                <span>Install App</span>
+              </button>
+            )}
+
             {renderStatusPill()}
 
             {/* Profile badge (completely bypassed login/sign-up screens) */}
-            {user && (
+            {user ? (
               <div className="flex items-center gap-2">
                 {accessToken && (
                   <button 
@@ -175,7 +188,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
                   </button>
                 )}
                 <button 
-                  onClick={() => onTabClick('settings')}
+                  onClick={() => onTabClick('local-profile')}
                   className="flex items-center gap-2 p-1 pl-3 pr-1 rounded-full border border-brand-border transition-all hover:border-brand-primary/50 bg-brand-surface"
                 >
                   <div className="flex flex-col items-end mr-1 hidden sm:flex">
@@ -187,6 +200,13 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
                   <img src={user.photoURL || ''} alt="P" className="w-8 h-8 rounded-full border border-brand-primary/20" />
                 </button>
               </div>
+            ) : (
+              <button 
+                onClick={onLoginClick}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 hover:text-brand-primary font-bold text-xs transition-colors shrink-0"
+              >
+                Sign In
+              </button>
             )}
           </div>
 

@@ -10,6 +10,18 @@
 [![Gemini API](https://img.shields.io/badge/Gemini_API-Google-blue?logo=google)](https://ai.google.dev/)
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?logo=vercel)](https://qcalc.edgtec.co.za/)
 
+---
+
+## 📸 Visual Showcase
+
+### Quantum Lab & Analytical Graphing Suite
+![QuantumCalc Scientific Computing Dashboard](public/screenshots/quantumcalc_hero.jpg)
+
+### South African Department of Basic Education CAPS Academy & Homework Studio
+![QuantumCalc Student Academy Studio](public/screenshots/quantumcalc_study.jpg)
+
+---
+
 QuantumCalc is a comprehensive, web-based suite of calculators and tools designed for students, professionals, and anyone in need of powerful, accessible calculation capabilities. It combines a professional-grade scientific calculator with a wide range of specialized tools for data analysis, finance, health, and everyday conversions.
 
 ---

@@ -13,6 +13,7 @@ import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandle
 import { getApiKey, getGeminiModel, getSystemInstructionSuffix } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import { triggerCloudSync } from '../services/googleDriveService';
+import { localSyncService, SyncState } from '../services/LocalSyncService';
 import Latex from 'react-latex-next';
 
 interface Note {
@@ -49,7 +50,7 @@ const MathTemplates = [
 ];
 
 const Scratchpad: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isFirebaseUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [notes, setNotes] = useState<Note[]>(() => {
     try {
@@ -92,6 +93,19 @@ const Scratchpad: React.FC = () => {
       console.warn("Could not save scratchpad font size state:", e);
     }
   }, [fontSize]);
+
+  // Local Sync Subscription
+  useEffect(() => {
+    const unsubscribe = localSyncService.subscribe((state: Partial<SyncState>) => {
+      if (state.scratchpad !== undefined && activeNoteId) {
+        // Optimistically update the active note with synced content
+        setNotes(prevNotes => prevNotes.map(n => 
+          n.id === activeNoteId ? { ...n, content: state.scratchpad! } : n
+        ));
+      }
+    });
+    return unsubscribe;
+  }, [activeNoteId]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<any>(null);
@@ -184,7 +198,17 @@ const Scratchpad: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !isFirebaseUser) {
+      try {
+        const saved = localStorage.getItem('quantum_notes');
+        const localNotes = saved ? JSON.parse(saved) : [];
+        setNotes(localNotes);
+        if (localNotes.length > 0) {
+          setActiveNoteId(current => current || localNotes[0].id);
+        }
+      } catch (e) {
+        console.warn("Failed to load local notes on startup", e);
+      }
       return;
     }
 
@@ -203,7 +227,7 @@ const Scratchpad: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isFirebaseUser]);
 
   const activeNote = notes.find(n => n.id === activeNoteId);
 
@@ -221,7 +245,7 @@ const Scratchpad: React.FC = () => {
       updatedAt: serverTimestamp()
     };
 
-    if (user) {
+    if (user && isFirebaseUser) {
       try {
         const docRef = await addDoc(collection(db, 'notes'), newNote);
         setActiveNoteId(docRef.id);
@@ -229,11 +253,15 @@ const Scratchpad: React.FC = () => {
         handleFirestoreError(error, OperationType.CREATE, 'notes');
       }
     } else {
-      const localNote = { ...newNote, id: Date.now().toString(), updatedAt: { seconds: Date.now() / 1000 } };
+      const localNote = { ...newNote, id: Date.now().toString(), updatedAt: { seconds: Date.now() / 1000 } } as unknown as Note;
       const updatedNotes = [localNote, ...notes];
       setNotes(updatedNotes);
-      localStorage.setItem('quantum_notes', JSON.stringify(updatedNotes));
-      triggerCloudSync();
+      try {
+        localStorage.setItem('quantum_notes', JSON.stringify(updatedNotes));
+        triggerCloudSync();
+      } catch (e) {
+        console.error("Failed to save notes to localStorage", e);
+      }
       setActiveNoteId(localNote.id);
     }
   };
@@ -249,9 +277,14 @@ const Scratchpad: React.FC = () => {
     const updatedNotesList = notes.map(n => n.id === activeNoteId ? { ...n, content } : n);
     setNotes(updatedNotesList);
 
+    // Broadcast if in a WebRTC session
+    if (localSyncService.getRoomId()) {
+      localSyncService.broadcast({ scratchpad: content });
+    }
+
     setIsSaving(true);
 
-    if (user) {
+    if (user && isFirebaseUser) {
       try {
         await updateDoc(doc(db, 'notes', activeNoteId), {
           content,
@@ -262,8 +295,12 @@ const Scratchpad: React.FC = () => {
         setIsSaving(false);
       }
     } else {
-      localStorage.setItem('quantum_notes', JSON.stringify(updatedNotesList));
-      triggerCloudSync();
+      try {
+        localStorage.setItem('quantum_notes', JSON.stringify(updatedNotesList));
+        triggerCloudSync();
+      } catch (e) {
+        console.error("Failed to save notes to localStorage", e);
+      }
     }
 
     // Smooth feedback timeout
@@ -282,7 +319,7 @@ const Scratchpad: React.FC = () => {
     
     setIsSaving(true);
 
-    if (user) {
+    if (user && isFirebaseUser) {
       try {
         await updateDoc(doc(db, 'notes', id), {
           title: newTitle,
@@ -293,8 +330,12 @@ const Scratchpad: React.FC = () => {
         setIsSaving(false);
       }
     } else {
-      localStorage.setItem('quantum_notes', JSON.stringify(updatedNotesList));
-      triggerCloudSync();
+      try {
+        localStorage.setItem('quantum_notes', JSON.stringify(updatedNotesList));
+        triggerCloudSync();
+      } catch (e) {
+        console.error("Failed to save notes to localStorage", e);
+      }
     }
 
     // Smooth feedback timeout
@@ -304,7 +345,7 @@ const Scratchpad: React.FC = () => {
   };
 
   const deleteNote = async (id: string) => {
-    if (user) {
+    if (user && isFirebaseUser) {
       try {
         await deleteDoc(doc(db, 'notes', id));
       } catch (error) {
@@ -313,8 +354,12 @@ const Scratchpad: React.FC = () => {
     } else {
       const updatedNotes = notes.filter(n => n.id !== id);
       setNotes(updatedNotes);
-      localStorage.setItem('quantum_notes', JSON.stringify(updatedNotes));
-      triggerCloudSync();
+      try {
+        localStorage.setItem('quantum_notes', JSON.stringify(updatedNotes));
+        triggerCloudSync();
+      } catch (e) {
+        console.error("Failed to delete note from localStorage", e);
+      }
     }
     if (activeNoteId === id) setActiveNoteId(notes.find(n => n.id !== id)?.id || null);
   };

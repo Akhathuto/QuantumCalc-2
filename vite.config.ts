@@ -22,7 +22,32 @@ export default defineConfig({
     }
   },
   plugins: [
-    react()
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['icon.svg', 'robots.txt'],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 15000000,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+      },
+      manifest: {
+        short_name: 'QuantumCalc',
+        name: 'QuantumCalc - Science Calculators & Worksheets',
+        icons: [
+          {
+            src: '/icon.svg',
+            type: 'image/svg+xml',
+            sizes: '512x512'
+          }
+        ],
+        start_url: '/',
+        background_color: '#0a0a0a',
+        display: 'standalone',
+        scope: '/',
+        theme_color: '#0a0a0a',
+        description: 'Unified Scientific Calculators & K-5 Printable Homework Worksheet Studio.'
+      }
+    })
   ],
   build: {
     reportCompressedSize: false,

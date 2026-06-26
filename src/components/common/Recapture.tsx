@@ -163,9 +163,9 @@ export const Recapture: React.FC<RecaptureProps> = ({ onVerify, className = '' }
             <div className="flex flex-col items-end opacity-60">
               <div className="flex items-center gap-1 text-brand-primary">
                 <Orbit size={12} className={isChecked && !isVerified ? "animate-spin" : ""} />
-                <span className="text-[9px] font-black tracking-widest uppercase">STAGING-REC</span>
+                <span className="text-[9px] font-black tracking-widest uppercase">DEV-REC</span>
               </div>
-              <span className="text-[7px] text-brand-text-secondary uppercase">Sandbox Bypass</span>
+              <span className="text-[7px] text-brand-text-secondary uppercase">Local Bypass</span>
             </div>
           </div>
 

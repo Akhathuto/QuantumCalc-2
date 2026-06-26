@@ -851,6 +851,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
   const [factBadge, setFactBadge] = useState<string>('Exponential Scaling');
   const [isLoadingFact, setIsLoadingFact] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activePreviewTab, setActivePreviewTab] = useState<'scientific' | 'academy'>('scientific');
   
   // Track viewed facts globally to keep selections overlaps-free and fresh
   const [viewedFacts, setViewedFacts] = useState<string[]>([
@@ -1562,6 +1563,171 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
 
         </motion.div>
 
+        {/* Workspace Virtual Tour Gallery */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="bg-brand-surface border border-brand-border/45 rounded-[32px] p-6 sm:p-10 text-left relative overflow-hidden shadow-sm"
+        >
+          <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-brand-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8 pb-6 border-b border-brand-border/25 relative z-10">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-wider mb-2.5 border border-brand-primary/15">
+                <Sparkles size={11} className="animate-spin-slow" /> Interactive Workspace Tour
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-brand-text mb-2 font-serif">
+                Take a Tour of the Lab
+              </h2>
+              <p className="text-brand-text-secondary text-sm font-light leading-relaxed max-w-xl">
+                Explore the hyper-aesthetic interfaces and multi-modal toolsets designed to support your academic journey from matric exams to professional calculations.
+              </p>
+            </div>
+
+            {/* Gallery tab controllers */}
+            <div className="flex items-center gap-2 p-1 bg-brand-bg/80 border border-brand-border/40 rounded-2xl w-full lg:w-auto self-stretch lg:self-auto">
+              <button
+                type="button"
+                onClick={() => setActivePreviewTab('scientific')}
+                className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all duration-300 outline-none cursor-pointer whitespace-nowrap ${
+                  activePreviewTab === 'scientific'
+                    ? 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20 scale-[1.02]'
+                    : 'text-brand-text-secondary hover:text-brand-text'
+                }`}
+              >
+                <Calculator size={14} />
+                <span>Scientific Lab</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePreviewTab('academy')}
+                className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all duration-300 outline-none cursor-pointer whitespace-nowrap ${
+                  activePreviewTab === 'academy'
+                    ? 'bg-brand-primary text-brand-bg shadow-lg shadow-brand-primary/20 scale-[1.02]'
+                    : 'text-brand-text-secondary hover:text-brand-text'
+                }`}
+              >
+                <GraduationCap size={14} />
+                <span>DBE Academy &amp; Studio</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive preview showcase with sliding transition */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            <div className="lg:col-span-7 rounded-2xl border border-brand-border/50 overflow-hidden shadow-2xl relative group/preview bg-brand-bg">
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/80 via-transparent to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end p-6">
+                <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-brand-primary bg-brand-bg/90 border border-brand-primary/20 px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm">
+                  Active Lab Preview
+                </span>
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activePreviewTab}
+                  src={activePreviewTab === 'scientific' ? '/screenshots/quantumcalc_hero.jpg' : '/screenshots/quantumcalc_study.jpg'}
+                  alt={activePreviewTab === 'scientific' ? 'Scientific Computing Workspace' : 'DBE Academy and Homework Studio'}
+                  referrerPolicy="no-referrer"
+                  initial={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
+                  animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, scale: 1.02, filter: 'blur(10px)' }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="w-full object-cover aspect-video hover:scale-102 transition-transform duration-500 cursor-zoom-in"
+                />
+              </AnimatePresence>
+            </div>
+
+            <div className="lg:col-span-5 flex flex-col justify-center space-y-6 text-left">
+              <AnimatePresence mode="wait">
+                {activePreviewTab === 'scientific' ? (
+                  <motion.div
+                    key="scientific-desc"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-4"
+                  >
+                    <h3 className="text-2xl font-bold text-brand-text font-serif">
+                      Quantum Lab & Analytical Grapher
+                    </h3>
+                    <p className="text-brand-text-secondary text-sm leading-relaxed font-light">
+                      A state-of-the-art algebraic equation parser, fully-featured 2D & 3D function plotting laboratory, and system variables hub. Perfect for graphing advanced 3D surfaces, vector fields, or calculating complex matrices with direct, clear solutions.
+                    </p>
+                    <ul className="space-y-2.5 text-xs text-brand-text-secondary">
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full" />
+                        <span>Interactive 2D Cartesian & Polar graphing suites</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full" />
+                        <span>3D Surface, Mesh, Isosurfaces, and Scatter visualizations</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full" />
+                        <span>Linear & quadratic step-by-step solvers with Bitwise conversions</span>
+                      </li>
+                    </ul>
+                    <div className="pt-3 flex gap-3">
+                      <button
+                        onClick={() => onTabClick('calculator')}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary text-brand-bg rounded-xl font-bold text-xs hover:scale-105 active:scale-95 transition-transform shadow-md shadow-brand-primary/10 cursor-pointer"
+                      >
+                        Scientific Lab <ArrowRight size={14} />
+                      </button>
+                      <button
+                        onClick={() => onTabClick('graphing')}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-brand-surface border border-brand-border text-brand-text rounded-xl font-bold text-xs hover:border-brand-primary/50 transition-all shadow-md cursor-pointer"
+                      >
+                        3D Grapher <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="academy-desc"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-4"
+                  >
+                    <h3 className="text-2xl font-bold text-brand-text font-serif">
+                      DBE South African Academy
+                    </h3>
+                    <p className="text-brand-text-secondary text-sm leading-relaxed font-light">
+                      Tailor-made resources to support South African high school and primary school students. Download official CAPS self-study guides, generate custom worksheets, and test your skills in active drill runs.
+                    </p>
+                    <ul className="space-y-2.5 text-xs text-brand-text-secondary">
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full" />
+                        <span>Printable seedable K-5 worksheets with grids</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full" />
+                        <span>Curriculum adaptive drill sessions &amp; stars</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full" />
+                        <span>Official Grade 10-12 CAPS exam study manuals</span>
+                      </li>
+                    </ul>
+                    <div className="pt-3">
+                      <button
+                        onClick={() => onTabClick('study-guides')}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary text-brand-bg rounded-xl font-bold text-xs hover:scale-105 active:scale-95 transition-transform shadow-md shadow-brand-primary/10 cursor-pointer"
+                      >
+                        Explore Study Center <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Core Capabilities Section */}
         <motion.div
           variants={containerVariants}
@@ -1693,91 +1859,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
             </button>
           </motion.div>
         )}
-
-        {/* Unified Elegant Footer Section */}
-        <footer className="mt-20 pt-16 pb-12 border-t border-brand-border/30 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 text-left">
-            <div className="col-span-2 md:col-span-1 space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black italic tracking-tighter text-brand-text">
-                  Quantum<span className="text-brand-primary">Calc</span>
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary border border-brand-primary/10">v1.2</span>
-              </div>
-              <p className="text-xs text-brand-text-secondary leading-relaxed font-light">
-                A hyper-modular computation suite built for advanced students, researchers, and scientific innovators.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text mb-4">Core Workspace</h4>
-              <ul className="space-y-2 text-xs">
-                <li>
-                  <button onClick={() => onTabClick('explore')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Explore Hub</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('calculator')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Scientific Calculator</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('graphing')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Analytical Grapher</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('calendar')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Study Calendar</button>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text mb-4">Resources & Labs</h4>
-              <ul className="space-y-2 text-xs">
-                <li>
-                  <button onClick={() => onTabClick('sandbox')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Math Sandbox</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('help')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Help Center & Guides</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('support')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Support Hub</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('feedback')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Feedback & Bugs</button>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text mb-4">Legal & Enterprise</h4>
-              <ul className="space-y-2 text-xs">
-                <li>
-                  <button onClick={() => onTabClick('about')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">About EDGTEC</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('contact')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Contact Relations</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('terms')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Terms of Service</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('privacy')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Privacy Protocol</button>
-                </li>
-                <li>
-                  <button onClick={() => onTabClick('core-license')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Core License EULA</button>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-brand-border/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-brand-text-secondary font-light">
-            <span>© 2026 EDGTEC. Engineered in South Africa. All rights reserved.</span>
-            <div className="flex gap-4">
-              <button onClick={() => onTabClick('terms')} className="hover:text-brand-text transition-colors">Terms</button>
-              <span className="text-brand-border/40">•</span>
-              <button onClick={() => onTabClick('privacy')} className="hover:text-brand-text transition-colors">Privacy</button>
-              <span className="text-brand-border/40">•</span>
-              <button onClick={() => onTabClick('core-license')} className="hover:text-brand-text transition-colors">EULA</button>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );

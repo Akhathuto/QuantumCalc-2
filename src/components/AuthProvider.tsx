@@ -44,6 +44,7 @@ interface AuthContextType {
   clearError: () => void;
   signInSimulated?: () => void;
   isLocalUser?: boolean;
+  isFirebaseUser?: boolean;
   localAccounts?: any[];
   signUpLocal?: (username: string, email: string, pass: string, role: string, grade: string, school: string, avatar: string) => Promise<void>;
   signInLocal?: (email: string, pass: string) => Promise<void>;
@@ -67,6 +68,7 @@ const AuthContext = createContext<AuthContextType>({
   clearError: () => {},
   signInSimulated: () => {},
   isLocalUser: false,
+  isFirebaseUser: false,
   localAccounts: [],
   signUpLocal: async () => {},
   signInLocal: async () => {},
@@ -260,8 +262,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           handleFirestoreError(err, OperationType.GET, `users/${currentUser.uid}`);
         });
       } else {
-        console.log("[AuthProvider] No active session. Auto-authenticating to Simulated Sandbox Profile...");
-        signInSimulated();
+        setUser(null);
+        setUserData(null);
+        setIsLocalUser(false);
+        setAccessToken(null);
+        setLoading(false);
       }
     });
 
@@ -325,7 +330,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut(auth);
       setAccessToken(null);
       setError(null);
-      signInSimulated();
     } catch (err) {
       console.error("Error signing out", err instanceof Error ? err.message : String(err));
     }
@@ -474,32 +478,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInSimulated = () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const mockUser: any = {
-        uid: 'ais-dev-sandbox-user-99999',
-        email: 'akhathuto@gmail.com',
-        displayName: 'Staging Researcher (Guest)',
-        emailVerified: true,
-        isAnonymous: false,
-        photoURL: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&h=100&q=80'
-      };
-      setUser(mockUser);
-      setUserData({
-        uid: mockUser.uid,
-        email: mockUser.email,
-        displayName: mockUser.displayName,
-        onboarded: true,
-        role: 'Beta Scholar',
-        createdAt: new Date(),
-      });
-      setAccessToken('mock-access-token-sandbox');
-    } catch (e: any) {
-      setError(`Failed to activate simulation workspace: ${e.message}`);
-    } finally {
-      setLoading(false);
-    }
+    // Removed staging mock user logic
   };
 
   const signUpLocal = async (username: string, email: string, pass: string, role: string, grade: string, school: string, avatar: string) => {
@@ -678,13 +657,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (deletedAcc && deletedAcc.uid === currentLocalId) {
         localStorage.removeItem('current_local_account_id');
         setIsLocalUser(false);
-        signInSimulated();
+        setUser(null);
+        setUserData(null);
+        setAccessToken(null);
       }
     } catch (err: any) {
       setError(err.message || "Failed to delete account.");
       throw err;
     }
   };
+
+  const isFirebaseUser = !!(user && !isLocalUser && user.uid !== 'ais-dev-sandbox-user-99999');
 
   return (
     <AuthContext.Provider value={{ 
@@ -703,6 +686,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearError, 
       signInSimulated,
       isLocalUser,
+      isFirebaseUser,
       localAccounts,
       signUpLocal,
       signInLocal,

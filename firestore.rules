@@ -191,5 +191,9 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
+
+    match /collab_rooms/{roomId} {
+      allow read, write: if true; // Public ephemeral collaboration rooms
+    }
   }
 }

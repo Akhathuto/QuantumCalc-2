@@ -1,0 +1,17 @@
+{
+  "short_name": "QuantumCalc",
+  "name": "QuantumCalc - Science Calculators & Worksheets",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#0a0a0a",
+  "description": "Unified Scientific Calculators & K-5 Printable Homework Worksheet Studio."
+}
