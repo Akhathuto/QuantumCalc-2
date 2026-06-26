@@ -408,8 +408,8 @@ const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
         </div>
       )}
 
-      {/* Quick History Hub navigation shortcut */}
-      <div className="mt-8 border-t border-brand-border/30 pt-6">
+      {/* Quick History Hub navigation shortcut & Sub-Footer */}
+      <div className="mt-8 border-t border-brand-border/30 pt-6 space-y-6">
         <div className="bg-gradient-to-br from-brand-surface to-brand-bg border border-brand-border/40 p-5 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-brand-primary/10 text-brand-primary rounded-xl">
@@ -426,6 +426,18 @@ const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
           >
             Open Logs
           </button>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[10px] sm:text-xs text-brand-text-secondary/70 font-light pt-2">
+          <button onClick={() => onTabClick('about')} className="hover:text-brand-primary transition-colors">About EDGTEC</button>
+          <span>•</span>
+          <button onClick={() => onTabClick('support')} className="hover:text-brand-primary transition-colors">Support Hub</button>
+          <span>•</span>
+          <button onClick={() => onTabClick('terms')} className="hover:text-brand-primary transition-colors">Terms & License</button>
+          <span>•</span>
+          <button onClick={() => onTabClick('privacy')} className="hover:text-brand-primary transition-colors">Privacy Protocol</button>
+          <span>•</span>
+          <button onClick={() => onTabClick('core-license')} className="hover:text-brand-primary transition-colors">Core License EULA</button>
         </div>
       </div>
     </div>

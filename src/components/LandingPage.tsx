@@ -1693,6 +1693,91 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
             </button>
           </motion.div>
         )}
+
+        {/* Unified Elegant Footer Section */}
+        <footer className="mt-20 pt-16 pb-12 border-t border-brand-border/30 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 text-left">
+            <div className="col-span-2 md:col-span-1 space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-black italic tracking-tighter text-brand-text">
+                  Quantum<span className="text-brand-primary">Calc</span>
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary border border-brand-primary/10">v1.2</span>
+              </div>
+              <p className="text-xs text-brand-text-secondary leading-relaxed font-light">
+                A hyper-modular computation suite built for advanced students, researchers, and scientific innovators.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text mb-4">Core Workspace</h4>
+              <ul className="space-y-2 text-xs">
+                <li>
+                  <button onClick={() => onTabClick('explore')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Explore Hub</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('calculator')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Scientific Calculator</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('graphing')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Analytical Grapher</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('calendar')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Study Calendar</button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text mb-4">Resources & Labs</h4>
+              <ul className="space-y-2 text-xs">
+                <li>
+                  <button onClick={() => onTabClick('sandbox')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Math Sandbox</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('help')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Help Center & Guides</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('support')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Support Hub</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('feedback')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Feedback & Bugs</button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text mb-4">Legal & Enterprise</h4>
+              <ul className="space-y-2 text-xs">
+                <li>
+                  <button onClick={() => onTabClick('about')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">About EDGTEC</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('contact')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Contact Relations</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('terms')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Terms of Service</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('privacy')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Privacy Protocol</button>
+                </li>
+                <li>
+                  <button onClick={() => onTabClick('core-license')} className="text-brand-text-secondary hover:text-brand-primary transition-colors">Core License EULA</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-brand-border/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-brand-text-secondary font-light">
+            <span>© 2026 EDGTEC. Engineered in South Africa. All rights reserved.</span>
+            <div className="flex gap-4">
+              <button onClick={() => onTabClick('terms')} className="hover:text-brand-text transition-colors">Terms</button>
+              <span className="text-brand-border/40">•</span>
+              <button onClick={() => onTabClick('privacy')} className="hover:text-brand-text transition-colors">Privacy</button>
+              <span className="text-brand-border/40">•</span>
+              <button onClick={() => onTabClick('core-license')} className="hover:text-brand-text transition-colors">EULA</button>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );

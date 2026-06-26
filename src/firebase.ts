@@ -7,7 +7,7 @@ import {
   inMemoryPersistence
 } from 'firebase/auth';
 import { doc, getDocFromServer, initializeFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV3Provider, getToken } from 'firebase/app-check';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
@@ -24,11 +24,35 @@ if (typeof window !== 'undefined' && localStorage.getItem('enable_app_check') ==
     console.log(`[Firebase App Check] Add this token to Firebase Console > App Check > Apps > Manage debug tokens.`);
     
     const siteKey = "6LcyhP4sAAAAAOCLqIlZCJHWsxeEaVSszIGHNfZL"; // Fallback site key from Recapture
-    initializeAppCheck(app, {
+    const appCheckInstance = initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider(siteKey),
       isTokenAutoRefreshEnabled: true
     });
     console.log("[Firebase] App Check initialized successfully with Debug Provider.");
+
+    // Proactively verify if App Check token is obtainable. If it fails with 403, disable it.
+    getToken(appCheckInstance)
+      .then(() => {
+        console.log("[Firebase App Check] Proactive token verification succeeded.");
+      })
+      .catch((err) => {
+        const errStr = String(err?.message || err);
+        console.error("[Firebase App Check] Proactive token verification failed:", errStr);
+        if (errStr.includes('403') || errStr.includes('app-check') || errStr.includes('fetch-status-error') || errStr.includes('invalid')) {
+          console.warn("[Firebase] Proactive App Check validation failed with 403. Auto-disabling App Check to recover connection.");
+          try {
+            localStorage.setItem('enable_app_check', 'false');
+          } catch (e) {
+            console.warn('LocalStorage error while disabling App Check:', e);
+          }
+          window.dispatchEvent(new CustomEvent('firestore-status', { 
+            detail: { 
+              status: 'app-check-error', 
+              error: "Firebase App Check Validation failed (HTTP 403). We have automatically disabled it for you. Click the warning badge in the header or reload the page to restore connectivity." 
+            } 
+          }));
+        }
+      });
   } catch (err) {
     console.warn("[Firebase] App Check initialization skipped or failed:", err);
   }
