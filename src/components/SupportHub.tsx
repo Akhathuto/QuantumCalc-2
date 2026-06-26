@@ -1,6 +1,11 @@
 import { LifeBuoy, MessageCircle, Mail, Book, Wrench } from 'lucide-react';
+import { AppTab } from '../types';
 
-const SupportHub = () => {
+interface SupportHubProps {
+    onNavigate: (tab: AppTab) => void;
+}
+
+const SupportHub = ({ onNavigate }: SupportHubProps) => {
     return (
         <div className="max-w-5xl mx-auto py-12 px-4 space-y-12 animate-fade-in-down">
             <div className="text-center space-y-4">
@@ -25,7 +30,7 @@ const SupportHub = () => {
                     <p className="text-brand-text-secondary leading-relaxed mb-6">
                         Browse our extensive guides on how to use advanced features, format complex equations, and trigger the AI assistant correctly.
                     </p>
-                    <button className="text-blue-500 font-bold hover:text-blue-400">View Documentation →</button>
+                    <button onClick={() => onNavigate('docs')} className="text-blue-500 font-bold hover:text-blue-400">View Documentation →</button>
                 </div>
 
                 {/* Troubleshooting */}
@@ -39,7 +44,7 @@ const SupportHub = () => {
                     <p className="text-brand-text-secondary leading-relaxed mb-6">
                         Having issues with graph rendering, history sync, or AI processing? Check our common technical troubleshooting steps.
                     </p>
-                    <button className="text-brand-accent font-bold hover:text-brand-accent/80">View Common Fixes →</button>
+                    <button onClick={() => onNavigate('troubleshooting')} className="text-brand-accent font-bold hover:text-brand-accent/80">View Common Fixes →</button>
                 </div>
 
                 {/* Community */}
@@ -53,7 +58,7 @@ const SupportHub = () => {
                     <p className="text-brand-text-secondary leading-relaxed mb-6">
                         Join other students, developers, and educators. Share your custom formulas, ask for math help, or report bugs.
                     </p>
-                    <button className="text-purple-500 font-bold hover:text-purple-400">Join the Discussion →</button>
+                    <button onClick={() => onNavigate('community')} className="text-purple-500 font-bold hover:text-purple-400">Join the Discussion →</button>
                 </div>
 
                 {/* Direct Contact */}
@@ -67,7 +72,7 @@ const SupportHub = () => {
                     <p className="text-brand-text-secondary leading-relaxed mb-6">
                         Need account assistance or have a private inquiry? Send our support team a direct message for prioritized handling.
                     </p>
-                    <button className="text-emerald-500 font-bold hover:text-emerald-400">Email Us →</button>
+                    <button onClick={() => onNavigate('contact')} className="text-emerald-500 font-bold hover:text-emerald-400">Email Us →</button>
                 </div>
             </div>
             

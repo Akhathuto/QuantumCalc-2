@@ -51,4 +51,7 @@ export type AppTab =
   | 'support'
   | 'sandbox'
   | 'calendar'
-  | 'local-profile';
+  | 'local-profile'
+  | 'docs'
+  | 'troubleshooting'
+  | 'community';

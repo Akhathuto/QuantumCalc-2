@@ -40,6 +40,9 @@ const CoreLicense = lazy(() => lazyWithRetry(() => import('./components/CoreLice
 const SupportHub = lazy(() => lazyWithRetry(() => import('./components/SupportHub')));
 const MathSandbox = lazy(() => lazyWithRetry(() => import('./components/MathSandbox')));
 const GoogleCalendar = lazy(() => lazyWithRetry(() => import('./components/GoogleCalendar')));
+const Documentation = lazy(() => lazyWithRetry(() => import('./components/Documentation')));
+const Troubleshooting = lazy(() => lazyWithRetry(() => import('./components/Troubleshooting')));
+const CommunityForum = lazy(() => lazyWithRetry(() => import('./components/CommunityForum')));
 
 // Secondary and lower-usage components lazy loaded to optimize initial bundle size & load times
 const History = lazy(() => lazyWithRetry(() => import('./components/History')));
@@ -451,13 +454,22 @@ const App = () => {
         TabComponent = <CoreLicense />;
         break;
       case 'support':
-        TabComponent = <SupportHub />;
+        TabComponent = <SupportHub onNavigate={setActiveTab} />;
         break;
       case 'sandbox':
         TabComponent = <MathSandbox />;
         break;
       case 'calendar':
         TabComponent = <GoogleCalendar />;
+        break;
+      case 'docs':
+        TabComponent = <Documentation />;
+        break;
+      case 'troubleshooting':
+        TabComponent = <Troubleshooting />;
+        break;
+      case 'community':
+        TabComponent = <CommunityForum />;
         break;
       default:
         TabComponent = <Calculator addToHistory={addToHistory} expressionToLoad={expressionToLoad} onExpressionLoaded={handleExpressionLoaded} setActiveTab={setActiveTab} />;
