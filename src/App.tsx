@@ -53,6 +53,7 @@ const TermsAndLicense = lazy(() => lazyWithRetry(() => import('./components/Term
 const Settings = lazy(() => lazyWithRetry(() => import('./components/Settings')));
 const Help = lazy(() => lazyWithRetry(() => import('./components/Help')));
 const ExploreHub = lazy(() => lazyWithRetry(() => import('./components/ExploreHub')));
+const LocalProfilePage = lazy(() => lazyWithRetry(() => import('./components/LocalProfilePage').then(m => ({ default: m.LocalProfilePage }))));
 
 const App = () => {
   const { user, userData, accessToken, loading } = useAuth();
@@ -420,7 +421,10 @@ const App = () => {
         TabComponent = <Contact />;
         break;
       case 'settings':
-        TabComponent = <Settings canInstall={!!deferredPrompt} onInstall={installApp} />;
+        TabComponent = <Settings canInstall={!!deferredPrompt} onInstall={installApp} setActiveTab={setActiveTab} />;
+        break;
+      case 'local-profile':
+        TabComponent = <LocalProfilePage onBackToTools={() => setActiveTab('explore')} />;
         break;
       case 'terms':
         TabComponent = <TermsAndLicense />;

@@ -43,6 +43,12 @@ interface AuthContextType {
   logout: () => Promise<void>;
   clearError: () => void;
   signInSimulated?: () => void;
+  isLocalUser?: boolean;
+  localAccounts?: any[];
+  signUpLocal?: (username: string, email: string, pass: string, role: string, grade: string, school: string, avatar: string) => Promise<void>;
+  signInLocal?: (email: string, pass: string) => Promise<void>;
+  updateLocalProfile?: (displayName: string, role: string, grade: string, school: string, avatar: string) => Promise<void>;
+  deleteLocalAccount?: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -60,6 +66,12 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   clearError: () => {},
   signInSimulated: () => {},
+  isLocalUser: false,
+  localAccounts: [],
+  signUpLocal: async () => {},
+  signInLocal: async () => {},
+  updateLocalProfile: async () => {},
+  deleteLocalAccount: async () => {},
 });
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -78,12 +90,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [localAccounts, setLocalAccounts] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem('local_accounts');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isLocalUser, setIsLocalUser] = useState(false);
   const unsubscribeUserDocRef = useRef<(() => void) | null>(null);
   const unsubscribeStatsRef = useRef<(() => void) | null>(null);
 
   const clearError = () => setError(null);
 
   useEffect(() => {
+    let currentLocalId = '';
+    try {
+      currentLocalId = localStorage.getItem('current_local_account_id') || '';
+    } catch (err) {
+      console.warn('Failed to retrieve current_local_account_id', err);
+    }
+
+    if (currentLocalId) {
+      try {
+        const stored = localStorage.getItem('local_accounts');
+        const accounts = stored ? JSON.parse(stored) : [];
+        const activeAcc = accounts.find((a: any) => a.uid === currentLocalId);
+        if (activeAcc) {
+          console.log('[AuthProvider] Loading active Local Account:', activeAcc.email);
+          setUser({
+            uid: activeAcc.uid,
+            email: activeAcc.email,
+            displayName: activeAcc.displayName,
+            photoURL: activeAcc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
+            emailVerified: true,
+            isAnonymous: false,
+          } as any);
+          setUserData({
+            uid: activeAcc.uid,
+            email: activeAcc.email,
+            displayName: activeAcc.displayName,
+            onboarded: true,
+            role: activeAcc.role || 'student',
+            grade: activeAcc.grade || '',
+            school: activeAcc.school || '',
+            createdAt: activeAcc.createdAt || new Date().toISOString(),
+            isLocal: true
+          });
+          setIsLocalUser(true);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to load local account on startup:', err);
+      }
+    }
+
     let isOfflineMode = false;
     try {
       isOfflineMode = localStorage.getItem('offline_mode') === 'true';
@@ -197,9 +260,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           handleFirestoreError(err, OperationType.GET, `users/${currentUser.uid}`);
         });
       } else {
-        setUserData(null);
-        setAccessToken(null);
-        setLoading(false);
+        console.log("[AuthProvider] No active session. Auto-authenticating to Simulated Sandbox Profile...");
+        signInSimulated();
       }
     });
 
@@ -258,9 +320,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      localStorage.removeItem('current_local_account_id');
+      setIsLocalUser(false);
       await signOut(auth);
       setAccessToken(null);
       setError(null);
+      signInSimulated();
     } catch (err) {
       console.error("Error signing out", err instanceof Error ? err.message : String(err));
     }
@@ -321,6 +386,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError("Please enter a valid email address.");
       } else if (err.code === 'auth/internal-error') {
         setError(`CRITICAL: 'auth/internal-error' may indicate that the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
+      } else if (err.message?.includes('firebase-app-check-token-is-invalid') || err.message?.includes('AppCheck') || err.message?.includes('app-check')) {
+        setError("Firebase App Check Validation Blocked: App Check is checking signatures or recaptcha is blocked in this container/iframe sandbox. Click 'Unlock Sandbox Workspace' below to bypass security check and register instantly with fully functional offline state.");
       } else {
         setError(err.message || "An unexpected error occurred during registration.");
       }
@@ -435,8 +502,213 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUpLocal = async (username: string, email: string, pass: string, role: string, grade: string, school: string, avatar: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const stored = localStorage.getItem('local_accounts');
+      const accounts = stored ? JSON.parse(stored) : [];
+      
+      if (accounts.some((a: any) => a.email.toLowerCase() === email.toLowerCase())) {
+        throw new Error("An account with this email already exists.");
+      }
+
+      const newUid = `local-usr-${Math.random().toString(36).substr(2, 9)}`;
+      const newAccount = {
+        uid: newUid,
+        email: email,
+        password: pass,
+        displayName: username,
+        role: role || 'student',
+        grade: grade || '',
+        school: school || '',
+        avatar: avatar || `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80`,
+        createdAt: new Date().toISOString()
+      };
+
+      const updatedAccounts = [...accounts, newAccount];
+      localStorage.setItem('local_accounts', JSON.stringify(updatedAccounts));
+      localStorage.setItem('current_local_account_id', newUid);
+      setLocalAccounts(updatedAccounts);
+      setIsLocalUser(true);
+
+      setUser({
+        uid: newAccount.uid,
+        email: newAccount.email,
+        displayName: newAccount.displayName,
+        photoURL: newAccount.avatar,
+        emailVerified: true,
+        isAnonymous: false
+      } as any);
+
+      setUserData({
+        uid: newAccount.uid,
+        email: newAccount.email,
+        displayName: newAccount.displayName,
+        onboarded: true,
+        role: newAccount.role,
+        grade: newAccount.grade,
+        school: newAccount.school,
+        createdAt: newAccount.createdAt,
+        isLocal: true
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to sign up locally.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInLocal = async (email: string, pass: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const stored = localStorage.getItem('local_accounts');
+      const accounts = stored ? JSON.parse(stored) : [];
+      const account = accounts.find((a: any) => a.email.toLowerCase() === email.toLowerCase());
+
+      if (!account) {
+        throw new Error("No local account found with this email.");
+      }
+      if (account.password !== pass) {
+        throw new Error("Incorrect password.");
+      }
+
+      localStorage.setItem('current_local_account_id', account.uid);
+      setIsLocalUser(true);
+
+      setUser({
+        uid: account.uid,
+        email: account.email,
+        displayName: account.displayName,
+        photoURL: account.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
+        emailVerified: true,
+        isAnonymous: false
+      } as any);
+
+      setUserData({
+        uid: account.uid,
+        email: account.email,
+        displayName: account.displayName,
+        onboarded: true,
+        role: account.role || 'student',
+        grade: account.grade || '',
+        school: account.school || '',
+        createdAt: account.createdAt || new Date().toISOString(),
+        isLocal: true
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to log in.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateLocalProfile = async (displayName: string, role: string, grade: string, school: string, avatar: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const currentLocalId = localStorage.getItem('current_local_account_id');
+      if (!currentLocalId) {
+        throw new Error("No active local account logged in.");
+      }
+
+      const stored = localStorage.getItem('local_accounts');
+      const accounts = stored ? JSON.parse(stored) : [];
+      const updatedAccounts = accounts.map((a: any) => {
+        if (a.uid === currentLocalId) {
+          return {
+            ...a,
+            displayName: displayName || a.displayName,
+            role: role || a.role,
+            grade: grade || a.grade,
+            school: school || a.school,
+            avatar: avatar || a.avatar
+          };
+        }
+        return a;
+      });
+
+      localStorage.setItem('local_accounts', JSON.stringify(updatedAccounts));
+      setLocalAccounts(updatedAccounts);
+
+      const activeAcc = updatedAccounts.find((a: any) => a.uid === currentLocalId);
+      if (activeAcc) {
+        setUser({
+          uid: activeAcc.uid,
+          email: activeAcc.email,
+          displayName: activeAcc.displayName,
+          photoURL: activeAcc.avatar,
+          emailVerified: true,
+          isAnonymous: false
+        } as any);
+
+        setUserData({
+          uid: activeAcc.uid,
+          email: activeAcc.email,
+          displayName: activeAcc.displayName,
+          onboarded: true,
+          role: activeAcc.role,
+          grade: activeAcc.grade,
+          school: activeAcc.school,
+          createdAt: activeAcc.createdAt,
+          isLocal: true
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteLocalAccount = async (email: string) => {
+    try {
+      const stored = localStorage.getItem('local_accounts');
+      const accounts = stored ? JSON.parse(stored) : [];
+      const filtered = accounts.filter((a: any) => a.email.toLowerCase() !== email.toLowerCase());
+      localStorage.setItem('local_accounts', JSON.stringify(filtered));
+      setLocalAccounts(filtered);
+
+      const currentLocalId = localStorage.getItem('current_local_account_id');
+      const deletedAcc = accounts.find((a: any) => a.email.toLowerCase() === email.toLowerCase());
+      if (deletedAcc && deletedAcc.uid === currentLocalId) {
+        localStorage.removeItem('current_local_account_id');
+        setIsLocalUser(false);
+        signInSimulated();
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to delete account.");
+      throw err;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userData, totalScholars, accessToken, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, signInGuest, resetPassword, logout, clearError, signInSimulated }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      userData, 
+      totalScholars, 
+      accessToken, 
+      loading, 
+      error, 
+      signInWithGoogle, 
+      signUpWithEmail, 
+      signInWithEmail, 
+      signInGuest, 
+      resetPassword, 
+      logout, 
+      clearError, 
+      signInSimulated,
+      isLocalUser,
+      localAccounts,
+      signUpLocal,
+      signInLocal,
+      updateLocalProfile,
+      deleteLocalAccount
+    }}>
       {children}
     </AuthContext.Provider>
   );

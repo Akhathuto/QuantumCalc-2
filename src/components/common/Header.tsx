@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, LogIn, Menu, Search, Cloud } from 'lucide-react';
+import { Menu, Search, Cloud } from 'lucide-react';
 import Logo from './Logo';
 import { AppTab } from '../../types';
 import { useAuth } from '../AuthProvider';
@@ -81,6 +81,26 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
         </button>
       );
     }
+
+    if (firestoreStatus === 'app-check-error' as any) {
+      return (
+        <button 
+          onClick={() => {
+            try {
+              localStorage.setItem('enable_app_check', 'false');
+              window.location.reload();
+            } catch (err) {
+              console.error('Failed to disable app check:', err);
+            }
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wider hover:bg-rose-500/20 hover:border-rose-500/40 transition-all shrink-0 cursor-pointer animate-pulse"
+          title="Firebase App Check Blocked (HTTP 403 / Signature Invalid). Click here to auto-disable App Check, reset, and reload the workspace instantly."
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+          <span>App Check Error (Click to Auto-Fix)</span>
+        </button>
+      );
+    }
     
     return null;
   };
@@ -141,8 +161,8 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
 
             {renderStatusPill()}
 
-            {/* Auth/Profile Section */}
-            {user ? (
+            {/* Profile badge (completely bypassed login/sign-up screens) */}
+            {user && (
               <div className="flex items-center gap-2">
                 {accessToken && (
                   <button 
@@ -166,22 +186,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
                   </div>
                   <img src={user.photoURL || ''} alt="P" className="w-8 h-8 rounded-full border border-brand-primary/20" />
                 </button>
-                <button 
-                  onClick={logout}
-                  className="p-2 sm:p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm hidden sm:block"
-                  title="Logout"
-                >
-                  <LogOut size={18} />
-                </button>
               </div>
-            ) : (
-              <button
-                onClick={onLoginClick}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-primary text-brand-bg font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-brand-primary/20 text-sm"
-              >
-                <LogIn size={16} />
-                <span className="hidden sm:inline">Connect</span>
-              </button>
             )}
           </div>
 

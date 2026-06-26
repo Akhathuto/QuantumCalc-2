@@ -50,4 +50,5 @@ export type AppTab =
   | 'core-license'
   | 'support'
   | 'sandbox'
-  | 'calendar';
+  | 'calendar'
+  | 'local-profile';

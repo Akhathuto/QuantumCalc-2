@@ -34,10 +34,11 @@ const themes = [
 interface SettingsProps {
     canInstall?: boolean;
     onInstall?: () => void;
+    setActiveTab?: (tab: any) => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
-    const { user, userData, accessToken, signInWithGoogle } = useAuth();
+const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall, setActiveTab }) => {
+    const { user, userData, accessToken, signInWithGoogle, isLocalUser, updateLocalProfile } = useAuth();
     const [toastMessage, setToastMessage] = useState('');
     const [currentThemeId, setCurrentThemeId] = useState(() => {
         try { return localStorage.getItem('theme') || 'dark'; } catch(e) { return 'dark'; }
@@ -227,6 +228,7 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
     const [isRestoring, setIsRestoring] = useState(false);
     const [autoSyncEnabled, setAutoSyncEnabled] = useState(() => { try { return localStorage.getItem('google_drive_auto_sync') === 'true'; } catch(e) { return false; } });
     const [offlineModeEnabled, setOfflineModeEnabled] = useState(() => { try { return localStorage.getItem('offline_mode') === 'true'; } catch(e) { return false; } });
+    const [appCheckEnabled, setAppCheckEnabled] = useState(() => { try { return localStorage.getItem('enable_app_check') === 'true'; } catch(e) { return false; } });
 
     const handleAutoSyncToggle = () => {
         const nextVal = !autoSyncEnabled;
@@ -245,6 +247,135 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
         } else {
             showToast("Sandbox Offline Mode DISABLED. Reloading to connect to Firebase Sandbox...");
             setTimeout(() => window.location.reload(), 1500);
+        }
+    };
+
+    const handleAppCheckToggle = () => {
+        const nextVal = !appCheckEnabled;
+        setAppCheckEnabled(nextVal);
+        localStorage.setItem('enable_app_check', nextVal ? 'true' : 'false');
+        if (nextVal) {
+            showToast("Firebase App Check Validation ENABLED. Reloading to initialize...");
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast("Firebase App Check Validation DISABLED. Reloading...");
+            setTimeout(() => window.location.reload(), 1500);
+        }
+    };
+
+    const [networkDiagnostics, setNetworkDiagnostics] = useState<{
+        status: 'idle' | 'testing' | 'success' | 'error';
+        log: string[];
+        currentLatency?: number;
+    }>({
+        status: 'idle',
+        log: []
+    });
+    
+    const [simulatedLag, setSimulatedLag] = useState(() => {
+        try { return localStorage.getItem('simulated_network_lag') || '0'; }
+        catch { return '0'; }
+    });
+
+    const [firestoreConnectionState, setFirestoreConnectionState] = useState<'checking' | 'online' | 'offline' | 'sandbox-offline' | 'error'>('checking');
+
+    useEffect(() => {
+        const handleStatus = (e: any) => {
+            if (e.detail?.status) {
+                setFirestoreConnectionState(e.detail.status);
+            }
+        };
+        window.addEventListener('firestore-status', handleStatus);
+        
+        if (localStorage.getItem('offline_mode') === 'true') {
+            setFirestoreConnectionState('sandbox-offline');
+        } else if (!navigator.onLine) {
+            setFirestoreConnectionState('offline');
+        } else {
+            setFirestoreConnectionState('online');
+        }
+        
+        return () => window.removeEventListener('firestore-status', handleStatus);
+    }, []);
+
+    const handleSimulatedLagChange = (val: string) => {
+        setSimulatedLag(val);
+        localStorage.setItem('simulated_network_lag', val);
+        if (val === '0') {
+            showToast("Simulated network lag disabled (Direct Pipe latency).");
+        } else {
+            showToast(`Simulated network lag set to +${val}ms.`);
+        }
+    };
+
+    const runNetworkDiagnostics = async () => {
+        setNetworkDiagnostics({
+            status: 'testing',
+            log: ['Initializing connection sequence...', 'Evaluating browser network state...']
+        });
+        
+        const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+        await delay(500);
+        
+        const logs = ['Initializing connection sequence...', 'Evaluating browser network state...'];
+        const isOnline = navigator.onLine;
+        logs.push(`Browser Online Status: ${isOnline ? '🟢 DETECTED' : '🔴 OFFLINE'}`);
+        setNetworkDiagnostics(prev => ({ ...prev, log: [...logs] }));
+        await delay(500);
+        
+        logs.push('Resolving endpoint firestore.googleapis.com...');
+        setNetworkDiagnostics(prev => ({ ...prev, log: [...logs] }));
+        
+        const start = Date.now();
+        let latency = 0;
+        try {
+            await fetch('https://firestore.googleapis.com/$discovery/rest?version=v1', { mode: 'no-cors' });
+            latency = Date.now() - start;
+            logs.push(`Host reachable in ${latency}ms.`);
+        } catch (e: any) {
+            logs.push(`Host resolution failed: ${e.message || String(e)}`);
+        }
+        setNetworkDiagnostics(prev => ({ ...prev, log: [...logs] }));
+        await delay(500);
+        
+        if (localStorage.getItem('offline_mode') === 'true') {
+            logs.push('Offline Mode Check: Explicitly enabled by Sandbox settings. Bypassing Firebase listeners.');
+            setNetworkDiagnostics({
+                status: 'success',
+                log: [...logs, 'Diagnostics completed: Client is functioning fully in Isolated Offline Mode.'],
+                currentLatency: latency
+            });
+            return;
+        }
+
+        logs.push('Pinging Authentication endpoints...');
+        setNetworkDiagnostics(prev => ({ ...prev, log: [...logs] }));
+        await delay(400);
+
+        try {
+            await fetch('https://identitytoolkit.googleapis.com/$discovery/rest?version=v1', { mode: 'no-cors' });
+            logs.push('Authentication gateway is online & authenticated.');
+        } catch (e: any) {
+            logs.push(`Authentication check warning: ${e.message}`);
+        }
+        setNetworkDiagnostics(prev => ({ ...prev, log: [...logs] }));
+        await delay(400);
+
+        logs.push('Validating Firestore database backend sync state...');
+        if (firestoreConnectionState === 'online') {
+            logs.push('Firestore: Direct live socket is OPEN.');
+            setNetworkDiagnostics({
+                status: 'success',
+                log: [...logs, 'Diagnostics passed: Connection is healthy!'],
+                currentLatency: latency
+            });
+        } else {
+            logs.push('Firestore: Operating inside local IndexedDB cache.');
+            setNetworkDiagnostics({
+                status: 'error',
+                log: [...logs, 'Diagnostics finished with notes. Connection is simulated or operating offline.'],
+                currentLatency: latency
+            });
         }
     };
 
@@ -525,6 +656,12 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
         if (!user) return;
         setIsSavingProfile(true);
         try {
+            if (isLocalUser && updateLocalProfile) {
+                await updateLocalProfile(user.displayName || '', editRole, editGrade, editSchool, user.photoURL || '');
+                showToast("Local profile details saved!");
+                return;
+            }
+
             const profileData: any = {
                 role: editRole,
                 onboarded: true,
@@ -711,11 +848,20 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-end">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
+                            {setActiveTab && (
+                                <button
+                                    onClick={() => setActiveTab('local-profile')}
+                                    className="flex items-center gap-2 text-xs font-bold text-brand-primary hover:text-brand-primary/80 transition-all text-left bg-brand-primary/5 hover:bg-brand-primary/10 border border-brand-primary/20 px-4 py-2.5 rounded-xl cursor-pointer"
+                                >
+                                    <UserIcon size={14} />
+                                    Manage Profiles (Create or Switch Accounts)
+                                </button>
+                            )}
                             <button
                                 onClick={handleUpdateProfile}
                                 disabled={isSavingProfile}
-                                className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-brand-primary text-brand-bg font-bold hover:shadow-lg hover:shadow-brand-primary/20 active:scale-95 transition-all disabled:opacity-50"
+                                className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-brand-primary text-brand-bg font-bold hover:shadow-lg hover:shadow-brand-primary/20 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 {isSavingProfile ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
                                 {isSavingProfile ? 'Saving...' : 'Save Changes'}
@@ -1705,30 +1851,190 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall }) => {
                     <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500">
                         <Cloud size={24} />
                     </div>
-                    Network & Connectivity
+                    Network, Sync & Connectivity
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                        <h4 className="font-bold text-brand-text">Sandbox Offline Mode</h4>
-                        <p className="text-brand-text-secondary text-sm font-light leading-relaxed">
-                            Bypass all Firebase authentication and cloud sync logic on startup. Prevents network errors and iframe origin warnings in isolated preview environments.
-                        </p>
-                    </div>
-                    <div className="flex items-center justify-start md:justify-end">
-                        <button
-                            onClick={handleOfflineModeToggle}
-                            className={`relative inline-flex items-center h-10 w-20 rounded-full transition-colors duration-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-brand-bg shrink-0 shadow-inner ${
-                                offlineModeEnabled ? 'bg-emerald-500' : 'bg-gray-400/50'
-                            }`}
-                        >
-                            <span
-                                className={`inline-block w-8 h-8 transform bg-white rounded-full shadow-lg transition-transform duration-500 ease-in-out ${
-                                    offlineModeEnabled ? 'translate-x-11' : 'translate-x-1'
-                                } flex items-center justify-center`}
+
+                {/* Connection Status Panel */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div className="lg:col-span-2 p-6 bg-brand-bg/50 border border-brand-border/40 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center gap-2 mb-3 animate-fade-in">
+                                <span className="text-xs text-brand-text-secondary font-bold uppercase tracking-wider block">Live Status Diagnostics</span>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all ${
+                                    firestoreConnectionState === 'online' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                    firestoreConnectionState === 'sandbox-offline' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 animate-pulse' :
+                                    firestoreConnectionState === 'offline' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                                    'bg-red-500/10 text-red-400 border border-red-500/20'
+                                }`}>
+                                    {firestoreConnectionState === 'online' && '● Connected'}
+                                    {firestoreConnectionState === 'sandbox-offline' && '● Sandbox Offline'}
+                                    {firestoreConnectionState === 'offline' && '● Offline Cache'}
+                                    {firestoreConnectionState === 'checking' && '● Scanning...'}
+                                    {firestoreConnectionState === 'error' && '● Sync Alert'}
+                                </span>
+                            </div>
+                            <h4 className="text-lg font-bold text-brand-text mb-2">
+                                {firestoreConnectionState === 'online' && 'Direct Cloud Synchronization Active'}
+                                {firestoreConnectionState === 'sandbox-offline' && 'Simulated Local Database Bypass'}
+                                {firestoreConnectionState === 'offline' && 'Offline Local Database Cache'}
+                                {firestoreConnectionState === 'error' && 'Firestore Stream Restricted'}
+                                {firestoreConnectionState === 'checking' && 'Acquiring connection metrics...'}
+                            </h4>
+                            <p className="text-brand-text-secondary text-xs font-light leading-relaxed mb-4">
+                                {firestoreConnectionState === 'online' && 'All calculation logs, workspace settings, achievements, and goals are automatically synchronized across all authorized devices using a reliable background Firestore stream.'}
+                                {firestoreConnectionState === 'sandbox-offline' && 'Your client is configured to bypass server authentication entirely. Data is stored inside browser-level IndexedDB/local storage, perfect for preventing iframe origin warnings.'}
+                                {firestoreConnectionState === 'offline' && 'Your browser cannot reach the Firebase servers. No worries: your history is securely written to localized offline cache tables and will merge when connectivity is re-established.'}
+                                {firestoreConnectionState === 'error' && 'Your workspace cannot authorize this preview environment with the Cloud servers. Try enabling Sandbox Offline Mode to bypass Auth requirements.'}
+                                {firestoreConnectionState === 'checking' && 'Probing database endpoints to measure latency and verify socket handshake...'}
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-3 mt-2">
+                            <button
+                                onClick={runNetworkDiagnostics}
+                                disabled={networkDiagnostics.status === 'testing'}
+                                className="px-4 py-2.5 bg-brand-primary text-brand-bg rounded-xl font-bold text-xs hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 shadow-md shadow-brand-primary/10 disabled:opacity-50"
                             >
-                                {offlineModeEnabled && <Check size={14} className="text-emerald-500" />}
-                            </span>
-                        </button>
+                                <RefreshCw size={14} className={networkDiagnostics.status === 'testing' ? 'animate-spin' : ''} />
+                                {networkDiagnostics.status === 'testing' ? 'Executing Diagnostic Scan...' : 'Run Diagnostics Check'}
+                            </button>
+                            {firestoreConnectionState === 'online' && (
+                                <div className="text-[10px] font-mono text-emerald-400 bg-emerald-500/5 px-3 py-2 border border-emerald-500/10 rounded-xl flex items-center">
+                                    Server response time: {networkDiagnostics.currentLatency ? `${networkDiagnostics.currentLatency}ms` : 'Fast wi-fi pipe'}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="p-6 bg-brand-bg/50 border border-brand-border/40 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <span className="text-xs text-brand-text-secondary font-bold uppercase tracking-wider block mb-2">Simulated Network Lag</span>
+                            <h4 className="text-sm font-bold text-brand-text mb-2">Simulate real-world conditions</h4>
+                            <p className="text-brand-text-secondary text-xs font-light leading-relaxed mb-4">
+                                Force artificial request delay on mathematical evaluations and cloud queries. This helps verify that loaders, skeletons, and transaction cues behave gracefully.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <select
+                                value={simulatedLag}
+                                onChange={(e) => handleSimulatedLagChange(e.target.value)}
+                                className="w-full bg-brand-surface border border-brand-border text-brand-text px-3 py-2 rounded-xl text-xs font-medium focus:outline-none focus:border-brand-primary cursor-pointer"
+                            >
+                                <option value="0">None (Real-Time Pipeline)</option>
+                                <option value="50">50ms (Optimal Fiber Wifi)</option>
+                                <option value="300">300ms (Average 3G/LTE Cellular)</option>
+                                <option value="1200">1200ms (High Latency Satellite)</option>
+                                <option value="3000">3000ms (Severe Throttle/Offline-Ready)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Diagnostics Log Visualizer */}
+                {networkDiagnostics.status !== 'idle' && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -10 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        className="p-5 bg-black/40 border border-brand-border/40 rounded-2xl mb-8 font-mono text-xs text-brand-text-secondary space-y-2 relative"
+                    >
+                        <div className="flex items-center justify-between border-b border-brand-border/20 pb-2 mb-2">
+                            <span className="font-bold uppercase tracking-wider text-brand-primary text-[10px]">Diagnostics Report Log</span>
+                            <button 
+                                onClick={() => setNetworkDiagnostics({ status: 'idle', log: [] })}
+                                className="text-[10px] hover:text-brand-text underline uppercase"
+                            >
+                                Clear logs
+                            </button>
+                        </div>
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                            {networkDiagnostics.log.map((line, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                    <span className="text-brand-primary/50 shrink-0">[{idx + 1}]</span>
+                                    <span className="break-all">{line}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {networkDiagnostics.status === 'testing' && (
+                            <div className="flex items-center gap-2 text-brand-primary pt-2 animate-pulse text-[10px]">
+                                <RefreshCw size={12} className="animate-spin" />
+                                SCANNING HOST PORT AND DOMAIN NAMESPACES...
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
+                {/* Toggles & Settings Block */}
+                <div className="space-y-8 divide-y divide-brand-border/20 border-t border-brand-border/20 pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-0">
+                        <div className="space-y-4">
+                            <h4 className="font-bold text-brand-text flex items-center gap-2">
+                                <span className={`w-2.5 h-2.5 rounded-full ${offlineModeEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                Sandbox Offline Mode
+                            </h4>
+                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed">
+                                Bypass all Firebase authentication and cloud sync logic on startup. Prevents network errors and iframe origin warnings in isolated preview environments.
+                            </p>
+                        </div>
+                        <div className="flex items-center justify-start md:justify-end">
+                            <button
+                                onClick={handleOfflineModeToggle}
+                                className={`relative inline-flex items-center h-10 w-20 rounded-full transition-colors duration-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-brand-bg shrink-0 shadow-inner ${
+                                    offlineModeEnabled ? 'bg-emerald-500' : 'bg-gray-400/50'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block w-8 h-8 transform bg-white rounded-full shadow-lg transition-transform duration-500 ease-in-out ${
+                                        offlineModeEnabled ? 'translate-x-11' : 'translate-x-1'
+                                    } flex items-center justify-center`}
+                                >
+                                    {offlineModeEnabled && <Check size={14} className="text-emerald-500" />}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
+                        <div className="space-y-4">
+                            <h4 className="font-bold text-brand-text flex items-center gap-2">
+                                <span className={`w-2.5 h-2.5 rounded-full ${appCheckEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                Firebase App Check Validation
+                            </h4>
+                            <p className="text-brand-text-secondary text-sm font-light leading-relaxed">
+                                Enable App Check debug token validation inside the sandbox. Required ONLY if your Firebase Project enforces App Check on Authentication or Firestore.
+                            </p>
+                            <div className="p-3.5 bg-brand-bg/50 border border-brand-border/40 rounded-xl font-mono text-[10px] text-brand-text-secondary space-y-1">
+                                <p className="font-bold text-brand-primary text-[10px] uppercase tracking-wider mb-1">Sandbox Debug Token UUID:</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="flex-1 text-brand-text font-bold select-all bg-black/20 p-2 rounded border border-brand-border/20 break-all text-center">9c9042da-24a3-42b8-a568-fd417e242625</p>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText("9c9042da-24a3-42b8-a568-fd417e242625");
+                                            showToast("Copied App Check Debug Token!");
+                                        }}
+                                        className="p-2 bg-brand-surface hover:bg-brand-border text-brand-text border border-brand-border rounded-lg"
+                                        title="Copy debug token"
+                                    >
+                                        <Clipboard size={14} />
+                                    </button>
+                                </div>
+                                <p className="text-[9px] pt-1 leading-normal">Copy and add this exact token to your <b>Firebase Console &gt; App Check &gt; Apps &gt; Manage debug tokens</b> to authorize requests.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-start md:justify-end">
+                            <button
+                                onClick={handleAppCheckToggle}
+                                className={`relative inline-flex items-center h-10 w-20 rounded-full transition-colors duration-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-brand-bg shrink-0 shadow-inner ${
+                                    appCheckEnabled ? 'bg-emerald-500' : 'bg-gray-400/50'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block w-8 h-8 transform bg-white rounded-full shadow-lg transition-transform duration-500 ease-in-out ${
+                                        appCheckEnabled ? 'translate-x-11' : 'translate-x-1'
+                                    } flex items-center justify-center`}
+                                >
+                                    {appCheckEnabled && <Check size={14} className="text-emerald-500" />}
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </motion.div>

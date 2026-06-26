@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { create, all } from 'mathjs';
 import { 
     Terminal, Play, Copy, Check, Share2, 
-    RefreshCw, Cpu, ChevronRight, FileCode, Plus, Trash
+    RefreshCw, Cpu, ChevronRight, FileCode, Plus, Trash,
+    Radio, Users, WifiOff, Send, CheckSquare, Bell
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const math = create(all, { number: 'BigNumber', precision: 64 });
 
@@ -152,6 +153,181 @@ const MathSandbox: React.FC = () => {
     const [shareUrl, setShareUrl] = useState<string | null>(null);
     const [isSharing, setIsSharing] = useState(false);
     const [copiedLink, setCopiedLink] = useState(false);
+
+    // --- Off-Grid Local Collaboration Sync ---
+    const [collabRoom, setCollabRoom] = useState<string>('');
+    const [nickname, setNickname] = useState<string>(() => `Peer_${Math.floor(100 + Math.random() * 900)}`);
+    const [isCollabActive, setIsCollabActive] = useState<boolean>(false);
+    const [peers, setPeers] = useState<{ id: string; name: string; lastSeen: number }[]>([]);
+    const [autoSync, setAutoSync] = useState<boolean>(false);
+    const [incomingPayload, setIncomingPayload] = useState<{ code: string; params: Parameter[]; sender: string } | null>(null);
+    const [collabStatus, setCollabStatus] = useState<'offline' | 'online'>('offline');
+    
+    const broadcastRef = useRef<BroadcastChannel | null>(null);
+    const myIdRef = useRef<string>(`peer_${Math.random().toString(36).substring(2, 9)}`);
+    const isLocalChangeRef = useRef<boolean>(true);
+
+    // Sync Workspace to active peers (Local + Cloud)
+    const broadcastWorkspace = useCallback(async (currentCode: string, currentParams: Parameter[]) => {
+        if (!isCollabActive) return;
+        
+        // Mark as our own transmit to avoid echo loops
+        isLocalChangeRef.current = false;
+        setTimeout(() => { isLocalChangeRef.current = true; }, 500);
+
+        const payload = {
+            type: 'CODE_BROADCAST',
+            id: myIdRef.current,
+            sender: nickname,
+            code: currentCode,
+            params: currentParams,
+            timestamp: Date.now()
+        };
+
+        // 1. Send via local off-grid BroadcastChannel
+        if (broadcastRef.current) {
+            broadcastRef.current.postMessage(payload);
+        }
+
+        // 2. Send via Firestore if we have a room code and online connection
+        if (collabRoom.trim() && collabStatus === 'online') {
+            try {
+                await setDoc(doc(db, 'collab_rooms', collabRoom.trim().toUpperCase()), {
+                    code: currentCode,
+                    params: currentParams,
+                    sender: nickname,
+                    senderId: myIdRef.current,
+                    timestamp: Date.now()
+                });
+            } catch (err) {
+                console.warn("[Collab] Firestore write skipped or failed:", err);
+            }
+        }
+    }, [isCollabActive, nickname, collabRoom, collabStatus]);
+
+    // Auto-broadcast edits when code or params change (debounced slightly or handled on button/blur)
+    // To keep performance high and avoid excess firestore writes, let's broadcast on code change or parameters change
+    useEffect(() => {
+        if (isCollabActive && isLocalChangeRef.current) {
+            const timer = setTimeout(() => {
+                broadcastWorkspace(code, params);
+            }, 800);
+            return () => clearTimeout(timer);
+        }
+    }, [code, params, isCollabActive, broadcastWorkspace]);
+
+    // Handle peer heartbeat discovery and incoming messages
+    useEffect(() => {
+        if (!isCollabActive) {
+            if (broadcastRef.current) {
+                broadcastRef.current.close();
+                broadcastRef.current = null;
+            }
+            setPeers([]);
+            setIncomingPayload(null);
+            return;
+        }
+
+        // Initialize BroadcastChannel
+        const channelName = collabRoom.trim() ? `quantum_collab_${collabRoom.trim().toUpperCase()}` : 'quantum_collab_global';
+        const channel = new BroadcastChannel(channelName);
+        broadcastRef.current = channel;
+
+        // Peer mapping helper
+        const activePeersMap: Record<string, { name: string; lastSeen: number }> = {};
+
+        const handleMessage = (msg: any) => {
+            const data = msg.data;
+            if (!data || data.id === myIdRef.current) return;
+
+            if (data.type === 'PING') {
+                activePeersMap[data.id] = { name: data.sender, lastSeen: Date.now() };
+                channel.postMessage({
+                    type: 'PONG',
+                    id: myIdRef.current,
+                    sender: nickname,
+                    timestamp: Date.now()
+                });
+            } else if (data.type === 'PONG') {
+                activePeersMap[data.id] = { name: data.sender, lastSeen: Date.now() };
+            } else if (data.type === 'CODE_BROADCAST') {
+                // Update workspace if auto-sync is on, otherwise show toast notification
+                if (autoSync) {
+                    isLocalChangeRef.current = false;
+                    setCode(data.code);
+                    setParams(data.params);
+                    setTimeout(() => { isLocalChangeRef.current = true; }, 500);
+                } else {
+                    setIncomingPayload({
+                        code: data.code,
+                        params: data.params,
+                        sender: data.sender
+                    });
+                }
+            }
+        };
+
+        channel.onmessage = handleMessage;
+
+        // Listen to Firestore Room if online
+        let unsubscribeFirestore: (() => void) | null = null;
+        if (collabRoom.trim()) {
+            setCollabStatus('online'); // assume online to start
+            try {
+                unsubscribeFirestore = onSnapshot(doc(db, 'collab_rooms', collabRoom.trim().toUpperCase()), (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data && data.senderId !== myIdRef.current) {
+                            if (autoSync) {
+                                isLocalChangeRef.current = false;
+                                setCode(data.code);
+                                setParams(data.params);
+                                setTimeout(() => { isLocalChangeRef.current = true; }, 500);
+                            } else {
+                                setIncomingPayload({
+                                    code: data.code,
+                                    params: data.params,
+                                    sender: data.sender
+                                });
+                            }
+                        }
+                    }
+                }, (error) => {
+                    console.warn("[Collab] Firestore room connection failed, falling back to off-grid local subnet mode.", error);
+                    setCollabStatus('offline');
+                });
+            } catch (err) {
+                setCollabStatus('offline');
+            }
+        } else {
+            setCollabStatus('offline');
+        }
+
+        // Heartbeat interval
+        const heartbeatInterval = setInterval(() => {
+            // Ping peers
+            channel.postMessage({
+                type: 'PING',
+                id: myIdRef.current,
+                sender: nickname,
+                timestamp: Date.now()
+            });
+
+            // Purge dead peers (older than 6 seconds)
+            const now = Date.now();
+            const currentPeers = Object.entries(activePeersMap)
+                .filter(([_, info]) => now - info.lastSeen < 6000)
+                .map(([id, info]) => ({ id, name: info.name, lastSeen: info.lastSeen }));
+            setPeers(currentPeers);
+        }, 2000);
+
+        return () => {
+            clearInterval(heartbeatInterval);
+            if (unsubscribeFirestore) unsubscribeFirestore();
+            channel.close();
+            broadcastRef.current = null;
+        };
+    }, [isCollabActive, collabRoom, nickname, autoSync]);
 
     // Initial load from Preset or share state if stored
     useEffect(() => {
@@ -396,6 +572,45 @@ const MathSandbox: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            {/* Incoming Broadcast Banner */}
+            <AnimatePresence>
+                {incomingPayload && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="bg-brand-primary/10 border border-brand-primary/40 p-4 rounded-2xl flex items-center justify-between gap-4 text-xs font-semibold text-brand-text mb-4 shadow-lg backdrop-blur"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <Bell size={16} className="text-brand-primary animate-bounce shrink-0" />
+                            <span>
+                                Peer <strong>{incomingPayload.sender}</strong> has shared their workspace ({incomingPayload.params.length} variables).
+                            </span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    isLocalChangeRef.current = false;
+                                    setCode(incomingPayload.code);
+                                    setParams(incomingPayload.params);
+                                    setTimeout(() => { isLocalChangeRef.current = true; }, 500);
+                                    setIncomingPayload(null);
+                                }}
+                                className="px-3 py-1.5 bg-brand-primary text-brand-bg hover:brightness-110 font-black uppercase rounded-lg text-[9px] cursor-pointer"
+                            >
+                                Apply Workspace
+                            </button>
+                            <button
+                                onClick={() => setIncomingPayload(null)}
+                                className="px-3 py-1.5 bg-brand-surface border border-brand-border hover:bg-brand-border/30 rounded-lg text-[9px] text-brand-text-secondary cursor-pointer font-bold"
+                            >
+                                Dismiss
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2 text-brand-primary">
@@ -612,6 +827,125 @@ const MathSandbox: React.FC = () => {
                                 )}
                             </div>
                         </div>
+                    </div>
+
+                    {/* Off-Grid Collab Sync Console */}
+                    <div className="bg-brand-surface border border-brand-border/40 rounded-[2rem] p-6 space-y-4 shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-[40px] pointer-events-none" />
+                        <div className="flex justify-between items-center pb-3 border-b border-brand-border/40">
+                            <div className="flex items-center gap-2">
+                                <Radio size={16} className={`text-brand-accent ${isCollabActive ? 'animate-pulse' : ''}`} />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-text italic">Off-Grid Peer Sync</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className={`w-1.5 h-1.5 rounded-full ${isCollabActive ? 'bg-green-500 animate-ping' : 'bg-brand-text-secondary'}`}></span>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-brand-text-secondary font-mono">
+                                    {isCollabActive ? (collabStatus === 'online' ? 'REALTIME_HYBRID_ON' : 'OFFGRID_LOCAL_ON') : 'OFFLINE'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {!isCollabActive ? (
+                            <div className="space-y-4">
+                                <p className="text-[10px] text-brand-text-secondary leading-relaxed uppercase tracking-wide">
+                                    Link classrooms or local browser instances completely offline using BroadcastChannel, or sync via cloud snapshot rooms.
+                                </p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="block text-[8px] font-black uppercase tracking-widest text-brand-text-secondary mb-1">Room Identifier (Optional)</label>
+                                        <input
+                                            type="text"
+                                            value={collabRoom}
+                                            onChange={e => setCollabRoom(e.target.value)}
+                                            className="w-full bg-brand-bg border border-brand-border rounded-lg py-1.5 px-3 font-mono text-[10px] text-brand-accent font-bold uppercase focus:ring-1 focus:ring-brand-primary outline-none"
+                                            placeholder="e.g. CLASS-10"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[8px] font-black uppercase tracking-widest text-brand-text-secondary mb-1">Your Handle / Nickname</label>
+                                        <input
+                                            type="text"
+                                            value={nickname}
+                                            onChange={e => setNickname(e.target.value)}
+                                            className="w-full bg-brand-bg border border-brand-border rounded-lg py-1.5 px-3 font-mono text-[10px] text-brand-text font-bold focus:ring-1 focus:ring-brand-primary outline-none"
+                                            placeholder="Nickname"
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsCollabActive(true)}
+                                    className="w-full py-2.5 bg-brand-accent hover:brightness-110 text-white font-black uppercase tracking-widest text-[9px] rounded-xl active:scale-95 transition-all shadow-md shadow-brand-accent/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                    <Radio size={12} /> Activate Sync Engine
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between bg-brand-bg/60 border border-brand-border/40 px-3.5 py-2.5 rounded-xl">
+                                    <div className="space-y-0.5">
+                                        <span className="text-[8px] text-brand-text-secondary uppercase block font-bold">Connected Room</span>
+                                        <span className="text-xs font-black font-mono text-brand-accent">{collabRoom ? collabRoom.toUpperCase() : 'GLOBAL_LOBBY'}</span>
+                                    </div>
+                                    <div className="text-right space-y-0.5">
+                                        <span className="text-[8px] text-brand-text-secondary uppercase block font-bold">My Nickname</span>
+                                        <span className="text-xs font-black font-mono text-brand-text">{nickname}</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[9px] font-black uppercase tracking-wider text-brand-text-secondary italic flex items-center gap-1.5">
+                                            <Users size={12} /> Connected Peers ({peers.length})
+                                        </span>
+                                        <label className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-brand-text-secondary cursor-pointer select-none">
+                                            <input 
+                                                type="checkbox"
+                                                checked={autoSync}
+                                                onChange={e => setAutoSync(e.target.checked)}
+                                                className="rounded bg-brand-bg border-brand-border text-brand-primary focus:ring-0 w-3 h-3"
+                                            />
+                                            Auto-Pull Edits
+                                        </label>
+                                    </div>
+
+                                    {peers.length === 0 ? (
+                                        <div className="p-4 bg-brand-bg/40 border border-brand-border/40 border-dashed rounded-xl flex flex-col items-center justify-center text-center">
+                                            <WifiOff size={24} className="text-brand-text-secondary opacity-35 mb-1.5" />
+                                            <p className="text-[9px] font-black text-brand-text-secondary/50 uppercase tracking-widest leading-none">Scanning for nearby classmates...</p>
+                                            <p className="text-[8px] text-brand-text-secondary/40 mt-1">Open another tab/window on this Room code to test!</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-1.5 max-h-[80px] overflow-y-auto custom-scrollbar">
+                                            {peers.map((peer, i) => (
+                                                <div key={i} className="flex items-center justify-between bg-brand-bg p-2 rounded-lg border border-brand-border/60 text-[10px]">
+                                                    <span className="font-mono font-bold text-brand-text truncate pr-1">{peer.name}</span>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0 animate-pulse"></span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-1">
+                                    <button
+                                        onClick={() => broadcastWorkspace(code, params)}
+                                        className="py-2 bg-brand-primary text-black font-black uppercase tracking-widest text-[9px] rounded-lg active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                        title="Broadcast current workspace parameters and code to peers"
+                                    >
+                                        <Send size={10} /> Push Workspace
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsCollabActive(false);
+                                            setIncomingPayload(null);
+                                        }}
+                                        className="py-2 bg-brand-surface border border-brand-border hover:border-red-400/30 text-brand-text-secondary hover:text-red-400 font-black uppercase tracking-widest text-[9px] rounded-lg active:scale-95 transition-all cursor-pointer"
+                                    >
+                                        Disconnect
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
