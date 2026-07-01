@@ -5,90 +5,92 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #09090b;
-  --color-surface: #18181b;
-  --color-primary: #818cf8;
-  --color-secondary: #c084fc;
-  --color-accent: #34d399;
-  --color-text: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-border: #27272a;
+  /* Default dark theme */
+  --color-bg: #09090b; /* Zinc 950 */
+  --color-surface: #18181b; /* Zinc 900 */
+  --color-primary: #818cf8; /* Indigo 400 */
+  --color-secondary: #c084fc; /* Purple 400 */
+  --color-accent: #34d399; /* Emerald 400 */
+  --color-text: #f8fafc; /* Slate 50 */
+  --color-text-secondary: #a1a1aa; /* Zinc 400 */
+  --color-border: #27272a; /* Zinc 800 */
 }
+
 html.light {
-  --color-bg: #ffffff;
-  --color-surface: #f8fafc;
-  --color-primary: #4f46e5;
-  --color-secondary: #9333ea;
-  --color-accent: #10b981;
-  --color-text: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-border: #e2e8f0;
+  --color-bg: #f8fafc; /* Slate 50 */
+  --color-surface: #ffffff; /* White */
+  --color-primary: #4f46e5; /* Indigo 600 */
+  --color-secondary: #9333ea; /* Purple 600 */
+  --color-accent: #059669; /* Emerald 600 */
+  --color-text: #0f172a; /* Slate 900 */
+  --color-text-secondary: #475569; /* Slate 600 */
+  --color-border: #e2e8f0; /* Slate 200 */
 }
 
 html.neon {
-  --color-bg: #050505;
-  --color-surface: #111111;
-  --color-primary: #00ffcc;
-  --color-secondary: #ff007f;
-  --color-accent: #bc13fe;
-  --color-text: #f0f0f0;
-  --color-text-secondary: #00ffa3;
-  --color-border: #333333;
+  --color-bg: #030014;
+  --color-surface: #0a0628;
+  --color-primary: #00ffcc; /* Cyan/Mint */
+  --color-secondary: #ff007f; /* Neon Pink */
+  --color-accent: #bc13fe; /* Neon Purple */
+  --color-text: #ffffff;
+  --color-text-secondary: #7df9ff;
+  --color-border: #1a153a;
 }
 
 html.royal {
-  --color-bg: #1a0b2e;
-  --color-surface: #2d1b4d;
-  --color-primary: #ffd700;
-  --color-secondary: #ff69b4;
-  --color-accent: #9b4dff;
-  --color-text: #f8f8f8;
-  --color-text-secondary: #c084fc;
-  --color-border: #4d2d7d;
+  --color-bg: #1e152a;
+  --color-surface: #2d2040;
+  --color-primary: #ffd700; /* Gold */
+  --color-secondary: #ff77ff;
+  --color-accent: #a970ff;
+  --color-text: #fdfcff;
+  --color-text-secondary: #cbb4e3;
+  --color-border: #4a3465;
 }
 
 html.terminal {
-  --color-bg: #121212;
-  --color-surface: #1e1e1e;
-  --color-primary: #00ff00;
+  --color-bg: #000000;
+  --color-surface: #081008;
+  --color-primary: #00ff00; /* Pure Green */
   --color-secondary: #00cc00;
   --color-accent: #33ff33;
   --color-text: #00ff00;
-  --color-text-secondary: #008800;
-  --color-border: #004400;
+  --color-text-secondary: #00aa00;
+  --color-border: #003300;
 }
 
 html.cyberpunk {
-  --color-bg: #130019;
+  --color-bg: #1a0024;
   --color-surface: #2b003a;
-  --color-primary: #ff00ff;
-  --color-secondary: #00ffff;
-  --color-accent: #ffff00;
+  --color-primary: #ff0055; /* Hot Pink */
+  --color-secondary: #00f0ff; /* Cyan */
+  --color-accent: #ffe600; /* Yellow */
   --color-text: #ffffff;
-  --color-text-secondary: #ff00ff;
-  --color-border: #5a0071;
+  --color-text-secondary: #ff80df;
+  --color-border: #4d0066;
 }
 
 html.cosmic {
-  --color-bg: #030014;
-  --color-surface: #0a0628;
-  --color-primary: #818cf8;
-  --color-secondary: #c084fc;
-  --color-accent: #34d399;
+  --color-bg: #050b14;
+  --color-surface: #0a1526;
+  --color-primary: #3b82f6; /* Blue 500 */
+  --color-secondary: #8b5cf6; /* Violet 500 */
+  --color-accent: #14b8a6; /* Teal 500 */
   --color-text: #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-border: #1e1b4b;
+  --color-text-secondary: #64748b; /* Slate 500 */
+  --color-border: #1e293b; /* Slate 800 */
 }
 
 html.mobile-touch {
   --color-bg: #000000;
-  --color-surface: #111111;
-  --color-primary: #bfdbfe; /* Pastel Touch Blue for better high contrast text and UI elements */
-  --color-secondary: #f472b6; /* Vivid Rose */
-  --color-accent: #34d399; /* Emerald accent */
+  --color-surface: #151515;
+  --color-primary: #60a5fa; /* High contrast blue */
+  --color-secondary: #f472b6; 
+  --color-accent: #4ade80; 
   --color-text: #ffffff;
-  --color-text-secondary: #94a3b8;
-  --color-border: #27272a;
+  --color-text-secondary: #cbd5e1; /* High contrast slate 300 */
+  --color-border: #333333;
 }
 
 @layer utilities {

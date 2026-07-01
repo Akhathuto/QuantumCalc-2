@@ -64,9 +64,7 @@ if (typeof window !== 'undefined' && localStorage.getItem('enable_app_check') ==
 const dbId = (firebaseConfig as any).firestoreDatabaseId || '(default)';
 console.log(`[Firebase] Initializing Firestore with Database ID: ${dbId}`);
 
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-}, dbId);
+export const db = initializeFirestore(app, {}, dbId);
 
 // Explicitly enable IndexedDB Persistence as requested
 if (typeof window !== 'undefined') {

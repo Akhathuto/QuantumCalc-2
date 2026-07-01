@@ -21,14 +21,14 @@ const roles = [
 ];
 
 const themes = [
-    { id: 'dark', name: 'Original Dark', color: 'bg-[#1a202c]' },
-    { id: 'light', name: 'Clean Light', color: 'bg-[#f7fafc]' },
-    { id: 'neon', name: 'Neon Night', color: 'bg-black border border-brand-primary' },
-    { id: 'royal', name: 'Royal Purple', color: 'bg-[#1a0b2e]' },
-    { id: 'terminal', name: 'Matrix Green', color: 'bg-black border border-green-500' },
-    { id: 'cyberpunk', name: 'Cyberpunk', color: 'bg-[#130019]' },
-    { id: 'cosmic', name: 'Cosmic Slate', color: 'bg-[#030014] border border-[#1e1b4b]' },
-    { id: 'mobile-touch', name: 'Mobile Tactile', color: 'bg-black border-2 border-dashed border-blue-400' },
+    { id: 'dark', name: 'Original Dark', color: 'bg-[#09090b]' },
+    { id: 'light', name: 'Clean Light', color: 'bg-[#f8fafc] border border-gray-200' },
+    { id: 'neon', name: 'Neon Night', color: 'bg-[#030014] border border-[#00ffcc]' },
+    { id: 'royal', name: 'Royal Purple', color: 'bg-[#1e152a] border border-[#ffd700]' },
+    { id: 'terminal', name: 'Matrix Green', color: 'bg-[#000000] border border-[#00ff00]' },
+    { id: 'cyberpunk', name: 'Cyberpunk', color: 'bg-[#1a0024] border border-[#ff0055]' },
+    { id: 'cosmic', name: 'Cosmic Slate', color: 'bg-[#050b14] border border-[#3b82f6]' },
+    { id: 'mobile-touch', name: 'Mobile Tactile', color: 'bg-[#000000] border-2 border-[#60a5fa]' },
 ];
 
 interface SettingsProps {
