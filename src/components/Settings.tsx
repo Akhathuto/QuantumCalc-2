@@ -172,6 +172,30 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall, setActiveTab
         }
     };
 
+    const handleForceUpdate = async () => {
+        try {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.update();
+                }
+            }
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(
+                    cacheNames.map(cacheName => caches.delete(cacheName))
+                );
+            }
+            showToast("Update applied. Reloading app...");
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } catch (error) {
+            console.error("Failed to update cache:", error);
+            showToast("Failed to apply update.");
+        }
+    };
+
     const handleExportData = () => {
         try {
             const data: Record<string, string | null> = {};
@@ -2060,6 +2084,13 @@ const Settings: React.FC<SettingsProps> = ({ canInstall, onInstall, setActiveTab
                                 className="flex-1 mt-4 py-2 bg-brand-surface border border-brand-border hover:bg-brand-border text-brand-text rounded-xl text-xs font-bold uppercase transition-all"
                             >
                                 Refresh
+                            </button>
+                            <button 
+                                onClick={handleForceUpdate}
+                                className="flex-1 mt-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl text-xs font-bold uppercase transition-all"
+                                title="Check for updates and clear system cache"
+                            >
+                                Update App
                             </button>
                         </div>
                     </div>
