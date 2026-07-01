@@ -7,64 +7,17 @@ import {
   inMemoryPersistence
 } from 'firebase/auth';
 import { doc, getDocFromServer, initializeFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { initializeAppCheck, ReCaptchaV3Provider, getToken } from 'firebase/app-check';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-
-// Initialize App Check with debug support ONLY if explicitly enabled
-if (typeof window !== 'undefined' && localStorage.getItem('enable_app_check') === 'true') {
-  try {
-    // Enable App Check debug token in preview/sandbox/dev environments
-    // We use a constant, predictable UUID so the user can easily register it once in the Firebase console
-    const debugToken = "9c9042da-24a3-42b8-a568-fd417e242625";
-    (window as any).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
-    
-    console.log(`[Firebase App Check] Activating Debug mode with token: ${debugToken}`);
-    console.log(`[Firebase App Check] Add this token to Firebase Console > App Check > Apps > Manage debug tokens.`);
-    
-    const siteKey = "6LcyhP4sAAAAAOCLqIlZCJHWsxeEaVSszIGHNfZL"; // Fallback site key from Recapture
-    const appCheckInstance = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(siteKey),
-      isTokenAutoRefreshEnabled: true
-    });
-    console.log("[Firebase] App Check initialized successfully with Debug Provider.");
-
-    // Proactively verify if App Check token is obtainable. If it fails with 403, disable it.
-    getToken(appCheckInstance)
-      .then(() => {
-        console.log("[Firebase App Check] Proactive token verification succeeded.");
-      })
-      .catch((err) => {
-        const errStr = String(err?.message || err);
-        console.error("[Firebase App Check] Proactive token verification failed:", errStr);
-        if (errStr.includes('403') || errStr.includes('app-check') || errStr.includes('fetch-status-error') || errStr.includes('invalid')) {
-          console.warn("[Firebase] Proactive App Check validation failed with 403. Auto-disabling App Check to recover connection.");
-          try {
-            localStorage.setItem('enable_app_check', 'false');
-          } catch (e) {
-            console.warn('LocalStorage error while disabling App Check:', e);
-          }
-          window.dispatchEvent(new CustomEvent('firestore-status', { 
-            detail: { 
-              status: 'app-check-error', 
-              error: "Firebase App Check Validation failed (HTTP 403). We have automatically disabled it for you. Click the warning badge in the header or reload the page to restore connectivity." 
-            } 
-          }));
-        }
-      });
-  } catch (err) {
-    console.warn("[Firebase] App Check initialization skipped or failed:", err);
-  }
-} else if (typeof window !== 'undefined') {
-  console.log("[Firebase] App Check is currently disabled. (Most environments do not require App Check in development). To enable, toggle 'App Check Validation' in the Settings page.");
-}
 
 // Use initializeFirestore with optimized settings for container/proxy environments and persistent offline cache
 const dbId = (firebaseConfig as any).firestoreDatabaseId || '(default)';
 console.log(`[Firebase] Initializing Firestore with Database ID: ${dbId}`);
 
-export const db = initializeFirestore(app, {}, dbId);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true
+}, dbId);
 
 // Explicitly enable IndexedDB Persistence as requested
 if (typeof window !== 'undefined') {

@@ -121,6 +121,10 @@ html.mobile-touch {
 
 body {
     @apply bg-brand-bg text-brand-text transition-colors duration-300;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(120, 110, 255, 0.02), transparent 25%),
+      radial-gradient(circle at 90% 80%, rgba(80, 255, 120, 0.02), transparent 25%);
+    background-attachment: fixed;
 }
 
 @media print {

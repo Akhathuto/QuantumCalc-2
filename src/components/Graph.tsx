@@ -20,7 +20,7 @@ const math = create(all);
 const CategoryTab: FC<{ label: string; icon: any; isActive: boolean; onClick: () => void }> = ({ label, icon: Icon, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isActive ? 'bg-brand-primary text-white shadow-xl shadow-brand-primary/30 -translate-y-1' : 'bg-brand-surface/40 text-brand-text-secondary hover:bg-brand-surface/80 hover:text-brand-text border border-brand-border/50'}`}
+        className={`flex items-center gap-2 px-6 py-3 rounded-[2rem] font-black text-[10px] uppercase tracking-widest transition-all backdrop-blur-md ${isActive ? 'bg-brand-primary text-white shadow-xl shadow-brand-primary/30 scale-105 border border-brand-primary' : 'bg-brand-surface/40 text-brand-text-secondary hover:bg-brand-surface border border-brand-border/40 hover:border-brand-primary/30'}`}
     >
         <Icon size={14} />
         <span>{label}</span>
@@ -30,7 +30,7 @@ const CategoryTab: FC<{ label: string; icon: any; isActive: boolean; onClick: ()
 const ChartTypeButton: FC<{ label: string; isActive: boolean; onClick: () => void }> = ({ label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border whitespace-nowrap ${isActive ? 'bg-brand-text text-brand-bg border-brand-text' : 'bg-transparent text-brand-text-secondary border-brand-border hover:border-brand-text/50 hover:text-brand-text'}`}
+        className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap ${isActive ? 'bg-brand-text text-brand-bg border-brand-text shadow-lg' : 'bg-transparent text-brand-text-secondary border-transparent hover:border-brand-border/80 hover:bg-brand-surface/50 hover:text-brand-text'}`}
     >
         {label}
     </button>

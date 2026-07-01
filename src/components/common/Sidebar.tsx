@@ -38,7 +38,6 @@ const navItems = [
   { id: 'explore', label: 'Explore Hub', Icon: Compass },
   { id: 'calculator', label: 'Calculator', Icon: CalculatorIcon },
   { id: 'graphing', label: 'Graphing', Icon: LineChart },
-  { id: 'calendar', label: 'Study Calendar', Icon: Calendar },
   { id: 'history', label: 'History', Icon: History },
 ];
 

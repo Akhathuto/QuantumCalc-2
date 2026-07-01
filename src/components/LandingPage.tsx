@@ -1090,14 +1090,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16 relative z-10">
         {/* Hero Section */}
-        <section className="relative overflow-hidden rounded-[40px] px-6 py-12 md:px-12 md:py-16 bg-gradient-to-b from-brand-surface/30 to-transparent border border-brand-border/15 backdrop-blur-[1px]">
+        <section className="relative overflow-hidden rounded-[40px] px-6 py-12 md:px-12 md:py-20 bg-brand-surface/40 border border-brand-border/40 shadow-2xl backdrop-blur-md">
           {/* Subtle grid and radial highlighting backplates */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,var(--color-primary),transparent_45%)] opacity-[0.06] pointer-events-none" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] opacity-[0.08] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,var(--color-primary),transparent_60%)] opacity-[0.08] pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_20%,#000_50%,transparent_100%)] opacity-[0.12] pointer-events-none" />
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
             {/* Left side: Heading content */}
-            <div className="lg:col-span-7 flex flex-col items-center text-center lg:items-start lg:text-left space-y-6">
+            <div className="lg:col-span-7 flex flex-col items-center text-center lg:items-start lg:text-left space-y-7">
               
               <motion.div 
                 initial={{ opacity: 0, y: -20, scale: 0.95 }}

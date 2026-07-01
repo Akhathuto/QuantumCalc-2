@@ -21,7 +21,7 @@ const Input = ({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-secondary pl-1 italic">{label}</label>
         <input 
             {...props} 
-            className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm focus:ring-2 focus:ring-brand-primary/50 outline-none transition-all font-mono placeholder:opacity-30" 
+            className="w-full bg-brand-surface/40 backdrop-blur-md border border-brand-border/60 rounded-xl px-4 py-3 text-brand-text text-sm focus:ring-2 focus:ring-brand-primary/50 outline-none transition-all font-mono placeholder:opacity-30 shadow-inner" 
         />
     </div>
 );
@@ -38,10 +38,11 @@ const ResultCard = ({ title, value, description }: { title: string, value: strin
     return (
         <motion.div 
             whileHover={{ y: -2 }}
-            className="bg-brand-bg border border-brand-border p-5 rounded-2xl relative group overflow-hidden"
+            className="bg-brand-surface/60 backdrop-blur-xl border border-brand-border/60 p-6 rounded-[2rem] relative group overflow-hidden shadow-2xl"
         >
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 via-transparent to-brand-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex justify-between items-start mb-2">
+            <div className="flex justify-between items-start mb-2 relative z-10">
                 <span className="text-[9px] font-black uppercase tracking-[0.25em] text-brand-primary/70">{title}</span>
                 <button 
                     onClick={copyToClipboard}

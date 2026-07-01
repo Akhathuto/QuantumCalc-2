@@ -590,7 +590,7 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
       setIsLoading(false);
       setIsSecond(false);
     }
-  }, [expression, currentInput, error, isLoading, addToHistory, parser]);
+  }, [expression, currentInput, error, isLoading, addToHistory, parser, syncStatus]);
 
   const handleOp = useCallback((op: string) => {
     triggerClick('tick');
@@ -798,10 +798,12 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className={`lg:col-span-3 ${scaleConfig.containerClass} b-max transition-all duration-300`}>
              {/* Dynamic Workspace Preference Strip */}
-             <div className="flex flex-wrap items-center justify-between gap-3 bg-brand-surface/20 border border-brand-border/40 px-4 py-3 rounded-2xl mb-4 text-xs select-none">
+             <div className="flex flex-wrap items-center justify-between gap-3 bg-brand-surface/40 backdrop-blur-md border border-brand-border/50 px-5 py-4 rounded-[2rem] mb-6 text-xs select-none shadow-sm">
                <div className="flex items-center gap-2 text-brand-text-secondary">
-                 <Sliders size={13} className="text-brand-primary" />
-                 <span className="font-black tracking-wider uppercase text-[10px]">Workspace controls</span>
+                 <div className="p-1.5 bg-brand-primary/10 rounded-lg text-brand-primary">
+                    <Sliders size={14} />
+                 </div>
+                 <span className="font-black tracking-[0.2em] uppercase text-[10px]">Workspace Controls</span>
                </div>
                
                <div className="flex flex-wrap items-center gap-3">
@@ -873,7 +875,8 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                </div>
              </div>
 
-             <TiltCard className={`bg-brand-surface/40 backdrop-blur-xl rounded-3xl ${scaleConfig.cardPadding} text-right ${scaleConfig.cardHeight} flex flex-col justify-between relative border border-brand-border/50 shadow-inner group`}>
+             <TiltCard className={`bg-brand-surface/60 backdrop-blur-2xl rounded-[3rem] ${scaleConfig.cardPadding} text-right ${scaleConfig.cardHeight} flex flex-col justify-between relative border border-brand-border/60 shadow-2xl group overflow-hidden`}>
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 
                 {/* Ticker Tape */}
@@ -956,19 +959,19 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
                   const isAct = b.active;
 
                   const getVariantStyles = () => {
-                    if (isAct) return 'bg-brand-primary text-brand-bg ring-2 ring-brand-primary/50 shadow-lg shadow-brand-primary/20';
+                    if (isAct) return 'bg-brand-primary text-brand-bg ring-2 ring-brand-primary/50 shadow-xl shadow-brand-primary/20 scale-105';
                     switch (b.variant) {
                       case 'primary': // `=`
-                        return 'bg-gradient-to-r from-brand-primary to-emerald-500 text-brand-bg font-black text-2xl shadow-lg shadow-brand-primary/10';
+                        return 'bg-gradient-to-br from-brand-primary to-emerald-500 text-brand-bg font-black text-2xl shadow-xl shadow-brand-primary/20 hover:shadow-brand-primary/40';
                       case 'secondary': // operations
-                        return 'bg-brand-surface/90 border border-brand-secondary/30 text-brand-secondary hover:text-white hover:bg-brand-secondary transition-all font-extrabold text-xl shadow-sm';
+                        return 'bg-brand-surface/60 backdrop-blur-md border border-brand-secondary/30 text-brand-secondary hover:text-white hover:bg-brand-secondary transition-all font-black text-xl shadow-md';
                       case 'outline': // sci operations
-                        return 'bg-brand-surface/40 hover:bg-brand-surface border border-brand-border/45 hover:border-brand-primary/30 text-brand-text-secondary hover:text-brand-text text-sm md:text-sm font-sans tracking-tight';
+                        return 'bg-brand-surface/20 backdrop-blur-md hover:bg-brand-surface/80 border border-brand-border/40 hover:border-brand-primary/40 text-brand-text-secondary hover:text-brand-text font-bold tracking-tight shadow-sm hover:shadow-md';
                       case 'clear': // AC delete
-                        return 'bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-400 hover:text-white hover:shadow-lg hover:shadow-red-500/15 text-sm uppercase tracking-wider font-extrabold';
+                        return 'bg-red-500/10 backdrop-blur-md hover:bg-red-500 border border-red-500/20 text-red-400 hover:text-white hover:shadow-xl hover:shadow-red-500/20 text-sm uppercase tracking-widest font-black';
                       case 'num': // numbers
                       default:
-                        return 'bg-brand-surface/60 hover:bg-brand-surface text-brand-text border border-brand-border/25 hover:border-brand-border/60 hover:shadow-md';
+                        return 'bg-brand-surface/40 backdrop-blur-md hover:bg-brand-surface text-brand-text border border-brand-border/30 hover:border-brand-border/60 shadow-sm hover:shadow-md font-black text-lg';
                     }
                   };
 
@@ -1073,11 +1076,12 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
         </div>
         
         <div className="lg:col-span-2 space-y-8">
-            <TiltCard className="bg-brand-surface/30 backdrop-blur-sm p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl min-h-[440px] flex flex-col relative overflow-hidden group hover:border-brand-primary/30 transition-colors duration-500">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-[60px] -mr-10 -mt-10 pointer-events-none group-hover:bg-brand-primary/20 transition-colors duration-700" />
-              <h3 className="text-2xl font-extrabold mb-6 flex items-center gap-3 text-brand-text tracking-tight relative z-10">
-                <div className="p-2 bg-brand-primary/10 text-brand-primary rounded-xl">
-                    <Brain size={24} />
+            <TiltCard className="bg-brand-surface/40 backdrop-blur-xl p-10 rounded-[3rem] border border-brand-border/60 shadow-2xl min-h-[440px] flex flex-col relative overflow-hidden group hover:border-brand-primary/40 transition-colors duration-500">
+               <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+               <div className="absolute top-0 right-0 w-48 h-48 bg-brand-primary/5 rounded-full blur-[80px] -mr-10 -mt-10 pointer-events-none group-hover:bg-brand-primary/15 transition-colors duration-700" />
+              <h3 className="text-3xl font-black mb-8 flex items-center gap-4 text-brand-text tracking-tighter relative z-10 italic">
+                <div className="p-3 bg-brand-primary/10 text-brand-primary rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+                    <Brain size={28} />
                 </div>
                 Formula Explorer
               </h3>
@@ -1187,11 +1191,12 @@ const Calculator = ({ addToHistory, expressionToLoad, onExpressionLoaded, setAct
               </div>
             </TiltCard>
             
-            <TiltCard className="bg-brand-surface/30 backdrop-blur-sm p-8 rounded-[2.5rem] border border-brand-border/50 shadow-xl overflow-hidden relative group hover:border-brand-secondary/30 transition-colors duration-500">
-                <div className="absolute bottom-0 right-0 w-32 h-32 bg-brand-secondary/5 rounded-full blur-[60px] -mr-10 -mb-10 pointer-events-none group-hover:bg-brand-secondary/10 transition-colors duration-700" />
-                <h3 className="text-2xl font-extrabold mb-6 flex items-center gap-3 text-brand-text tracking-tight relative z-10">
-                    <div className="p-2 bg-brand-secondary/10 text-brand-secondary rounded-xl">
-                        <FlaskConical size={24} />
+            <TiltCard className="bg-brand-surface/40 backdrop-blur-xl p-10 rounded-[3rem] border border-brand-border/60 shadow-2xl overflow-hidden relative group hover:border-brand-secondary/40 transition-colors duration-500">
+                <div className="absolute inset-0 bg-gradient-to-tl from-brand-secondary/5 via-transparent to-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+                <div className="absolute bottom-0 right-0 w-48 h-48 bg-brand-secondary/5 rounded-full blur-[80px] -mr-10 -mb-10 pointer-events-none group-hover:bg-brand-secondary/15 transition-colors duration-700" />
+                <h3 className="text-3xl font-black mb-8 flex items-center gap-4 text-brand-text tracking-tighter relative z-10 italic">
+                    <div className="p-3 bg-brand-secondary/10 text-brand-secondary rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+                        <FlaskConical size={28} />
                     </div>
                     Scientific Constants
                 </h3>

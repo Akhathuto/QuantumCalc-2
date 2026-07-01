@@ -2,16 +2,11 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { 
   User, 
   onAuthStateChanged, 
-  signInWithPopup, 
-  signInWithRedirect,
-  getRedirectResult,
-  GoogleAuthProvider, 
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   sendPasswordResetEmail,
-  browserPopupRedirectResolver,
   signInAnonymously
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
@@ -35,7 +30,6 @@ interface AuthContextType {
   accessToken: string | null;
   loading: boolean;
   error: string | null;
-  signInWithGoogle: (useRedirect?: boolean) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string, extraData?: any) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInGuest: () => Promise<void>;
@@ -59,7 +53,6 @@ const AuthContext = createContext<AuthContextType>({
   accessToken: null,
   loading: true,
   error: null,
-  signInWithGoogle: async (_useRedirect?: boolean) => {},
   signUpWithEmail: async (_email: string, _password: string, _displayName: string, _extraData?: any) => {},
   signInWithEmail: async (_email: string, _password: string) => {},
   signInGuest: async () => {},
@@ -78,12 +71,6 @@ const AuthContext = createContext<AuthContextType>({
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
-
-const getResolver = () => {
-  // Always return the actual browser popup/redirect resolver so that Firebase Auth
-  // has a resolver to execute dynamic popup or redirect sign-in flows.
-  return browserPopupRedirectResolver;
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -173,30 +160,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // We don't want to block the app if stats fail, but we should know why
     });
 
-    // Handle redirect result
-    const checkRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth, getResolver());
-        if (result) {
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          if (credential?.accessToken) {
-            setAccessToken(credential.accessToken);
-          }
-        }
-      } catch (err: any) {
-        console.error('Error from redirect sign-in:', err instanceof Error ? err.message : String(err));
-        // Common in iframes/previews with third-party cookie restrictions or unwhitelisted domains
-        if (err.code === 'auth/internal-error' || err.code === 'auth/network-request-failed') {
-           console.warn('Silently ignoring redirect initialization error:', err.code);
-        } else {
-           // We do not set the error state globally on boot, as it blocks the user from email sign up
-           console.warn('Unhandled redirect error:', err.message);
-        }
-      }
-    };
-
-    checkRedirect();
-
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       // Clear existing subscription
       if (unsubscribeUserDocRef.current) {
@@ -276,52 +239,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (unsubscribeStatsRef.current) unsubscribeStatsRef.current();
     };
   }, []);
-
-  const signInWithGoogle = async (useRedirect = false) => {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/drive.appdata');
-    provider.addScope('https://www.googleapis.com/auth/drive.file');
-    provider.addScope('https://www.googleapis.com/auth/calendar');
-    provider.setCustomParameters({ prompt: 'select_account' });
-    
-    setLoading(true);
-    setError(null);
-    try {
-      if (useRedirect) {
-        await signInWithRedirect(auth, provider, getResolver());
-        return; // Redirecting...
-      }
-
-      const result = await signInWithPopup(auth, provider, getResolver());
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential?.accessToken) {
-        setAccessToken(credential.accessToken);
-      }
-    } catch (err: any) {
-      setLoading(false);
-      // Only log as warning to prevent triggering platform crash detectors for normal user cancellations
-      console.group("Sign-in Diagnostics");
-      console.warn("Diagnostics - Code:", err.code);
-      console.warn("Diagnostics - Message:", err.message);
-      console.warn("Diagnostics - Hostname:", window.location.hostname);
-      console.groupEnd();
-
-      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-        console.log("Sign-in cancelled by user.");
-        setError("Sign-in window was closed by the user before completing authentication. Please try again, or use the 'Direct Redirect Method'.");
-      } else if (err.code === 'auth/popup-blocked') {
-        setError("Sign-in popup was blocked by your browser. Please allow popups for this site or use the Redirect method.");
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError(`CRITICAL: Domain "${window.location.hostname}" is NOT authorized in Firebase Console. Please go to Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
-      } else if (err.code === 'auth/network-request-failed') {
-        setError("Network error: This can be caused by ad-blockers, browser privacy settings, or missing Authorized Domains in Firebase. Please try the 'Redirect Method' to bypass common popup restrictions.");
-      } else if (err.code === 'auth/internal-error') {
-        setError(`CRITICAL: 'auth/internal-error' usually means the domain "${window.location.hostname}" is NOT authorized. Go to Firebase Console > Authentication > Settings > Authorized domains. Alternatively, use 'Sandbox Offline Mode' inside the Settings page to bypass this completely.`);
-      } else {
-        setError(`Authentication Error: ${err.message || "An unexpected error occurred"}. (Code: ${err.code})`);
-      }
-    }
-  };
 
   const logout = async () => {
     try {
@@ -677,7 +594,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       accessToken, 
       loading, 
       error, 
-      signInWithGoogle, 
       signUpWithEmail, 
       signInWithEmail, 
       signInGuest, 

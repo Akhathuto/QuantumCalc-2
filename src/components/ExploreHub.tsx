@@ -182,19 +182,20 @@ const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
 
         {/* Dynamic Search Box with large key indicators */}
         <div className="space-y-3">
-          <div className="relative">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/20 via-brand-secondary/20 to-brand-primary/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <input
               type="text"
               placeholder="Search solvers, units, worksheets, or try tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-4 pl-12 pr-16 bg-brand-surface border-2 border-brand-border hover:border-brand-primary/40 focus:border-brand-primary/80 rounded-2xl text-brand-text text-sm sm:text-base outline-none transition-all placeholder:text-brand-text-secondary/40 font-medium font-sans shadow-inner focus:ring-4 focus:ring-brand-primary/10"
+              className="relative w-full py-4 pl-12 pr-16 bg-brand-surface/80 backdrop-blur-md border border-brand-border/60 hover:border-brand-primary/60 focus:border-brand-primary rounded-2xl text-brand-text text-sm sm:text-base outline-none transition-all placeholder:text-brand-text-secondary/40 font-medium font-sans shadow-lg focus:shadow-[0_0_0_4px_rgba(var(--color-primary),0.15)]"
             />
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-secondary opacity-60" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-secondary opacity-60 group-hover:text-brand-primary transition-colors" size={20} />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-brand-text-secondary hover:text-brand-primary transition-colors bg-brand-bg px-2.5 py-1.5 rounded-xl border border-brand-border"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-brand-text-secondary hover:text-brand-primary transition-colors bg-brand-bg px-2.5 py-1.5 rounded-lg border border-brand-border shadow-sm z-10"
               >
                 RESET
               </button>
@@ -365,36 +366,37 @@ const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
 
       {/* Dynamic Grid Results */}
       {filteredTools.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredTools.map((tool) => {
             const Icon = tool.icon;
             return (
               <button
                 key={tool.id}
                 onClick={() => onTabClick(tool.id)}
-                className="w-full text-left p-4.5 rounded-3xl bg-brand-surface border border-brand-border hover:border-brand-primary active:scale-[0.98] transition-all relative flex items-center justify-between gap-4 group cursor-pointer shadow-sm hover:shadow-md hover:shadow-brand-primary/5 select-none"
+                className="w-full text-left p-5 rounded-3xl bg-brand-surface/40 backdrop-blur-sm border border-brand-border hover:border-brand-primary active:scale-[0.98] transition-all relative flex flex-col items-start gap-4 group cursor-pointer shadow-sm hover:shadow-xl hover:shadow-brand-primary/10 select-none overflow-hidden"
               >
-                <div className="flex items-center gap-4 min-w-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="flex items-center gap-4 w-full">
                   {/* Large tactile icon badge background */}
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${tool.bg} border border-white/5 shadow-inner`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${tool.bg} border border-white/5 shadow-inner group-hover:scale-105 transition-transform duration-300`}>
                     <Icon size={24} className={tool.color} />
                   </div>
                   
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-brand-text tracking-tight truncate group-hover:text-brand-primary transition-colors">{tool.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-[13px] text-brand-text tracking-tight truncate group-hover:text-brand-primary transition-colors">{tool.name}</span>
                       {tool.badge && (
-                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-brand-primary/10 text-brand-primary shrink-0">
+                        <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-brand-primary/10 text-brand-primary shrink-0">
                           {tool.badge}
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-brand-text-secondary font-medium leading-relaxed tracking-wide truncate mt-0.5">{tool.desc}</p>
+                    <p className="text-[11px] text-brand-text-secondary font-medium leading-relaxed tracking-wide line-clamp-2">{tool.desc}</p>
                   </div>
                 </div>
 
-                <div className="w-8 h-8 rounded-xl bg-brand-bg/50 border border-brand-border/40 flex items-center justify-center opacity-70 group-hover:opacity-100 group-hover:border-brand-primary/35 transition-all text-brand-text-secondary group-hover:text-brand-primary">
-                  <ChevronRight size={16} />
+                <div className="absolute bottom-4 right-4 w-7 h-7 rounded-full bg-brand-bg/50 border border-brand-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 text-brand-text-secondary group-hover:text-brand-primary">
+                  <ChevronRight size={14} />
                 </div>
               </button>
             );

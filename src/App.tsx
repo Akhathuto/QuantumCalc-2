@@ -39,7 +39,6 @@ const PrivacyProtocol = lazy(() => lazyWithRetry(() => import('./components/Priv
 const CoreLicense = lazy(() => lazyWithRetry(() => import('./components/CoreLicense')));
 const SupportHub = lazy(() => lazyWithRetry(() => import('./components/SupportHub')));
 const MathSandbox = lazy(() => lazyWithRetry(() => import('./components/MathSandbox')));
-const GoogleCalendar = lazy(() => lazyWithRetry(() => import('./components/GoogleCalendar')));
 const Documentation = lazy(() => lazyWithRetry(() => import('./components/Documentation')));
 const Troubleshooting = lazy(() => lazyWithRetry(() => import('./components/Troubleshooting')));
 const CommunityForum = lazy(() => lazyWithRetry(() => import('./components/CommunityForum')));
@@ -458,9 +457,6 @@ const App = () => {
         break;
       case 'sandbox':
         TabComponent = <MathSandbox />;
-        break;
-      case 'calendar':
-        TabComponent = <GoogleCalendar />;
         break;
       case 'docs':
         TabComponent = <Documentation />;
