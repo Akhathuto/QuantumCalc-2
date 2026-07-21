@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Search, Cloud, Download } from 'lucide-react';
+import { Menu, Search, Cloud, Download, RefreshCw } from 'lucide-react';
 import Logo from './Logo';
 import { AppTab } from '../../types';
 import { useAuth } from '../AuthProvider';
@@ -16,6 +16,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, onMenuClick }) => {
   const { user, userData, accessToken, logout } = useAuth();
   const { isInstallable, installPWA } = usePWAInstall();
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [firestoreStatus, setFirestoreStatus] = useState<'checking' | 'online' | 'offline' | 'sandbox-offline' | 'error'>(() => {
     try {
       if (typeof window !== 'undefined' && localStorage.getItem('offline_mode') === 'true') {
@@ -164,13 +165,46 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
             {isInstallable && (
               <button
                 onClick={installPWA}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-brand-primary text-brand-bg rounded-lg font-bold text-xs hover:scale-105 transition-transform"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-brand-primary text-brand-bg rounded-lg font-bold text-xs hover:scale-105 transition-transform shrink-0 cursor-pointer"
                 title="Install QuantumCalc App"
               >
                 <Download size={14} />
                 <span>Install App</span>
               </button>
             )}
+
+            <button
+              onClick={async () => {
+                try {
+                  setToastMsg("Busting system caches & syncing latest assets...");
+                  if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                      await registration.update();
+                    }
+                  }
+                  if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(
+                      cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                  }
+                  setToastMsg("Workspace synchronized! Reloading page...");
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 1200);
+                } catch (err) {
+                  console.error("Failed to update cache:", err);
+                  setToastMsg("Failed to synchronize catch. Please retry.");
+                  setTimeout(() => setToastMsg(null), 3000);
+                }
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-border hover:border-brand-primary/40 text-brand-text hover:text-brand-primary transition-all text-xs font-bold shrink-0 cursor-pointer bg-brand-surface/30"
+              title="Bust service worker caches and synchronize the app to the current catch (latest release)"
+            >
+              <RefreshCw size={13} className="animate-spin-slow text-brand-primary" />
+              <span>Current Catch</span>
+            </button>
 
             {renderStatusPill()}
 
@@ -180,10 +214,10 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
                 {accessToken && (
                   <button 
                     onClick={() => onTabClick('settings')}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/10 transition-colors hidden sm:flex shrink-0"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/10 transition-colors hidden sm:flex shrink-0 animate-pulse"
                     title="Google Drive Sync Active"
                   >
-                    <Cloud size={12} className="text-emerald-500 animate-[pulse_2s_infinite]" />
+                    <Cloud size={12} className="text-emerald-500" />
                     <span>Drive Sync Active</span>
                   </button>
                 )}
@@ -212,6 +246,13 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabClick, onLoginClick, on
 
         </div>
       </div>
+      
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 bg-brand-surface/95 border border-brand-border/80 text-brand-text rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-fade-in max-w-sm">
+          <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" />
+          <span className="text-xs font-bold tracking-wide">{toastMsg}</span>
+        </div>
+      )}
     </header>
   );
 };

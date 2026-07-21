@@ -373,30 +373,35 @@ const ExploreHub: React.FC<ExploreHubProps> = ({ onTabClick }) => {
               <button
                 key={tool.id}
                 onClick={() => onTabClick(tool.id)}
-                className="w-full text-left p-5 rounded-3xl bg-brand-surface/40 backdrop-blur-sm border border-brand-border hover:border-brand-primary active:scale-[0.98] transition-all relative flex flex-col items-start gap-4 group cursor-pointer shadow-sm hover:shadow-xl hover:shadow-brand-primary/10 select-none overflow-hidden"
+                className="w-full text-left p-5 rounded-3xl bg-brand-surface/60 backdrop-blur-sm border border-brand-border/70 hover:border-brand-primary/60 active:scale-[0.98] transition-all relative flex flex-col justify-between gap-4 group cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-brand-primary/10 select-none overflow-hidden hover:-translate-y-1"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="flex items-center gap-4 w-full">
-                  {/* Large tactile icon badge background */}
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${tool.bg} border border-white/5 shadow-inner group-hover:scale-105 transition-transform duration-300`}>
-                    <Icon size={24} className={tool.color} />
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <div className="flex items-start gap-4 w-full relative z-10">
+                  {/* Tactile icon badge background */}
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${tool.bg} border border-white/10 shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon size={22} className={tool.color} />
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-[13px] text-brand-text tracking-tight truncate group-hover:text-brand-primary transition-colors">{tool.name}</span>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-extrabold text-[13px] text-brand-text tracking-tight truncate group-hover:text-brand-primary transition-colors">{tool.name}</span>
                       {tool.badge && (
-                        <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-brand-primary/10 text-brand-primary shrink-0">
+                        <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-brand-primary/15 text-brand-primary shrink-0 border border-brand-primary/20">
                           {tool.badge}
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-brand-text-secondary font-medium leading-relaxed tracking-wide line-clamp-2">{tool.desc}</p>
+                    <p className="text-[11px] text-brand-text-secondary font-normal leading-relaxed tracking-wide line-clamp-2">{tool.desc}</p>
                   </div>
                 </div>
 
-                <div className="absolute bottom-4 right-4 w-7 h-7 rounded-full bg-brand-bg/50 border border-brand-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 text-brand-text-secondary group-hover:text-brand-primary">
-                  <ChevronRight size={14} />
+                <div className="flex items-center justify-between w-full pt-2 border-t border-brand-border/20 relative z-10">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-brand-text-secondary/50 group-hover:text-brand-primary/70 transition-colors">
+                    Launch
+                  </span>
+                  <div className="w-6 h-6 rounded-full bg-brand-bg/60 border border-brand-border flex items-center justify-center text-brand-text-secondary group-hover:text-brand-primary group-hover:border-brand-primary/40 group-hover:bg-brand-primary/10 transition-all group-hover:translate-x-0.5">
+                    <ChevronRight size={13} />
+                  </div>
                 </div>
               </button>
             );

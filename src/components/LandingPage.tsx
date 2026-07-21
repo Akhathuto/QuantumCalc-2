@@ -1736,7 +1736,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
           viewport={{ once: true, margin: "-100px" }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8"
         >
-          <motion.div variants={itemVariants} className="bg-brand-surface rounded-[24px] p-8 border border-brand-border/45 text-left hover:border-brand-primary/30 transition-all duration-300 shadow-sm hover:shadow-lg">
+          <motion.div variants={itemVariants} className="premium-glow-hover bg-brand-surface rounded-[24px] p-8 border border-brand-border/45 text-left">
             <div className="w-12 h-12 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
               <Calculator size={24} />
             </div>
@@ -1746,7 +1746,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
             </p>
           </motion.div>
           
-          <motion.div variants={itemVariants} className="bg-brand-surface rounded-[24px] p-8 border border-brand-border/45 text-left hover:border-brand-primary/30 transition-all duration-300 shadow-sm hover:shadow-lg">
+          <motion.div variants={itemVariants} className="premium-glow-hover bg-brand-surface rounded-[24px] p-8 border border-brand-border/45 text-left">
             <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
               <GraduationCap size={24} />
             </div>
@@ -1756,7 +1756,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onTabClick, onLoginClick }) =
             </p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-brand-surface rounded-[24px] p-8 border border-brand-border/45 text-left hover:border-brand-primary/30 transition-all duration-300 shadow-sm hover:shadow-lg">
+          <motion.div variants={itemVariants} className="premium-glow-hover bg-brand-surface rounded-[24px] p-8 border border-brand-border/45 text-left">
             <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
               <LineChart size={24} />
             </div>

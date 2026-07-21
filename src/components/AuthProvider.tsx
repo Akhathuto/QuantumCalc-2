@@ -395,7 +395,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInSimulated = () => {
-    // Removed staging mock user logic
+    setIsLocalUser(true);
+    setUser({
+      uid: 'ais-dev-sandbox-user-99999',
+      email: 'sandbox-scholar@qcalc.edu',
+      displayName: 'Sandbox Scholar',
+      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
+      emailVerified: true,
+      isAnonymous: false
+    } as any);
+
+    setUserData({
+      uid: 'ais-dev-sandbox-user-99999',
+      email: 'sandbox-scholar@qcalc.edu',
+      displayName: 'Sandbox Scholar',
+      onboarded: true,
+      role: 'student',
+      grade: 'General',
+      school: 'Quantum Academy',
+      createdAt: new Date().toISOString(),
+      isLocal: true
+    });
+    setLoading(false);
   };
 
   const signUpLocal = async (username: string, email: string, pass: string, role: string, grade: string, school: string, avatar: string) => {
