@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, BrainCircuit, X, Bot, Sparkles, Command } from 'lucide-react';
+import { Mic, MicOff, BrainCircuit, X, Bot, Sparkles, Command, Send, ArrowDownRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppTab } from '../types';
-import { getApiKey } from '../services/geminiService';
+import { getApiKey, getGeminiModel } from '../services/geminiService';
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 
@@ -17,16 +17,29 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', text: string }[]>([]);
 
   // Speech Recognition Setup
   const recognitionRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, isThinking, isOpen]);
 
   const askAi = async (query: string) => {
     if (!query.trim()) return;
     
     setIsThinking(true);
     setMessages(prev => [...prev, { role: 'user', text: query }]);
+    setInputValue('');
     
     try {
       const apiKey = getApiKey();
@@ -39,8 +52,9 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
       }
 
       const ai = new GoogleGenAI({ apiKey });
+      const modelName = getGeminiModel();
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: modelName,
         contents: query,
         config: {
           systemInstruction: `You are the QuantumCalc AI Research Assistant. You are currently helping the user in the "${activeTab}" section of the app. Provide clear, concise, and educational answers, formatted nicely using Markdown. If you provide steps or code or math, format it properly. If the user wants to solve a complex math problem, provide the answer directly and explain how to get more details in the 'Student Tools' tab. You help with navigation, quick math, tool explanations, and general knowledge.`,
@@ -139,21 +153,39 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-brand-bg/50">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-brand-bg/50 custom-scrollbar">
                 {messages.length === 0 && (
-                  <div className="text-center py-10 space-y-4">
-                    <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto text-brand-primary">
-                      <Sparkles size={32} />
+                  <div className="text-center py-6 space-y-4">
+                    <div className="w-14 h-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center mx-auto text-brand-primary shadow-inner border border-brand-primary/20">
+                      <Sparkles size={28} />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-brand-text">How can I help you?</p>
-                        <p className="text-xs text-brand-text-secondary mt-1 px-4">Try "Open Calculator" or "What is 25% of 150?"</p>
+                        <p className="text-sm font-bold text-brand-text">Quantum AI Companion</p>
+                        <p className="text-xs text-brand-text-secondary mt-1 px-4 leading-relaxed">Ask anything or select a quick topic below:</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 pt-2 px-2">
+                      {[
+                        `Explain features on '${activeTab}'`,
+                        "What is 25% of 150?",
+                        "Solve quadratic: x² - 5x + 6 = 0",
+                        "Fundamental physical constants"
+                      ].map((prompt, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => askAi(prompt)}
+                          className="flex items-center justify-between text-left px-3 py-2 rounded-xl bg-brand-surface border border-brand-border/70 hover:border-brand-primary/50 hover:bg-brand-primary/5 text-xs text-brand-text transition-all group cursor-pointer"
+                        >
+                          <span className="truncate">{prompt}</span>
+                          <ArrowDownRight size={13} className="text-brand-text-secondary group-hover:text-brand-primary transition-colors shrink-0 ml-1" />
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${m.role === 'user' ? 'bg-brand-primary text-white rounded-tr-none' : 'bg-brand-surface border border-brand-border text-brand-text rounded-tl-none overflow-x-auto'}`}>
+                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${m.role === 'user' ? 'bg-brand-primary text-white rounded-tr-none shadow-sm' : 'bg-brand-surface border border-brand-border text-brand-text rounded-tl-none overflow-x-auto shadow-sm'}`}>
                       {m.role === 'user' ? (
                         m.text
                       ) : (
@@ -166,17 +198,19 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
                 ))}
                 {isThinking && (
                    <div className="flex justify-start">
-                    <div className="bg-brand-surface border border-brand-border p-3 rounded-2xl rounded-tl-none flex gap-1">
+                    <div className="bg-brand-surface border border-brand-border p-3 rounded-2xl rounded-tl-none flex items-center gap-2 text-xs text-brand-text-secondary">
                       <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" />
                       <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce [animation-delay:0.2s]" />
                       <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                      <span className="font-mono text-[10px] ml-1">Analyzing...</span>
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Interaction Bar */}
-              <div className="p-4 bg-brand-surface border-t border-brand-border">
+              <div className="p-3 bg-brand-surface border-t border-brand-border">
                  {transcript && isListening && (
                    <div className="text-[10px] text-brand-primary font-mono mb-2 animate-pulse truncate uppercase tracking-widest bg-brand-primary/5 p-1 rounded">
                      Listening: {transcript}
@@ -185,23 +219,31 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, setAct
                 <div className="flex gap-2">
                   <button 
                     onClick={toggleListening}
-                    className={`p-2 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20'}`}
+                    title={isListening ? "Stop Voice Input" : "Voice Input"}
+                    className={`p-2.5 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20'}`}
                   >
-                    {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                    {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                   </button>
-                  <div className="flex-1 relative">
+                  <div className="flex-1 relative flex items-center">
                     <input 
                       type="text" 
                       placeholder="Ask me anything..."
-                      className="w-full bg-brand-bg/50 border border-brand-border rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      className="w-full bg-brand-bg/60 border border-brand-border rounded-xl pl-3 pr-9 py-2 text-xs outline-none focus:border-brand-primary text-brand-text placeholder:text-brand-text-secondary/60"
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          askAi((e.target as HTMLInputElement).value);
-                          (e.target as HTMLInputElement).value = '';
+                        if (e.key === 'Enter' && inputValue.trim()) {
+                          askAi(inputValue);
                         }
                       }}
                     />
-                    <Command className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text-secondary" size={14} />
+                    <button
+                      onClick={() => inputValue.trim() && askAi(inputValue)}
+                      disabled={!inputValue.trim()}
+                      className="absolute right-2 p-1 text-brand-text-secondary hover:text-brand-primary disabled:opacity-30 disabled:hover:text-brand-text-secondary transition-colors"
+                    >
+                      <Send size={14} />
+                    </button>
                   </div>
                 </div>
               </div>

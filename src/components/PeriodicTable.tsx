@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
     Atom, Search, TrendingUp, Thermometer, Layers, BarChart3, Sparkles, Loader2,
     Flame, HelpCircle, CheckCircle2, XCircle, ArrowLeftRight, FlaskConical, Info,
-    Play, Pause, RefreshCw, Undo2
+    Play, Pause, RefreshCw, Undo2, Dices, Copy, Check, Filter
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getApiKey } from '../services/geminiService';
@@ -131,14 +131,25 @@ import { SolubilityChecker } from './SolubilityChecker';
 import { MoleculeBuilder } from './MoleculeBuilder';
 import { ElementComparison } from './ElementComparison';
 
-export type ViewMode = 'category' | 'electronegativity' | 'atomic_radius';
+type ViewMode = 'category' | 'electronegativity' | 'atomic_radius';
+type BlockType = 'all' | 's' | 'p' | 'd' | 'f';
+
+const getElementBlock = (e: Element): 's' | 'p' | 'd' | 'f' => {
+    if (e.category === 'lanthanide' || e.category === 'actinide') return 'f';
+    if (e.group === 1 || e.group === 2 || e.number === 2) return 's';
+    if (e.group >= 13 && e.group <= 18) return 'p';
+    return 'd';
+};
 
 const PeriodicTable = () => {
     const [selected, setSelected] = useState<Element | null>(null);
     const [search, setSearch] = useState('');
     const [viewMode, setViewMode] = useState<ViewMode>('category');
+    const [blockFilter, setBlockFilter] = useState<BlockType>('all');
+    const [stateFilter, setStateFilter] = useState<'all' | 'solid' | 'liquid' | 'gas' | 'synthetic'>('all');
     const [showTrends, setShowTrends] = useState(false);
     const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+    const [copiedSymbol, setCopiedSymbol] = useState(false);
 
     // Dynamic temperature state for phase simulator
     const [temperature, setTemperature] = useState(298.15); // Room Temperature by default (25°C)
@@ -154,6 +165,12 @@ const PeriodicTable = () => {
 
     const [isAiThinking, setIsAiThinking] = useState(false);
     const [aiInsight, setAiInsight] = useState<string | null>(null);
+
+    const pickRandomElement = () => {
+        const randomIndex = Math.floor(Math.random() * ELEMENTS.length);
+        const randomElem = ELEMENTS[randomIndex];
+        setSelected(randomElem);
+    };
 
     const askAiForElement = async () => {
         if (!selected) return;
@@ -187,7 +204,9 @@ const PeriodicTable = () => {
 
     const getElementStyle = (element: Element) => {
         const isHoveredCat = hoveredCategory === element.category;
-        const opacity = (hoveredCategory && !isHoveredCat) ? '0.2' : '1';
+        const isBlockMatch = blockFilter === 'all' || getElementBlock(element) === blockFilter;
+        const isStateMatch = stateFilter === 'all' || getElementStateAtTemp(element, temperature) === stateFilter;
+        const opacity = ((hoveredCategory && !isHoveredCat) || !isBlockMatch || !isStateMatch) ? '0.2' : '1';
         const color = CATEGORY_COLORS[element.category] || element.color;
 
         if (viewMode === 'category') {
@@ -228,7 +247,7 @@ const PeriodicTable = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-brand-surface/50 p-4 rounded-2xl border border-brand-border">
+            <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-brand-surface/50 p-4 rounded-2xl border border-brand-border shadow-sm">
                 <div className="flex items-center gap-4 bg-brand-primary/10 px-6 py-3 rounded-2xl border border-brand-primary/20 shadow-lg">
                     <div className="p-2 bg-brand-primary rounded-lg text-white">
                         <Atom size={28} />
@@ -239,37 +258,106 @@ const PeriodicTable = () => {
                     </div>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                    {/* View mode buttons */}
                     <div className="flex bg-brand-bg p-1 rounded-xl border border-brand-border h-10 shadow-inner">
-                        <button onClick={() => setViewMode('category')} className={`px-4 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-2 ${viewMode === 'category' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>
+                        <button onClick={() => setViewMode('category')} className={`px-3.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5 ${viewMode === 'category' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>
                             <Layers size={12} /> Standard
                         </button>
-                        <button onClick={() => setViewMode('electronegativity')} className={`px-4 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-2 ${viewMode === 'electronegativity' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>
+                        <button onClick={() => setViewMode('electronegativity')} className={`px-3.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5 ${viewMode === 'electronegativity' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>
                             <TrendingUp size={12} /> Electronegativity
                         </button>
-                        <button onClick={() => setViewMode('atomic_radius')} className={`px-4 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-2 ${viewMode === 'atomic_radius' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>
-                            <TrendingUp size={12} className="rotate-90" /> radius
+                        <button onClick={() => setViewMode('atomic_radius')} className={`px-3.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1.5 ${viewMode === 'atomic_radius' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text-secondary hover:text-brand-text'}`}>
+                            <TrendingUp size={12} className="rotate-90" /> Radius
                         </button>
                     </div>
 
                     <button 
                         onClick={() => setShowTrends(!showTrends)}
-                        className={`h-10 px-4 rounded-xl border border-brand-border flex items-center gap-2 text-xs font-bold transition-all ${showTrends ? 'bg-brand-primary/20 text-brand-primary border-brand-primary' : 'bg-brand-bg text-brand-text-secondary hover:text-brand-text'}`}
+                        className={`h-10 px-3.5 rounded-xl border border-brand-border flex items-center gap-2 text-xs font-bold transition-all ${showTrends ? 'bg-brand-primary/20 text-brand-primary border-brand-primary' : 'bg-brand-bg text-brand-text-secondary hover:text-brand-text'}`}
                     >
-                        <BarChart3 size={16} /> {showTrends ? 'Hide' : 'Trends'}
+                        <BarChart3 size={15} /> {showTrends ? 'Hide' : 'Trends'}
                     </button>
 
-                    <div className="relative flex-1 md:flex-initial min-w-[200px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-text-secondary" size={16} />
+                    <button
+                        onClick={pickRandomElement}
+                        title="Pick Random Element"
+                        className="h-10 px-3.5 rounded-xl border border-brand-border bg-brand-bg hover:bg-brand-primary/10 text-brand-text-secondary hover:text-brand-primary flex items-center gap-2 text-xs font-bold transition-all"
+                    >
+                        <Dices size={15} /> Random
+                    </button>
+
+                    <div className="relative flex-1 md:flex-initial min-w-[180px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-text-secondary" size={15} />
                         <input 
                             type="text"
                             placeholder="Element, Symbol, #..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full bg-brand-bg border border-brand-border rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-primary outline-none"
+                            className="w-full bg-brand-bg border border-brand-border rounded-xl py-2 pl-9 pr-3 text-xs focus:ring-2 focus:ring-brand-primary outline-none"
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* Block & State Filter Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-brand-surface/30 rounded-2xl border border-brand-border/40">
+                <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-brand-text-secondary tracking-widest">
+                            <Filter size={13} className="text-brand-primary" /> Block:
+                        </div>
+                        <div className="flex bg-brand-bg p-1 rounded-xl border border-brand-border text-[9px] font-black uppercase gap-1">
+                            {(['all', 's', 'p', 'd', 'f'] as BlockType[]).map(block => (
+                                <button
+                                    key={block}
+                                    onClick={() => setBlockFilter(block)}
+                                    className={`px-2.5 py-1 rounded-lg transition-all ${
+                                        blockFilter === block 
+                                            ? 'bg-brand-primary text-white shadow-md' 
+                                            : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface'
+                                    }`}
+                                >
+                                    {block === 'all' ? 'All' : `${block.toUpperCase()}`}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-brand-text-secondary tracking-widest">
+                            <Thermometer size={13} className="text-brand-primary" /> State:
+                        </div>
+                        <div className="flex bg-brand-bg p-1 rounded-xl border border-brand-border text-[9px] font-black uppercase gap-1">
+                            {(['all', 'solid', 'liquid', 'gas', 'synthetic'] as const).map(st => (
+                                <button
+                                    key={st}
+                                    onClick={() => setStateFilter(st)}
+                                    className={`px-2.5 py-1 rounded-lg transition-all capitalize ${
+                                        stateFilter === st 
+                                            ? 'bg-brand-primary text-white shadow-md' 
+                                            : 'text-brand-text-secondary hover:text-brand-text hover:bg-brand-surface'
+                                    }`}
+                                >
+                                    {st}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {(blockFilter !== 'all' || stateFilter !== 'all' || search) && (
+                    <button
+                        onClick={() => {
+                            setBlockFilter('all');
+                            setStateFilter('all');
+                            setSearch('');
+                        }}
+                        className="flex items-center gap-1 px-3 py-1 rounded-xl bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[10px] font-black uppercase tracking-wider transition-all border border-brand-primary/20"
+                    >
+                        <Undo2 size={12} /> Reset Filters
+                    </button>
+                )}
             </div>
 
             {showTrends && (
@@ -658,12 +746,29 @@ const PeriodicTable = () => {
 
                             {/* Property Matrix */}
                             <div className="flex-1 w-full space-y-6">
-                                <div className="flex flex-col sm:flex-row sm:items-baseline gap-2">
-                                    <h4 className="text-4xl font-black text-brand-text tracking-tight">{selected.name}</h4>
-                                    <span style={{ backgroundColor: `${selected.color}20`, color: selected.color }} 
-                                          className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-current w-fit">
-                                        {selected.category}
-                                    </span>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="flex flex-wrap items-baseline gap-3">
+                                        <h4 className="text-4xl font-black text-brand-text tracking-tight">{selected.name}</h4>
+                                        <span style={{ backgroundColor: `${selected.color}20`, color: selected.color }} 
+                                              className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-current w-fit">
+                                            {selected.category}
+                                        </span>
+                                        <span className="px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                                            {getElementBlock(selected).toUpperCase()}-Block
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`${selected.name} (${selected.symbol}) - Atomic #${selected.number}, Mass: ${selected.mass} u`);
+                                            setCopiedSymbol(true);
+                                            setTimeout(() => setCopiedSymbol(false), 2000);
+                                        }}
+                                        className="px-3 py-1.5 rounded-xl bg-brand-bg border border-brand-border hover:border-brand-primary/50 text-brand-text-secondary hover:text-brand-text text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shrink-0"
+                                    >
+                                        {copiedSymbol ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                                        {copiedSymbol ? 'Copied Details' : 'Copy Spec'}
+                                    </button>
                                 </div>
 
                                 <p className="text-sm text-brand-text-secondary max-w-2xl leading-relaxed bg-brand-bg/30 p-4 rounded-xl italic">
